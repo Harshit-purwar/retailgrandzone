@@ -167,9 +167,8 @@ function CheckoutPage() {
             <div className="p-4">
               <RadioGroup value={payment} onValueChange={setPayment} className="space-y-3">
                 {[
-                  { v: "COD", l: "Cash on delivery", d: "Pay when the order arrives" },
-                  { v: "UPI", l: "UPI", d: "Pay instantly using any UPI app" },
-                  { v: "Card", l: "Credit / Debit card", d: "Visa, Mastercard, RuPay" },
+                  { v: "COD", l: "Cash on delivery", d: "Pay in cash when the order arrives" },
+
                 ].map((o) => (
                   <label
                     key={o.v}
