@@ -4,6 +4,31 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Banner, Product } from "@/lib/store-types";
 import { ProductCard } from "@/components/store/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Smartphone,
+  Laptop,
+  Headphones,
+  Shirt,
+  Footprints,
+  WashingMachine,
+  Tv,
+  CookingPot,
+  Backpack,
+  Watch,
+} from "lucide-react";
+
+const CATEGORY_TILES = [
+  { name: "Mobiles", Icon: Smartphone },
+  { name: "Laptops", Icon: Laptop },
+  { name: "Audio", Icon: Headphones },
+  { name: "Fashion", Icon: Shirt },
+  { name: "Footwear", Icon: Footprints },
+  { name: "Appliances", Icon: WashingMachine },
+  { name: "Televisions", Icon: Tv },
+  { name: "Kitchen", Icon: CookingPot },
+  { name: "Bags", Icon: Backpack },
+  { name: "Wearables", Icon: Watch },
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -71,7 +96,7 @@ function Home() {
 
       {/* Hero banners */}
       <section className="space-y-3">
-        {hero.isLoading ? <Skeleton className="h-56 w-full rounded-lg" /> : null}
+        {hero.isLoading ? <Skeleton className="h-56 w-full rounded-2xl" /> : null}
         {(hero.data ?? []).map((b) => {
           const target = bannerTarget(b);
           return (
@@ -79,14 +104,17 @@ function Home() {
               key={b.id}
               type="button"
               onClick={() => navigate(target as never)}
-              className="relative block w-full overflow-hidden rounded-lg text-left"
+              className="relative block w-full overflow-hidden rounded-2xl text-left"
             >
               <img src={b.image_url} alt={b.title} className="h-48 w-full object-cover sm:h-72" />
               <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent p-6 sm:p-10">
                 <div className="max-w-md text-white">
-                  <h2 className="text-2xl font-bold sm:text-4xl">{b.title}</h2>
+                  <span className="inline-flex items-center rounded-full bg-brand px-3 py-1 text-xs font-bold text-brand-foreground">
+                    Delivery in 12 minutes
+                  </span>
+                  <h2 className="mt-3 text-2xl font-bold sm:text-4xl">{b.title}</h2>
                   <p className="mt-2 text-sm opacity-90 sm:text-base">{b.subtitle}</p>
-                  <span className="mt-4 inline-block rounded bg-[var(--gold)] px-4 py-2 text-sm font-semibold text-[var(--gold-foreground)]">
+                  <span className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
                     {b.cta_text}
                   </span>
                 </div>
@@ -96,27 +124,46 @@ function Home() {
         })}
       </section>
 
+      {/* Category tiles */}
+      <section className="mt-5 rounded-2xl bg-card p-4">
+        <h2 className="mb-3 text-lg font-bold">Shop by category</h2>
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-10">
+          {CATEGORY_TILES.map((c) => (
+            <Link
+              key={c.name}
+              to="/products"
+              search={{ q: undefined, category: c.name }}
+              className="flex flex-col items-center gap-2 rounded-xl bg-secondary p-2 text-center transition-colors hover:bg-accent"
+            >
+              <c.Icon className="h-6 w-6 text-primary" />
+              <span className="text-[11px] font-semibold leading-tight text-foreground">{c.name}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* Deals */}
-      <section className="mt-6 rounded-lg bg-card p-4">
+      <section className="mt-5 rounded-2xl bg-card p-4">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Deals of the day</h2>
+          <h2 className="text-xl font-bold">Deals of the day</h2>
           <Link
             to="/products"
             search={{ q: undefined, category: undefined }}
-            className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
+            className="text-sm font-bold text-primary hover:underline"
           >
-            View all
+            See all
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {products.isLoading
-            ? Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-72 rounded-lg" />)
+            ? Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-72 rounded-2xl" />)
             : deals.map((p) => <ProductCard key={p.id} product={p} />)}
         </div>
       </section>
 
+
       {/* Promo banners */}
-      <section className="mt-6 grid gap-3 sm:grid-cols-2">
+      <section className="mt-5 grid gap-3 sm:grid-cols-2">
         {(promo.data ?? []).map((b) => {
           const target = bannerTarget(b);
           return (
@@ -124,7 +171,7 @@ function Home() {
               key={b.id}
               type="button"
               onClick={() => navigate(target as never)}
-              className="relative overflow-hidden rounded-lg text-left"
+              className="relative overflow-hidden rounded-2xl text-left"
             >
               <img src={b.image_url} alt={b.title} className="h-40 w-full object-cover" />
               <div className="absolute inset-0 bg-black/45 p-5 text-white">
@@ -138,8 +185,8 @@ function Home() {
       </section>
 
       {/* All products */}
-      <section className="mt-6 rounded-lg bg-card p-4">
-        <h2 className="mb-4 text-xl font-semibold">Recommended for you</h2>
+      <section className="mt-5 rounded-2xl bg-card p-4">
+        <h2 className="mb-4 text-xl font-bold">Recommended for you</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {list.map((p) => (
             <ProductCard key={p.id} product={p} />
