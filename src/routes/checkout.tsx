@@ -1,0 +1,224 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
+import { useCart } from "@/lib/cart-context";
+import { inr } from "@/lib/store-types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+export const Route = createFileRoute("/checkout")({
+  head: () => ({
+    meta: [
+      { title: "Checkout — ShopKart" },
+      { name: "description", content: "Enter your delivery address and payment method to place your ShopKart order." },
+      { property: "og:title", content: "Checkout — ShopKart" },
+      { property: "og:description", content: "Enter delivery address and payment method to place your order." },
+    ],
+  }),
+  component: CheckoutPage,
+});
+
+function CheckoutPage() {
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+  const { lines, subtotal, clear } = useCart();
+  const [step, setStep] = useState<1 | 2>(1);
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState({
+    full_name: "",
+    phone: "",
+    address_line: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
+  const [payment, setPayment] = useState("COD");
+
+  const delivery = subtotal > 0 && subtotal < 500 ? 40 : 0;
+  const total = subtotal + delivery;
+
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: "/auth", search: { redirect: "/checkout" }, replace: true });
+  }, [loading, user, navigate]);
+
+  useEffect(() => {
+    if (!loading && user && lines.length === 0) navigate({ to: "/cart", replace: true });
+  }, [loading, user, lines.length, navigate]);
+
+  function set(key: keyof typeof form) {
+    return (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  }
+
+  async function placeOrder() {
+    if (!user) return;
+    setBusy(true);
+    const { data: order, error } = await supabase
+      .from("orders")
+      .insert({
+        user_id: user.id,
+        email: user.email,
+        full_name: form.full_name,
+        phone: form.phone,
+        address_line: form.address_line,
+        city: form.city,
+        state: form.state,
+        pincode: form.pincode,
+        total,
+        payment_method: payment,
+        payment_status: payment === "COD" ? "Pending" : "Paid",
+        status: "Ordered",
+      })
+      .select()
+      .single();
+
+    if (error || !order) {
+      setBusy(false);
+      return toast.error(error?.message ?? "Could not place order");
+    }
+
+    const { error: itemsError } = await supabase.from("order_items").insert(
+      lines.map((l) => ({
+        order_id: order.id,
+        product_id: l.productId,
+        title: l.title,
+        image_url: l.image_url,
+        price: l.price,
+        quantity: l.quantity,
+      })),
+    );
+    setBusy(false);
+    if (itemsError) return toast.error(itemsError.message);
+
+    clear();
+    toast.success("Order placed!");
+    navigate({ to: "/order/$id", params: { id: order.id } });
+  }
+
+  return (
+    <div className="mx-auto grid max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[1fr_360px]">
+      <div className="space-y-3">
+        <section className="rounded-lg bg-card">
+          <header className="flex items-center gap-3 border-b border-border px-4 py-3">
+            <span className="rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">1</span>
+            <h2 className="font-semibold uppercase tracking-wide">Delivery address</h2>
+          </header>
+          {step === 1 ? (
+            <form
+              className="grid gap-4 p-4 sm:grid-cols-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                setStep(2);
+              }}
+            >
+              <div>
+                <Label htmlFor="name">Full name</Label>
+                <Input id="name" required value={form.full_name} onChange={set("full_name")} />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone number</Label>
+                <Input id="phone" required pattern="[0-9]{10}" value={form.phone} onChange={set("phone")} />
+              </div>
+              <div className="sm:col-span-2">
+                <Label htmlFor="address">Address (house no, area, street)</Label>
+                <Input id="address" required value={form.address_line} onChange={set("address_line")} />
+              </div>
+              <div>
+                <Label htmlFor="city">City</Label>
+                <Input id="city" required value={form.city} onChange={set("city")} />
+              </div>
+              <div>
+                <Label htmlFor="state">State</Label>
+                <Input id="state" required value={form.state} onChange={set("state")} />
+              </div>
+              <div>
+                <Label htmlFor="pincode">Pincode</Label>
+                <Input id="pincode" required pattern="[0-9]{6}" value={form.pincode} onChange={set("pincode")} />
+              </div>
+              <div className="sm:col-span-2">
+                <Button type="submit" className="bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90">
+                  Deliver here
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <div className="flex items-start justify-between gap-4 p-4 text-sm">
+              <p>
+                <span className="font-semibold">{form.full_name}</span> {form.phone}
+                <br />
+                {form.address_line}, {form.city}, {form.state} — {form.pincode}
+              </p>
+              <Button variant="outline" size="sm" onClick={() => setStep(1)}>
+                Change
+              </Button>
+            </div>
+          )}
+        </section>
+
+        <section className="rounded-lg bg-card">
+          <header className="flex items-center gap-3 border-b border-border px-4 py-3">
+            <span className="rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">2</span>
+            <h2 className="font-semibold uppercase tracking-wide">Payment options</h2>
+          </header>
+          {step === 2 ? (
+            <div className="p-4">
+              <RadioGroup value={payment} onValueChange={setPayment} className="space-y-3">
+                {[
+                  { v: "COD", l: "Cash on delivery", d: "Pay when the order arrives" },
+                  { v: "UPI", l: "UPI", d: "Pay instantly using any UPI app" },
+                  { v: "Card", l: "Credit / Debit card", d: "Visa, Mastercard, RuPay" },
+                ].map((o) => (
+                  <label
+                    key={o.v}
+                    className="flex cursor-pointer items-start gap-3 rounded border border-border p-3 has-[:checked]:border-primary"
+                  >
+                    <RadioGroupItem value={o.v} id={`pay-${o.v}`} className="mt-1" />
+                    <span>
+                      <span className="block text-sm font-medium">{o.l}</span>
+                      <span className="block text-xs text-muted-foreground">{o.d}</span>
+                    </span>
+                  </label>
+                ))}
+              </RadioGroup>
+              <Button
+                className="mt-4 bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90"
+                size="lg"
+                disabled={busy}
+                onClick={placeOrder}
+              >
+                {busy ? "Placing order…" : `Place order · ${inr(total)}`}
+              </Button>
+            </div>
+          ) : (
+            <p className="p-4 text-sm text-muted-foreground">Complete the delivery address first.</p>
+          )}
+        </section>
+      </div>
+
+      <aside className="h-fit rounded-lg bg-card p-4 lg:sticky lg:top-32">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Price details</h2>
+        <div className="space-y-2 text-sm">
+          {lines.map((l) => (
+            <div key={l.productId} className="flex justify-between gap-3">
+              <span className="line-clamp-1">
+                {l.title} × {l.quantity}
+              </span>
+              <span>{inr(l.price * l.quantity)}</span>
+            </div>
+          ))}
+          <div className="flex justify-between border-t border-dashed border-border pt-2">
+            <span>Delivery</span>
+            <span className={delivery ? "" : "text-[var(--deal)]"}>{delivery ? inr(delivery) : "FREE"}</span>
+          </div>
+        </div>
+        <div className="mt-3 flex justify-between border-t border-border pt-3 text-base font-semibold">
+          <span>Total</span>
+          <span>{inr(total)}</span>
+        </div>
+      </aside>
+    </div>
+  );
+}
