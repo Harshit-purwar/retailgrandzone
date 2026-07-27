@@ -4,18 +4,30 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Banner, Product } from "@/lib/store-types";
 import { ProductCard } from "@/components/store/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Smartphone,
+  Laptop,
+  Headphones,
+  Shirt,
+  Footprints,
+  WashingMachine,
+  Tv,
+  CookingPot,
+  Backpack,
+  Watch,
+} from "lucide-react";
 
 const CATEGORY_TILES = [
-  { name: "Mobiles", emoji: "\u{1F4F1}" },
-  { name: "Laptops", emoji: "\u{1F4BB}" },
-  { name: "Audio", emoji: "\u{1F3A7}" },
-  { name: "Fashion", emoji: "\u{1F455}" },
-  { name: "Footwear", emoji: "\u{1F45F}" },
-  { name: "Appliances", emoji: "\u{1F9FA}" },
-  { name: "Televisions", emoji: "\u{1F4FA}" },
-  { name: "Kitchen", emoji: "\u{1F373}" },
-  { name: "Bags", emoji: "\u{1F392}" },
-  { name: "Wearables", emoji: "\u{231A}" },
+  { name: "Mobiles", Icon: Smartphone },
+  { name: "Laptops", Icon: Laptop },
+  { name: "Audio", Icon: Headphones },
+  { name: "Fashion", Icon: Shirt },
+  { name: "Footwear", Icon: Footprints },
+  { name: "Appliances", Icon: WashingMachine },
+  { name: "Televisions", Icon: Tv },
+  { name: "Kitchen", Icon: CookingPot },
+  { name: "Bags", Icon: Backpack },
+  { name: "Wearables", Icon: Watch },
 ];
 
 export const Route = createFileRoute("/")({
@@ -123,7 +135,7 @@ function Home() {
               search={{ q: undefined, category: c.name }}
               className="flex flex-col items-center gap-2 rounded-xl bg-secondary p-2 text-center transition-colors hover:bg-accent"
             >
-              <span className="text-2xl">{c.emoji}</span>
+              <c.Icon className="h-6 w-6 text-primary" />
               <span className="text-[11px] font-semibold leading-tight text-foreground">{c.name}</span>
             </Link>
           ))}
