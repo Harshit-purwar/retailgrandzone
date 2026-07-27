@@ -5,6 +5,19 @@ import type { Banner, Product } from "@/lib/store-types";
 import { ProductCard } from "@/components/store/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const CATEGORY_TILES = [
+  { name: "Mobiles", emoji: "\u{1F4F1}" },
+  { name: "Laptops", emoji: "\u{1F4BB}" },
+  { name: "Audio", emoji: "\u{1F3A7}" },
+  { name: "Fashion", emoji: "\u{1F455}" },
+  { name: "Footwear", emoji: "\u{1F45F}" },
+  { name: "Appliances", emoji: "\u{1F9FA}" },
+  { name: "Televisions", emoji: "\u{1F4FA}" },
+  { name: "Kitchen", emoji: "\u{1F373}" },
+  { name: "Bags", emoji: "\u{1F392}" },
+  { name: "Wearables", emoji: "\u{231A}" },
+];
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -138,7 +151,7 @@ function Home() {
 
 
       {/* Promo banners */}
-      <section className="mt-6 grid gap-3 sm:grid-cols-2">
+      <section className="mt-5 grid gap-3 sm:grid-cols-2">
         {(promo.data ?? []).map((b) => {
           const target = bannerTarget(b);
           return (
@@ -146,7 +159,7 @@ function Home() {
               key={b.id}
               type="button"
               onClick={() => navigate(target as never)}
-              className="relative overflow-hidden rounded-lg text-left"
+              className="relative overflow-hidden rounded-2xl text-left"
             >
               <img src={b.image_url} alt={b.title} className="h-40 w-full object-cover" />
               <div className="absolute inset-0 bg-black/45 p-5 text-white">
@@ -160,8 +173,8 @@ function Home() {
       </section>
 
       {/* All products */}
-      <section className="mt-6 rounded-lg bg-card p-4">
-        <h2 className="mb-4 text-xl font-semibold">Recommended for you</h2>
+      <section className="mt-5 rounded-2xl bg-card p-4">
+        <h2 className="mb-4 text-xl font-bold">Recommended for you</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {list.map((p) => (
             <ProductCard key={p.id} product={p} />
