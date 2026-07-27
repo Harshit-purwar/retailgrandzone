@@ -137,8 +137,8 @@ function AdminPage() {
       ),
     };
     const res = row.id
-      ? await supabase.from("products").update(payload).eq("id", row.id as string)
-      : await supabase.from("products").insert(payload);
+      ? await supabase.from("products").update(payload as never).eq("id", row.id as string)
+      : await supabase.from("products").insert(payload as never);
     if (res.error) return toast.error(res.error.message);
     toast.success("Product saved");
     setEditing(null);
@@ -159,8 +159,8 @@ function AdminPage() {
       active: !!row.active,
     };
     const res = row.id
-      ? await supabase.from("banners").update(payload).eq("id", row.id as string)
-      : await supabase.from("banners").insert(payload);
+      ? await supabase.from("banners").update(payload as never).eq("id", row.id as string)
+      : await supabase.from("banners").insert(payload as never);
     if (res.error) return toast.error(res.error.message);
     toast.success("Banner saved");
     setEditing(null);
