@@ -192,7 +192,7 @@ function AdminPage() {
       <h1 className="mb-4 text-xl font-semibold">Admin panel</h1>
 
       <Tabs defaultValue="products" className="rounded-lg bg-card p-4">
-        <TabsList>
+        <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="banners">Banners</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
@@ -204,7 +204,7 @@ function AdminPage() {
           </Button>
           <div className="space-y-2">
             {(products.data ?? []).map((p) => (
-              <div key={p.id} className="flex items-center gap-3 rounded border border-border p-3">
+              <div key={p.id} className="flex flex-wrap items-center gap-3 rounded border border-border p-3">
                 <img src={p.image_url} alt={p.title} className="h-12 w-12 object-contain" />
                 <div className="flex-1 text-sm">
                   <p className="font-medium">{p.title}</p>
@@ -220,7 +220,9 @@ function AdminPage() {
                       kind: "product",
                       row: {
                         ...(p as unknown as AnyRecord),
+                        images: Array.isArray(p.images) ? (p.images as string[]) : [],
                         highlights: Array.isArray(p.highlights) ? (p.highlights as string[]).join("\n") : "",
+
                         specs:
                           p.specs && typeof p.specs === "object"
                             ? Object.entries(p.specs as Record<string, unknown>)
@@ -247,7 +249,7 @@ function AdminPage() {
           </Button>
           <div className="space-y-2">
             {(banners.data ?? []).map((b) => (
-              <div key={b.id} className="flex items-center gap-3 rounded border border-border p-3">
+              <div key={b.id} className="flex flex-wrap items-center gap-3 rounded border border-border p-3">
                 <img src={b.image_url} alt={b.title} className="h-12 w-20 rounded object-cover" />
                 <div className="flex-1 text-sm">
                   <p className="font-medium">{b.title}</p>
@@ -283,7 +285,7 @@ function AdminPage() {
                 </div>
                 <span className="font-semibold">{inr(Number(o.total))}</span>
                 <Select value={o.status} onValueChange={(v) => setOrderStatus(o.id, v)}>
-                  <SelectTrigger className="w-44">
+                  <SelectTrigger className="w-full sm:w-44">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
