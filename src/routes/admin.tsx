@@ -371,11 +371,17 @@ function EditForm({
       }}
     >
       {fields.map(([key, label, type]) => (
-        <div key={key} className={type === "area" || key === "image_url" ? "sm:col-span-2" : ""}>
+        <div key={key} className={type === "area" || type === "gallery" || key === "image_url" ? "sm:col-span-2" : ""}>
           <Label htmlFor={key}>{label}</Label>
-          {key === "image_url" ? (
+          {type === "gallery" ? (
+            <GalleryField
+              value={Array.isArray(row[key]) ? (row[key] as string[]) : []}
+              onChange={(v) => onChange({ ...row, [key]: v })}
+            />
+          ) : key === "image_url" ? (
             <ImageField value={String(row[key] ?? "")} onChange={(v) => onChange({ ...row, [key]: v })} />
           ) : key === "category" || key === "link_category" ? (
+
             <CategoryField
               allowEmpty={key === "link_category"}
               value={String(row[key] ?? "")}
