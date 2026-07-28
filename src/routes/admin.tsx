@@ -332,14 +332,16 @@ function EditForm({
   onChange: (row: AnyRecord) => void;
   onSave: () => void;
 }) {
-  const fields: [string, string, "text" | "number" | "area"][] =
+  const fields: [string, string, "text" | "number" | "area" | "gallery"][] =
     kind === "product"
       ? [
           ["title", "Title", "text"],
           ["slug", "Slug", "text"],
           ["brand", "Brand", "text"],
           ["category", "Category", "text"],
-          ["image_url", "Image URL", "text"],
+          ["image_url", "Main image", "text"],
+          ["images", "More images (gallery)", "gallery"],
+
           ["price", "Price", "number"],
           ["mrp", "MRP", "number"],
           ["rating", "Rating", "number"],
