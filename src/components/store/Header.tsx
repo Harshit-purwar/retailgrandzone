@@ -147,7 +147,7 @@ export function Header() {
           >
             All products
           </Link>
-          {CATEGORIES.map((c) => (
+          {(categories.data ?? []).map((c: string) => (
             <Link
               key={c}
               to="/products"
