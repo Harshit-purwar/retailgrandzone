@@ -81,18 +81,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ShopKart — Online Shopping for Mobiles, Fashion & More" },
+      { title: "The Grand Zone — Online Shopping for Mobiles, Fashion & More" },
       {
         name: "description",
-        content: "Shop mobiles, laptops, audio, fashion and home appliances at ShopKart with fast delivery and easy returns.",
+        content: "Shop mobiles, laptops, audio, fashion and home appliances at The Grand Zone with fast delivery and easy returns.",
       },
-      { property: "og:title", content: "ShopKart — Online Shopping" },
-      { property: "og:description", content: "Shop mobiles, laptops, audio, fashion and home appliances at ShopKart." },
+      { property: "og:title", content: "The Grand Zone — Online Shopping" },
+      { property: "og:description", content: "Shop mobiles, laptops, audio, fashion and home appliances at The Grand Zone." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#f8cb46" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-title", content: "ShopKart" },
+      { name: "apple-mobile-web-app-title", content: "GrandZone" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
     ],
     links: [

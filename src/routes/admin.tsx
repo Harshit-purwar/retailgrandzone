@@ -2,9 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { BASE_CATEGORIES, useCategories } from "@/lib/categories";
+import { uploadStoreImage } from "@/lib/storage-upload";
 import type { Banner, Order, Product } from "@/lib/store-types";
 import { ORDER_STATUSES, inr } from "@/lib/store-types";
 import { Button } from "@/components/ui/button";
@@ -24,11 +26,11 @@ import {
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin panel — ShopKart" },
-      { name: "description", content: "Manage ShopKart products, banners and customer orders." },
+      { title: "Admin panel — The Grand Zone" },
+      { name: "description", content: "Manage The Grand Zone products, banners and customer orders." },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Admin panel — ShopKart" },
-      { property: "og:description", content: "Manage ShopKart products, banners and customer orders." },
+      { property: "og:title", content: "Admin panel — The Grand Zone" },
+      { property: "og:description", content: "Manage The Grand Zone products, banners and customer orders." },
     ],
   }),
   component: AdminPage,
@@ -363,9 +365,17 @@ function EditForm({
       }}
     >
       {fields.map(([key, label, type]) => (
-        <div key={key} className={type === "area" ? "sm:col-span-2" : ""}>
+        <div key={key} className={type === "area" || key === "image_url" ? "sm:col-span-2" : ""}>
           <Label htmlFor={key}>{label}</Label>
-          {type === "area" ? (
+          {key === "image_url" ? (
+            <ImageField value={String(row[key] ?? "")} onChange={(v) => onChange({ ...row, [key]: v })} />
+          ) : key === "category" || key === "link_category" ? (
+            <CategoryField
+              allowEmpty={key === "link_category"}
+              value={String(row[key] ?? "")}
+              onChange={(v) => onChange({ ...row, [key]: v })}
+            />
+          ) : type === "area" ? (
             <Textarea
               id={key}
               rows={4}
@@ -383,6 +393,7 @@ function EditForm({
           )}
         </div>
       ))}
+
       <label className="flex items-center gap-2 text-sm sm:col-span-2">
         <input
           type="checkbox"
@@ -395,5 +406,107 @@ function EditForm({
         <Button type="submit">Save</Button>
       </div>
     </form>
+  );
+}
+
+function ImageField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const [busy, setBusy] = useState(false);
+
+  async function pick(file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const url = await uploadStoreImage(file);
+      onChange(url);
+      toast.success("Image uploaded");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-3">
+        {value ? (
+          <img src={value} alt="Selected" className="h-16 w-16 rounded-lg border border-border object-cover" />
+        ) : null}
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-accent">
+          <Upload className="h-4 w-4" />
+          {busy ? "Uploading…" : "Choose file"}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            disabled={busy}
+            onChange={(e) => pick(e.target.files?.[0])}
+          />
+        </label>
+      </div>
+      <Input
+        placeholder="…or paste an image URL"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  );
+}
+
+function CategoryField({
+  value,
+  onChange,
+  allowEmpty,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  allowEmpty?: boolean;
+}) {
+  const categories = useCategories();
+  const list = categories.data ?? BASE_CATEGORIES;
+  const known = value === "" || list.includes(value);
+  const [creating, setCreating] = useState(false);
+
+  if (creating || !known) {
+    return (
+      <div className="flex gap-2">
+        <Input
+          autoFocus
+          placeholder="New category name"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <Button type="button" variant="outline" onClick={() => setCreating(false)}>
+          Pick existing
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <Select
+      value={value || "__none"}
+      onValueChange={(v) => {
+        if (v === "__new") {
+          setCreating(true);
+          onChange("");
+        } else {
+          onChange(v === "__none" ? "" : v);
+        }
+      }}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder="Select category" />
+      </SelectTrigger>
+      <SelectContent>
+        {allowEmpty ? <SelectItem value="__none">No category</SelectItem> : null}
+        {list.map((c) => (
+          <SelectItem key={c} value={c}>
+            {c}
+          </SelectItem>
+        ))}
+        <SelectItem value="__new">+ Create new category…</SelectItem>
+      </SelectContent>
+    </Select>
   );
 }

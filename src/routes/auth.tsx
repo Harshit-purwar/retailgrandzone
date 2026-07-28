@@ -13,10 +13,10 @@ export const Route = createFileRoute("/auth")({
   validateSearch: z.object({ redirect: z.string().optional() }),
   head: () => ({
     meta: [
-      { title: "Login or sign up — ShopKart" },
-      { name: "description", content: "Log in or create a ShopKart account with your email address to place orders." },
-      { property: "og:title", content: "Login or sign up — ShopKart" },
-      { property: "og:description", content: "Log in or create a ShopKart account with your email address." },
+      { title: "Login or sign up — The Grand Zone" },
+      { name: "description", content: "Log in or create a The Grand Zone account with your email address to place orders." },
+      { property: "og:title", content: "Login or sign up — The Grand Zone" },
+      { property: "og:description", content: "Log in or create a The Grand Zone account with your email address." },
     ],
   }),
   component: AuthPage,

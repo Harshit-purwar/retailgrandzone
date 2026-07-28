@@ -13,10 +13,10 @@ import { useCart } from "@/lib/cart-context";
 export const Route = createFileRoute("/product/$slug")({
   head: () => ({
     meta: [
-      { title: "Product details — ShopKart" },
-      { name: "description", content: "Full description, ratings and specifications for this ShopKart product." },
-      { property: "og:title", content: "Product details — ShopKart" },
-      { property: "og:description", content: "Full description, ratings and specifications for this ShopKart product." },
+      { title: "Product details — The Grand Zone" },
+      { name: "description", content: "Full description, ratings and specifications for this The Grand Zone product." },
+      { property: "og:title", content: "Product details — The Grand Zone" },
+      { property: "og:description", content: "Full description, ratings and specifications for this The Grand Zone product." },
     ],
   }),
   component: ProductPage,

@@ -10,10 +10,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const Route = createFileRoute("/orders")({
   head: () => ({
     meta: [
-      { title: "My orders — ShopKart" },
-      { name: "description", content: "See all the orders you have placed on ShopKart and their current status." },
-      { property: "og:title", content: "My orders — ShopKart" },
-      { property: "og:description", content: "See all the orders you have placed on ShopKart." },
+      { title: "My orders — The Grand Zone" },
+      { name: "description", content: "See all the orders you have placed on The Grand Zone and their current status." },
+      { property: "og:title", content: "My orders — The Grand Zone" },
+      { property: "og:description", content: "See all the orders you have placed on The Grand Zone." },
     ],
   }),
   component: OrdersPage,
