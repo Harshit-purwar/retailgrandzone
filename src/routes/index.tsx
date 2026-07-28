@@ -94,53 +94,87 @@ function Home() {
     <div className="mx-auto max-w-7xl px-4 py-4">
       <h1 className="sr-only">The Grand Zone online shopping</h1>
 
-      {/* Hero banners */}
-      <section className="space-y-3">
+      {/* Hero banners — scrollable image carousel */}
+      <section>
         {hero.isLoading ? <Skeleton className="h-56 w-full rounded-2xl" /> : null}
-        {(hero.data ?? []).map((b) => {
-          const target = bannerTarget(b);
-          return (
-            <button
-              key={b.id}
-              type="button"
-              onClick={() => navigate(target as never)}
-              className="relative block w-full overflow-hidden rounded-2xl text-left"
+        {(hero.data ?? []).length > 0 ? (
+          <div className="relative">
+            <div
+              ref={heroScroller}
+              className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
-              <img src={b.image_url} alt={b.title} className="h-48 w-full object-cover sm:h-72" />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent p-6 sm:p-10">
-                <div className="max-w-md text-white">
-                  <span className="inline-flex items-center rounded-full bg-brand px-3 py-1 text-xs font-bold text-brand-foreground">
-                    Delivery in 12 minutes
-                  </span>
-                  <h2 className="mt-3 text-2xl font-bold sm:text-4xl">{b.title}</h2>
-                  <p className="mt-2 text-sm opacity-90 sm:text-base">{b.subtitle}</p>
-                  <span className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                    {b.cta_text}
-                  </span>
-                </div>
-              </div>
-            </button>
-          );
-        })}
+              {(hero.data ?? []).map((b) => {
+                const target = bannerTarget(b);
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => navigate(target as never)}
+                    className="relative w-full shrink-0 snap-center overflow-hidden rounded-2xl text-left"
+                  >
+                    <img src={b.image_url} alt={b.title} className="h-48 w-full object-cover sm:h-72" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent p-6 sm:p-10">
+                      <div className="max-w-md text-white">
+                        <span className="inline-flex items-center rounded-full bg-brand px-3 py-1 text-xs font-bold text-brand-foreground">
+                          Delivery in 12 minutes
+                        </span>
+                        <h2 className="mt-3 text-2xl font-bold sm:text-4xl">{b.title}</h2>
+                        <p className="mt-2 text-sm opacity-90 sm:text-base">{b.subtitle}</p>
+                        <span className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                          {b.cta_text}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {(hero.data ?? []).length > 1 ? (
+              <>
+                <button
+                  type="button"
+                  aria-label="Previous banner"
+                  onClick={() => scrollHero(-1)}
+                  className="absolute left-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-card/90 p-2 shadow-md hover:bg-card sm:block"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next banner"
+                  onClick={() => scrollHero(1)}
+                  className="absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-card/90 p-2 shadow-md hover:bg-card sm:block"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </>
+            ) : null}
+          </div>
+        ) : null}
       </section>
 
       {/* Category tiles */}
       <section className="mt-5 rounded-2xl bg-card p-4">
         <h2 className="mb-3 text-lg font-bold">Shop by category</h2>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-10">
-          {CATEGORY_TILES.map((c) => (
-            <Link
-              key={c.name}
-              to="/products"
-              search={{ q: undefined, category: c.name }}
-              className="flex flex-col items-center gap-2 rounded-xl bg-secondary p-2 text-center transition-colors hover:bg-accent"
-            >
-              <c.Icon className="h-6 w-6 text-primary" />
-              <span className="text-[11px] font-semibold leading-tight text-foreground">{c.name}</span>
-            </Link>
-          ))}
+          {(categories.data ?? []).map((name: string) => {
+            const Icon = CATEGORY_ICONS[name] ?? Tag;
+            return (
+              <Link
+                key={name}
+                to="/products"
+                search={{ q: undefined, category: name }}
+                className="flex flex-col items-center gap-2 rounded-xl bg-secondary p-2 text-center transition-colors hover:bg-accent"
+              >
+                <Icon className="h-6 w-6 text-primary" />
+                <span className="text-[11px] font-semibold leading-tight text-foreground">{name}</span>
+              </Link>
+            );
+          })}
         </div>
       </section>
+
 
       {/* Deals */}
       <section className="mt-5 rounded-2xl bg-card p-4">
