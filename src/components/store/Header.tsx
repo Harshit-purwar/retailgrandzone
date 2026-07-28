@@ -9,11 +9,12 @@ import {
   LogOut,
   MapPin,
   ChevronDown,
-  Zap,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
+import { useCategories } from "@/lib/categories";
 import { inr } from "@/lib/store-types";
+import logo from "@/assets/grandzone-logo.png.asset.json";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,35 +25,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const CATEGORIES = [
-  "Mobiles",
-  "Laptops",
-  "Audio",
-  "Fashion",
-  "Footwear",
-  "Appliances",
-  "Televisions",
-  "Kitchen",
-  "Bags",
-  "Wearables",
-];
-
 export function Header() {
   const { count, subtotal } = useCart();
   const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
+  const categories = useCategories();
 
   return (
     <header className="sticky top-0 z-50">
       <div className="bg-brand text-brand-foreground">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-foreground text-brand">
-              <Zap className="h-5 w-5 fill-current" />
+            <img
+              src={logo.url}
+              alt="The Grand Zone logo"
+              className="h-10 w-10 rounded-full object-cover"
+            />
+            <span className="text-xl font-extrabold leading-tight tracking-tight sm:text-2xl">
+              The Grand Zone
             </span>
-            <span className="text-2xl font-extrabold tracking-tight">The Grand Zone</span>
           </Link>
+
 
           <button
             type="button"
