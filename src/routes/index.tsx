@@ -79,6 +79,15 @@ function bannerTarget(banner: Banner) {
 function Home() {
   const navigate = useNavigate();
   const hero = useBanners("hero");
+  const categories = useCategories();
+  const heroScroller = useRef<HTMLDivElement>(null);
+
+  function scrollHero(direction: 1 | -1) {
+    const el = heroScroller.current;
+    if (!el) return;
+    el.scrollBy({ left: direction * el.clientWidth, behavior: "smooth" });
+  }
+
   const promo = useBanners("promo");
 
   const products = useQuery({
