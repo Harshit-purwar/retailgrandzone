@@ -363,9 +363,17 @@ function EditForm({
       }}
     >
       {fields.map(([key, label, type]) => (
-        <div key={key} className={type === "area" ? "sm:col-span-2" : ""}>
+        <div key={key} className={type === "area" || key === "image_url" ? "sm:col-span-2" : ""}>
           <Label htmlFor={key}>{label}</Label>
-          {type === "area" ? (
+          {key === "image_url" ? (
+            <ImageField value={String(row[key] ?? "")} onChange={(v) => onChange({ ...row, [key]: v })} />
+          ) : key === "category" || key === "link_category" ? (
+            <CategoryField
+              allowEmpty={key === "link_category"}
+              value={String(row[key] ?? "")}
+              onChange={(v) => onChange({ ...row, [key]: v })}
+            />
+          ) : type === "area" ? (
             <Textarea
               id={key}
               rows={4}
@@ -383,6 +391,7 @@ function EditForm({
           )}
         </div>
       ))}
+
       <label className="flex items-center gap-2 text-sm sm:col-span-2">
         <input
           type="checkbox"
