@@ -213,7 +213,7 @@ function ProductPage() {
                   <tbody>
                     {specs.map(([k, v], i) => (
                       <tr key={k} className={i % 2 ? "bg-muted/40" : ""}>
-                        <td className="w-48 px-3 py-2 align-top text-muted-foreground">{k}</td>
+                        <td className="w-32 px-3 py-2 align-top text-muted-foreground sm:w-48">{k}</td>
                         <td className="px-3 py-2">{v}</td>
                       </tr>
                     ))}
