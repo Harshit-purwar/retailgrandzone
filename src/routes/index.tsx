@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Banner, Product } from "@/lib/store-types";
+import { useCategories } from "@/lib/categories";
 import { ProductCard } from "@/components/store/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -15,20 +17,25 @@ import {
   CookingPot,
   Backpack,
   Watch,
+  Tag,
+  ChevronLeft,
+  ChevronRight,
+  type LucideIcon,
 } from "lucide-react";
 
-const CATEGORY_TILES = [
-  { name: "Mobiles", Icon: Smartphone },
-  { name: "Laptops", Icon: Laptop },
-  { name: "Audio", Icon: Headphones },
-  { name: "Fashion", Icon: Shirt },
-  { name: "Footwear", Icon: Footprints },
-  { name: "Appliances", Icon: WashingMachine },
-  { name: "Televisions", Icon: Tv },
-  { name: "Kitchen", Icon: CookingPot },
-  { name: "Bags", Icon: Backpack },
-  { name: "Wearables", Icon: Watch },
-];
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  Mobiles: Smartphone,
+  Laptops: Laptop,
+  Audio: Headphones,
+  Fashion: Shirt,
+  Footwear: Footprints,
+  Appliances: WashingMachine,
+  Televisions: Tv,
+  Kitchen: CookingPot,
+  Bags: Backpack,
+  Wearables: Watch,
+};
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
