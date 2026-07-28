@@ -421,7 +421,80 @@ function EditForm({
   );
 }
 
+function GalleryField({ value, onChange }: { value: string[]; onChange: (value: string[]) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [url, setUrl] = useState("");
+
+  async function pick(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setBusy(true);
+    try {
+      const urls = await Promise.all(Array.from(files).map((f) => uploadStoreImage(f)));
+      onChange([...value, ...urls]);
+      toast.success(`${urls.length} image${urls.length > 1 ? "s" : ""} uploaded`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      {value.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {value.map((src, i) => (
+            <div key={`${src}-${i}`} className="relative">
+              <img src={src} alt="" className="h-16 w-16 rounded-lg border border-border object-cover" />
+              <button
+                type="button"
+                aria-label="Remove image"
+                onClick={() => onChange(value.filter((_, idx) => idx !== i))}
+                className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-accent">
+          <Upload className="h-4 w-4" />
+          {busy ? "Uploading…" : "Choose files"}
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            disabled={busy}
+            onChange={(e) => pick(e.target.files)}
+          />
+        </label>
+        <Input
+          className="w-full sm:w-auto sm:flex-1"
+          placeholder="…or paste an image URL"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            if (!url.trim()) return;
+            onChange([...value, url.trim()]);
+            setUrl("");
+          }}
+        >
+          Add
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function ImageField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+
   const [busy, setBusy] = useState(false);
 
   async function pick(file: File | undefined) {
