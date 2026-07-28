@@ -47,6 +47,7 @@ const emptyProduct: AnyRecord = {
   price: 0,
   mrp: 0,
   image_url: "",
+  images: [] as string[],
   rating: 4.2,
   rating_count: 0,
   stock: 10,
@@ -122,6 +123,7 @@ function AdminPage() {
       price: Number(row.price),
       mrp: Number(row.mrp),
       image_url: row.image_url,
+      images: Array.isArray(row.images) ? (row.images as string[]).filter(Boolean) : [],
       rating: Number(row.rating),
       rating_count: Number(row.rating_count),
       stock: Number(row.stock),
@@ -190,7 +192,7 @@ function AdminPage() {
       <h1 className="mb-4 text-xl font-semibold">Admin panel</h1>
 
       <Tabs defaultValue="products" className="rounded-lg bg-card p-4">
-        <TabsList>
+        <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="banners">Banners</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
@@ -202,7 +204,7 @@ function AdminPage() {
           </Button>
           <div className="space-y-2">
             {(products.data ?? []).map((p) => (
-              <div key={p.id} className="flex items-center gap-3 rounded border border-border p-3">
+              <div key={p.id} className="flex flex-wrap items-center gap-3 rounded border border-border p-3">
                 <img src={p.image_url} alt={p.title} className="h-12 w-12 object-contain" />
                 <div className="flex-1 text-sm">
                   <p className="font-medium">{p.title}</p>
@@ -218,7 +220,9 @@ function AdminPage() {
                       kind: "product",
                       row: {
                         ...(p as unknown as AnyRecord),
+                        images: Array.isArray(p.images) ? (p.images as string[]) : [],
                         highlights: Array.isArray(p.highlights) ? (p.highlights as string[]).join("\n") : "",
+
                         specs:
                           p.specs && typeof p.specs === "object"
                             ? Object.entries(p.specs as Record<string, unknown>)
@@ -245,7 +249,7 @@ function AdminPage() {
           </Button>
           <div className="space-y-2">
             {(banners.data ?? []).map((b) => (
-              <div key={b.id} className="flex items-center gap-3 rounded border border-border p-3">
+              <div key={b.id} className="flex flex-wrap items-center gap-3 rounded border border-border p-3">
                 <img src={b.image_url} alt={b.title} className="h-12 w-20 rounded object-cover" />
                 <div className="flex-1 text-sm">
                   <p className="font-medium">{b.title}</p>
@@ -281,7 +285,7 @@ function AdminPage() {
                 </div>
                 <span className="font-semibold">{inr(Number(o.total))}</span>
                 <Select value={o.status} onValueChange={(v) => setOrderStatus(o.id, v)}>
-                  <SelectTrigger className="w-44">
+                  <SelectTrigger className="w-full sm:w-44">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -328,14 +332,16 @@ function EditForm({
   onChange: (row: AnyRecord) => void;
   onSave: () => void;
 }) {
-  const fields: [string, string, "text" | "number" | "area"][] =
+  const fields: [string, string, "text" | "number" | "area" | "gallery"][] =
     kind === "product"
       ? [
           ["title", "Title", "text"],
           ["slug", "Slug", "text"],
           ["brand", "Brand", "text"],
           ["category", "Category", "text"],
-          ["image_url", "Image URL", "text"],
+          ["image_url", "Main image", "text"],
+          ["images", "More images (gallery)", "gallery"],
+
           ["price", "Price", "number"],
           ["mrp", "MRP", "number"],
           ["rating", "Rating", "number"],
@@ -365,11 +371,17 @@ function EditForm({
       }}
     >
       {fields.map(([key, label, type]) => (
-        <div key={key} className={type === "area" || key === "image_url" ? "sm:col-span-2" : ""}>
+        <div key={key} className={type === "area" || type === "gallery" || key === "image_url" ? "sm:col-span-2" : ""}>
           <Label htmlFor={key}>{label}</Label>
-          {key === "image_url" ? (
+          {type === "gallery" ? (
+            <GalleryField
+              value={Array.isArray(row[key]) ? (row[key] as string[]) : []}
+              onChange={(v) => onChange({ ...row, [key]: v })}
+            />
+          ) : key === "image_url" ? (
             <ImageField value={String(row[key] ?? "")} onChange={(v) => onChange({ ...row, [key]: v })} />
           ) : key === "category" || key === "link_category" ? (
+
             <CategoryField
               allowEmpty={key === "link_category"}
               value={String(row[key] ?? "")}
@@ -409,7 +421,80 @@ function EditForm({
   );
 }
 
+function GalleryField({ value, onChange }: { value: string[]; onChange: (value: string[]) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [url, setUrl] = useState("");
+
+  async function pick(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setBusy(true);
+    try {
+      const urls = await Promise.all(Array.from(files).map((f) => uploadStoreImage(f)));
+      onChange([...value, ...urls]);
+      toast.success(`${urls.length} image${urls.length > 1 ? "s" : ""} uploaded`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      {value.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {value.map((src, i) => (
+            <div key={`${src}-${i}`} className="relative">
+              <img src={src} alt="" className="h-16 w-16 rounded-lg border border-border object-cover" />
+              <button
+                type="button"
+                aria-label="Remove image"
+                onClick={() => onChange(value.filter((_, idx) => idx !== i))}
+                className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-accent">
+          <Upload className="h-4 w-4" />
+          {busy ? "Uploading…" : "Choose files"}
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            disabled={busy}
+            onChange={(e) => pick(e.target.files)}
+          />
+        </label>
+        <Input
+          className="w-full sm:w-auto sm:flex-1"
+          placeholder="…or paste an image URL"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            if (!url.trim()) return;
+            onChange([...value, url.trim()]);
+            setUrl("");
+          }}
+        >
+          Add
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function ImageField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+
   const [busy, setBusy] = useState(false);
 
   async function pick(file: File | undefined) {

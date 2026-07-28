@@ -60,7 +60,7 @@ export function Header() {
             <ChevronDown className="h-4 w-4" />
           </button>
 
-          <div className="order-3 flex w-full flex-1 items-center md:order-2 md:w-auto md:max-w-2xl">
+          <div className="order-3 flex w-full basis-full shrink-0 items-center md:order-2 md:w-auto md:flex-1 md:basis-auto md:max-w-2xl">
             <form
               className="flex w-full items-center rounded-xl border border-border bg-card px-3 py-2.5 shadow-sm"
               onSubmit={(e) => {

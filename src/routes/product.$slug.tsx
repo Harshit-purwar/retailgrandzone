@@ -114,11 +114,38 @@ function ProductPage() {
         <span>{product.title}</span>
       </nav>
 
-      <div className="grid gap-6 rounded-lg bg-card p-4 lg:grid-cols-[420px_1fr]">
+      <div className="grid gap-6 rounded-lg bg-card p-3 sm:p-4 lg:grid-cols-[420px_1fr]">
         <div className="lg:sticky lg:top-32 lg:self-start">
-          <div className="rounded border border-border bg-white p-4">
-            <img src={gallery[0]} alt={product.title} className="mx-auto h-80 w-full object-contain" />
+          <div className="rounded border border-border bg-white p-3 sm:p-4">
+            <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {gallery.map((src, i) => (
+                <img
+                  key={`${src}-${i}`}
+                  id={`gallery-${i}`}
+                  src={src}
+                  alt={`${product.title} image ${i + 1}`}
+                  className="mx-auto h-64 w-full shrink-0 snap-center object-contain sm:h-80"
+                />
+              ))}
+            </div>
           </div>
+          {gallery.length > 1 ? (
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {gallery.map((src, i) => (
+                <button
+                  key={`thumb-${src}-${i}`}
+                  type="button"
+                  onClick={() =>
+                    document.getElementById(`gallery-${i}`)?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
+                  }
+                  className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-white"
+                >
+                  <img src={src} alt="" className="h-full w-full object-contain" />
+                </button>
+              ))}
+            </div>
+          ) : null}
+
           <div className="mt-4 grid grid-cols-2 gap-3">
             <Button
               size="lg"
@@ -186,7 +213,7 @@ function ProductPage() {
                   <tbody>
                     {specs.map(([k, v], i) => (
                       <tr key={k} className={i % 2 ? "bg-muted/40" : ""}>
-                        <td className="w-48 px-3 py-2 align-top text-muted-foreground">{k}</td>
+                        <td className="w-32 px-3 py-2 align-top text-muted-foreground sm:w-48">{k}</td>
                         <td className="px-3 py-2">{v}</td>
                       </tr>
                     ))}
