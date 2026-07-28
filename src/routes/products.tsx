@@ -15,10 +15,10 @@ export const Route = createFileRoute("/products")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "All products — ShopKart" },
-      { name: "description", content: "Browse every product on ShopKart by category, brand and price." },
-      { property: "og:title", content: "All products — ShopKart" },
-      { property: "og:description", content: "Browse every product on ShopKart by category, brand and price." },
+      { title: "All products — The Grand Zone" },
+      { name: "description", content: "Browse every product on The Grand Zone by category, brand and price." },
+      { property: "og:title", content: "All products — The Grand Zone" },
+      { property: "og:description", content: "Browse every product on The Grand Zone by category, brand and price." },
     ],
   }),
   component: ProductsPage,

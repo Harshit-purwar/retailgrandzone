@@ -9,10 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const Route = createFileRoute("/order/$id")({
   head: () => ({
     meta: [
-      { title: "Order confirmed — ShopKart" },
-      { name: "description", content: "Track your ShopKart order status, items and delivery address." },
-      { property: "og:title", content: "Order confirmed — ShopKart" },
-      { property: "og:description", content: "Track your ShopKart order status, items and delivery address." },
+      { title: "Order confirmed — The Grand Zone" },
+      { name: "description", content: "Track your The Grand Zone order status, items and delivery address." },
+      { property: "og:title", content: "Order confirmed — The Grand Zone" },
+      { property: "og:description", content: "Track your The Grand Zone order status, items and delivery address." },
     ],
   }),
   component: OrderPage,

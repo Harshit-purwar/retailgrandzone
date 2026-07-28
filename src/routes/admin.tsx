@@ -24,11 +24,11 @@ import {
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin panel — ShopKart" },
-      { name: "description", content: "Manage ShopKart products, banners and customer orders." },
+      { title: "Admin panel — The Grand Zone" },
+      { name: "description", content: "Manage The Grand Zone products, banners and customer orders." },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Admin panel — ShopKart" },
-      { property: "og:description", content: "Manage ShopKart products, banners and customer orders." },
+      { property: "og:title", content: "Admin panel — The Grand Zone" },
+      { property: "og:description", content: "Manage The Grand Zone products, banners and customer orders." },
     ],
   }),
   component: AdminPage,

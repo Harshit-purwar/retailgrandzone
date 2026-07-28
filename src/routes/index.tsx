@@ -33,12 +33,12 @@ const CATEGORY_TILES = [
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "ShopKart — Online Shopping for Mobiles, Fashion & Appliances" },
+      { title: "The Grand Zone — Online Shopping for Mobiles, Fashion & Appliances" },
       {
         name: "description",
-        content: "Browse the latest deals on mobiles, laptops, audio, fashion, footwear and home appliances at ShopKart.",
+        content: "Browse the latest deals on mobiles, laptops, audio, fashion, footwear and home appliances at The Grand Zone.",
       },
-      { property: "og:title", content: "ShopKart — Online Shopping" },
+      { property: "og:title", content: "The Grand Zone — Online Shopping" },
       { property: "og:description", content: "Deals on mobiles, laptops, audio, fashion and appliances." },
     ],
   }),
@@ -92,7 +92,7 @@ function Home() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-4">
-      <h1 className="sr-only">ShopKart online shopping</h1>
+      <h1 className="sr-only">The Grand Zone online shopping</h1>
 
       {/* Hero banners */}
       <section className="space-y-3">

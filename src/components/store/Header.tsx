@@ -51,7 +51,7 @@ export function Header() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-foreground text-brand">
               <Zap className="h-5 w-5 fill-current" />
             </span>
-            <span className="text-2xl font-extrabold tracking-tight">ShopKart</span>
+            <span className="text-2xl font-extrabold tracking-tight">The Grand Zone</span>
           </Link>
 
           <button
@@ -175,7 +175,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:grid-cols-3">
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-foreground">About</p>
-          <p>ShopKart delivers everyday essentials and gadgets to your door in minutes.</p>
+          <p>The Grand Zone delivers everyday essentials and gadgets to your door in minutes.</p>
         </div>
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-foreground">Help</p>

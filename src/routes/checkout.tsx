@@ -13,9 +13,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
-      { title: "Checkout — ShopKart" },
-      { name: "description", content: "Enter your delivery address and payment method to place your ShopKart order." },
-      { property: "og:title", content: "Checkout — ShopKart" },
+      { title: "Checkout — The Grand Zone" },
+      { name: "description", content: "Enter your delivery address and payment method to place your The Grand Zone order." },
+      { property: "og:title", content: "Checkout — The Grand Zone" },
       { property: "og:description", content: "Enter delivery address and payment method to place your order." },
     ],
   }),
