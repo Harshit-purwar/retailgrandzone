@@ -5,10 +5,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { inr } from "@/lib/store-types";
+import { createRazorpayOrder, verifyRazorpayPayment } from "@/lib/razorpay.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
+  }
+}
+
+function loadRazorpayScript(): Promise<boolean> {
+  if (typeof window === "undefined") return Promise.resolve(false);
+  if (window.Razorpay) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -53,6 +73,39 @@ function CheckoutPage() {
     return (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [key]: e.target.value }));
   }
 
+  async function payWithRazorpay(orderId: string) {
+    const ok = await loadRazorpayScript();
+    if (!ok || !window.Razorpay) throw new Error("Could not load Razorpay checkout");
+    const rzp = await createRazorpayOrder({ data: { orderId } });
+
+    await new Promise<void>((resolve, reject) => {
+      const checkout = new window.Razorpay!({
+        key: rzp.keyId,
+        amount: rzp.amount,
+        currency: "INR",
+        name: "The Grand Zone",
+        description: "Order payment",
+        order_id: rzp.razorpayOrderId,
+        prefill: { name: form.full_name, contact: form.phone, email: user?.email ?? "" },
+        theme: { color: "#0d0d0d" },
+        modal: { ondismiss: () => reject(new Error("Payment cancelled")) },
+        handler: (response: Record<string, string>) => {
+          verifyRazorpayPayment({
+            data: {
+              orderId,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            },
+          })
+            .then(() => resolve())
+            .catch(reject);
+        },
+      });
+      checkout.open();
+    });
+  }
+
   async function placeOrder() {
     if (!user) return;
     setBusy(true);
@@ -69,7 +122,7 @@ function CheckoutPage() {
         pincode: form.pincode,
         total,
         payment_method: payment,
-        payment_status: payment === "COD" ? "Pending" : "Paid",
+        payment_status: "Pending",
         status: "Ordered",
       })
       .select()
@@ -90,13 +143,28 @@ function CheckoutPage() {
         quantity: l.quantity,
       })),
     );
-    setBusy(false);
-    if (itemsError) return toast.error(itemsError.message);
+    if (itemsError) {
+      setBusy(false);
+      return toast.error(itemsError.message);
+    }
 
+    if (payment === "RAZORPAY") {
+      try {
+        await payWithRazorpay(order.id);
+        toast.success("Payment successful!");
+      } catch (err) {
+        setBusy(false);
+        return toast.error(err instanceof Error ? err.message : "Payment failed");
+      }
+    } else {
+      toast.success("Order placed!");
+    }
+
+    setBusy(false);
     clear();
-    toast.success("Order placed!");
     navigate({ to: "/order/$id", params: { id: order.id } });
   }
+
 
   return (
     <div className="mx-auto grid max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[1fr_360px]">
@@ -167,8 +235,8 @@ function CheckoutPage() {
             <div className="p-4">
               <RadioGroup value={payment} onValueChange={setPayment} className="space-y-3">
                 {[
+                  { v: "RAZORPAY", l: "Pay online (Razorpay)", d: "UPI, cards, netbanking & wallets — secure payment" },
                   { v: "COD", l: "Cash on delivery", d: "Pay in cash when the order arrives" },
-
                 ].map((o) => (
                   <label
                     key={o.v}
