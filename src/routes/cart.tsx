@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Trash2, Minus, Plus } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { inr } from "@/lib/store-types";
+import { deliveryFeeFor, useStoreSettings } from "@/lib/store-settings";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/cart")({
@@ -19,7 +20,9 @@ export const Route = createFileRoute("/cart")({
 function CartPage() {
   const { lines, subtotal, setQuantity, remove } = useCart();
   const navigate = useNavigate();
-  const delivery = subtotal > 0 && subtotal < 500 ? 40 : 0;
+  const settings = useStoreSettings();
+  const delivery = deliveryFeeFor(subtotal, settings.data);
+
 
   if (lines.length === 0) {
     return (
