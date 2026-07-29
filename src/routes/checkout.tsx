@@ -292,7 +292,7 @@ function CheckoutPage() {
         </section>
       </div>
 
-      <aside className="h-fit rounded-lg bg-card p-4 lg:sticky lg:top-32">
+      <aside className="h-fit rounded-2xl bg-card p-4 shadow-sm lg:sticky lg:top-32">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Price details</h2>
         <div className="space-y-2 text-sm">
           {lines.map((l) => (
@@ -303,16 +303,55 @@ function CheckoutPage() {
               <span>{inr(l.price * l.quantity)}</span>
             </div>
           ))}
+          {discount > 0 ? (
+            <div className="flex justify-between border-t border-dashed border-border pt-2 text-[var(--deal)]">
+              <span>Coupon {coupon?.code}</span>
+              <span>− {inr(discount)}</span>
+            </div>
+          ) : null}
           <div className="flex justify-between border-t border-dashed border-border pt-2">
             <span>Delivery</span>
             <span className={delivery ? "" : "text-[var(--deal)]"}>{delivery ? inr(delivery) : "FREE"}</span>
           </div>
         </div>
+
+        <div className="mt-4 rounded-xl border border-dashed border-border p-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Coupon code</p>
+          {coupon ? (
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="font-semibold">{coupon.code} applied</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setCoupon(null);
+                  setCouponInput("");
+                }}
+              >
+                Remove
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                placeholder="Enter code (optional)"
+                aria-label="Coupon code"
+              />
+              <Button type="button" variant="outline" disabled={couponBusy} onClick={applyCoupon}>
+                {couponBusy ? "…" : "Apply"}
+              </Button>
+            </div>
+          )}
+        </div>
+
         <div className="mt-3 flex justify-between border-t border-border pt-3 text-base font-semibold">
           <span>Total</span>
           <span>{inr(total)}</span>
         </div>
       </aside>
+
     </div>
   );
 }
