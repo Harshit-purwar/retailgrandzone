@@ -9,6 +9,7 @@ import { BASE_CATEGORIES, useCategories } from "@/lib/categories";
 import { uploadStoreImage } from "@/lib/storage-upload";
 import type { Banner, Order, Product } from "@/lib/store-types";
 import { ORDER_STATUSES, inr } from "@/lib/store-types";
+import { CouponsTab, DeliveryTab } from "@/components/admin/StoreConfigTabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -196,6 +197,8 @@ function AdminPage() {
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="banners">Banners</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsTrigger value="coupons">Coupons</TabsTrigger>
+          <TabsTrigger value="delivery">Delivery</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="pt-4">
@@ -299,6 +302,14 @@ function AdminPage() {
               </div>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="coupons" className="pt-4">
+          <CouponsTab />
+        </TabsContent>
+
+        <TabsContent value="delivery" className="pt-4">
+          <DeliveryTab />
         </TabsContent>
       </Tabs>
 
