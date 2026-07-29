@@ -73,6 +73,39 @@ function CheckoutPage() {
     return (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [key]: e.target.value }));
   }
 
+  async function payWithRazorpay(orderId: string) {
+    const ok = await loadRazorpayScript();
+    if (!ok || !window.Razorpay) throw new Error("Could not load Razorpay checkout");
+    const rzp = await createRazorpayOrder({ data: { orderId } });
+
+    await new Promise<void>((resolve, reject) => {
+      const checkout = new window.Razorpay!({
+        key: rzp.keyId,
+        amount: rzp.amount,
+        currency: "INR",
+        name: "The Grand Zone",
+        description: "Order payment",
+        order_id: rzp.razorpayOrderId,
+        prefill: { name: form.full_name, contact: form.phone, email: user?.email ?? "" },
+        theme: { color: "#0d0d0d" },
+        modal: { ondismiss: () => reject(new Error("Payment cancelled")) },
+        handler: (response: Record<string, string>) => {
+          verifyRazorpayPayment({
+            data: {
+              orderId,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            },
+          })
+            .then(() => resolve())
+            .catch(reject);
+        },
+      });
+      checkout.open();
+    });
+  }
+
   async function placeOrder() {
     if (!user) return;
     setBusy(true);
@@ -89,7 +122,7 @@ function CheckoutPage() {
         pincode: form.pincode,
         total,
         payment_method: payment,
-        payment_status: payment === "COD" ? "Pending" : "Paid",
+        payment_status: "Pending",
         status: "Ordered",
       })
       .select()
@@ -110,13 +143,28 @@ function CheckoutPage() {
         quantity: l.quantity,
       })),
     );
-    setBusy(false);
-    if (itemsError) return toast.error(itemsError.message);
+    if (itemsError) {
+      setBusy(false);
+      return toast.error(itemsError.message);
+    }
 
+    if (payment === "RAZORPAY") {
+      try {
+        await payWithRazorpay(order.id);
+        toast.success("Payment successful!");
+      } catch (err) {
+        setBusy(false);
+        return toast.error(err instanceof Error ? err.message : "Payment failed");
+      }
+    } else {
+      toast.success("Order placed!");
+    }
+
+    setBusy(false);
     clear();
-    toast.success("Order placed!");
     navigate({ to: "/order/$id", params: { id: order.id } });
   }
+
 
   return (
     <div className="mx-auto grid max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[1fr_360px]">
