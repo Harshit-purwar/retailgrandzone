@@ -57,9 +57,31 @@ function CheckoutPage() {
     pincode: "",
   });
   const [payment, setPayment] = useState("COD");
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<Coupon | null>(null);
+  const [couponBusy, setCouponBusy] = useState(false);
 
-  const delivery = subtotal > 0 && subtotal < 500 ? 40 : 0;
-  const total = subtotal + delivery;
+  const settings = useStoreSettings();
+  const discount = couponDiscount(subtotal, coupon);
+  const baseDelivery = deliveryFeeFor(subtotal, settings.data);
+  const delivery = coupon?.free_delivery ? 0 : baseDelivery;
+  const total = Math.max(0, subtotal - discount + delivery);
+
+  async function applyCoupon() {
+    if (!couponInput.trim()) return;
+    setCouponBusy(true);
+    try {
+      const found = await fetchCoupon(couponInput, subtotal);
+      setCoupon(found);
+      toast.success(`Coupon ${found.code} applied`);
+    } catch (err) {
+      setCoupon(null);
+      toast.error(err instanceof Error ? err.message : "Invalid coupon");
+    } finally {
+      setCouponBusy(false);
+    }
+  }
+
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", search: { redirect: "/checkout" }, replace: true });
