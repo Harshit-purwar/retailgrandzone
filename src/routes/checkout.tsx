@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { inr } from "@/lib/store-types";
 import { createRazorpayOrder, verifyRazorpayPayment } from "@/lib/razorpay.functions";
+import type { Coupon } from "@/lib/store-settings";
+import { couponDiscount, deliveryFeeFor, fetchCoupon, useStoreSettings } from "@/lib/store-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
