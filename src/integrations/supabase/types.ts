@@ -64,6 +64,45 @@ export type Database = {
           },
         ]
       }
+      coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          discount_type: string
+          expires_at: string | null
+          free_delivery: boolean
+          id: string
+          max_discount: number
+          min_order: number
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          discount_type?: string
+          expires_at?: string | null
+          free_delivery?: boolean
+          id?: string
+          max_discount?: number
+          min_order?: number
+          value?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          discount_type?: string
+          expires_at?: string | null
+          free_delivery?: boolean
+          id?: string
+          max_discount?: number
+          min_order?: number
+          value?: number
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           id: string
@@ -113,7 +152,10 @@ export type Database = {
         Row: {
           address_line: string
           city: string
+          coupon_code: string | null
           created_at: string
+          delivery_fee: number
+          discount: number
           email: string | null
           full_name: string
           id: string
@@ -129,7 +171,10 @@ export type Database = {
         Insert: {
           address_line: string
           city: string
+          coupon_code?: string | null
           created_at?: string
+          delivery_fee?: number
+          discount?: number
           email?: string | null
           full_name: string
           id?: string
@@ -145,7 +190,10 @@ export type Database = {
         Update: {
           address_line?: string
           city?: string
+          coupon_code?: string | null
           created_at?: string
+          delivery_fee?: number
+          discount?: number
           email?: string | null
           full_name?: string
           id?: string
@@ -238,6 +286,30 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+        }
+        Relationships: []
+      }
+      store_settings: {
+        Row: {
+          delivery_fee: number
+          delivery_fee_enabled: boolean
+          free_delivery_above: number
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          delivery_fee?: number
+          delivery_fee_enabled?: boolean
+          free_delivery_above?: number
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          delivery_fee?: number
+          delivery_fee_enabled?: boolean
+          free_delivery_above?: number
+          id?: string
+          updated_at?: string
         }
         Relationships: []
       }

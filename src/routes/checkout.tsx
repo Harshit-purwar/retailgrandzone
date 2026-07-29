@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { inr } from "@/lib/store-types";
 import { createRazorpayOrder, verifyRazorpayPayment } from "@/lib/razorpay.functions";
+import type { Coupon } from "@/lib/store-settings";
+import { couponDiscount, deliveryFeeFor, fetchCoupon, useStoreSettings } from "@/lib/store-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,9 +59,31 @@ function CheckoutPage() {
     pincode: "",
   });
   const [payment, setPayment] = useState("COD");
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<Coupon | null>(null);
+  const [couponBusy, setCouponBusy] = useState(false);
 
-  const delivery = subtotal > 0 && subtotal < 500 ? 40 : 0;
-  const total = subtotal + delivery;
+  const settings = useStoreSettings();
+  const discount = couponDiscount(subtotal, coupon);
+  const baseDelivery = deliveryFeeFor(subtotal, settings.data);
+  const delivery = coupon?.free_delivery ? 0 : baseDelivery;
+  const total = Math.max(0, subtotal - discount + delivery);
+
+  async function applyCoupon() {
+    if (!couponInput.trim()) return;
+    setCouponBusy(true);
+    try {
+      const found = await fetchCoupon(couponInput, subtotal);
+      setCoupon(found);
+      toast.success(`Coupon ${found.code} applied`);
+    } catch (err) {
+      setCoupon(null);
+      toast.error(err instanceof Error ? err.message : "Invalid coupon");
+    } finally {
+      setCouponBusy(false);
+    }
+  }
+
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", search: { redirect: "/checkout" }, replace: true });
@@ -121,6 +145,9 @@ function CheckoutPage() {
         state: form.state,
         pincode: form.pincode,
         total,
+        coupon_code: coupon?.code ?? null,
+        discount,
+        delivery_fee: delivery,
         payment_method: payment,
         payment_status: "Pending",
         status: "Ordered",
@@ -265,7 +292,7 @@ function CheckoutPage() {
         </section>
       </div>
 
-      <aside className="h-fit rounded-lg bg-card p-4 lg:sticky lg:top-32">
+      <aside className="h-fit rounded-2xl bg-card p-4 shadow-sm lg:sticky lg:top-32">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Price details</h2>
         <div className="space-y-2 text-sm">
           {lines.map((l) => (
@@ -276,16 +303,55 @@ function CheckoutPage() {
               <span>{inr(l.price * l.quantity)}</span>
             </div>
           ))}
+          {discount > 0 ? (
+            <div className="flex justify-between border-t border-dashed border-border pt-2 text-[var(--deal)]">
+              <span>Coupon {coupon?.code}</span>
+              <span>− {inr(discount)}</span>
+            </div>
+          ) : null}
           <div className="flex justify-between border-t border-dashed border-border pt-2">
             <span>Delivery</span>
             <span className={delivery ? "" : "text-[var(--deal)]"}>{delivery ? inr(delivery) : "FREE"}</span>
           </div>
         </div>
+
+        <div className="mt-4 rounded-xl border border-dashed border-border p-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Coupon code</p>
+          {coupon ? (
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="font-semibold">{coupon.code} applied</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setCoupon(null);
+                  setCouponInput("");
+                }}
+              >
+                Remove
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                placeholder="Enter code (optional)"
+                aria-label="Coupon code"
+              />
+              <Button type="button" variant="outline" disabled={couponBusy} onClick={applyCoupon}>
+                {couponBusy ? "…" : "Apply"}
+              </Button>
+            </div>
+          )}
+        </div>
+
         <div className="mt-3 flex justify-between border-t border-border pt-3 text-base font-semibold">
           <span>Total</span>
           <span>{inr(total)}</span>
         </div>
       </aside>
+
     </div>
   );
 }
