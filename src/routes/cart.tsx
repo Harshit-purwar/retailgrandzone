@@ -43,41 +43,48 @@ function CartPage() {
   }
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[1fr_360px]">
-      <div className="rounded-lg bg-card">
-        <h1 className="border-b border-border px-4 py-3 text-lg font-semibold">My Cart ({lines.length})</h1>
+    <div className="mx-auto grid max-w-7xl gap-4 px-3 pb-28 pt-3 sm:px-4 sm:py-4 lg:grid-cols-[1fr_360px] lg:pb-8">
+      <div className="overflow-hidden rounded-2xl bg-card shadow-sm">
+        <h1 className="border-b border-border px-4 py-3 text-base font-semibold sm:text-lg">
+          My Cart ({lines.length})
+        </h1>
         {lines.map((l) => (
-          <div key={l.productId} className="flex gap-4 border-b border-border p-4">
-            <img src={l.image_url} alt={l.title} className="h-24 w-24 shrink-0 object-contain" />
-            <div className="flex-1">
+          <div key={l.productId} className="flex gap-3 border-b border-border p-3 last:border-0 sm:gap-4 sm:p-4">
+            <img
+              src={l.image_url}
+              alt={l.title}
+              loading="lazy"
+              className="h-20 w-20 shrink-0 rounded-xl bg-muted/40 object-contain sm:h-24 sm:w-24"
+            />
+            <div className="min-w-0 flex-1">
               <Link
                 to="/product/$slug"
                 params={{ slug: l.slug ?? l.productId }}
-                className="text-sm font-medium hover:text-primary"
+                className="line-clamp-2 text-sm font-medium transition-colors hover:text-primary"
               >
                 {l.title}
               </Link>
-              <p className="mt-1 text-lg font-semibold">{inr(l.price)}</p>
-              <div className="mt-3 flex items-center gap-3">
-                <div className="flex items-center rounded border border-border">
+              <p className="mt-1 text-base font-semibold sm:text-lg">{inr(l.price)}</p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <div className="flex items-center rounded-full border border-border">
                   <button
                     aria-label="Decrease quantity"
-                    className="px-2 py-1"
+                    className="rounded-l-full px-3 py-1.5 transition-colors active:bg-muted"
                     onClick={() => setQuantity(l.productId, l.quantity - 1)}
                   >
                     <Minus className="h-4 w-4" />
                   </button>
-                  <span className="w-10 text-center text-sm">{l.quantity}</span>
+                  <span className="w-8 text-center text-sm font-semibold">{l.quantity}</span>
                   <button
                     aria-label="Increase quantity"
-                    className="px-2 py-1"
+                    className="rounded-r-full px-3 py-1.5 transition-colors active:bg-muted"
                     onClick={() => setQuantity(l.productId, l.quantity + 1)}
                   >
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
                 <button
-                  className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-destructive"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
                   onClick={() => remove(l.productId)}
                 >
                   <Trash2 className="h-4 w-4" /> Remove
@@ -88,7 +95,7 @@ function CartPage() {
         ))}
       </div>
 
-      <aside className="h-fit rounded-lg bg-card p-4 lg:sticky lg:top-32">
+      <aside className="h-fit rounded-2xl bg-card p-4 shadow-sm lg:sticky lg:top-32">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Price details</h2>
         <div className="space-y-2 border-b border-dashed border-border pb-3 text-sm">
           <div className="flex justify-between">
@@ -104,10 +111,32 @@ function CartPage() {
           <span>Total amount</span>
           <span>{inr(subtotal + delivery)}</span>
         </div>
-        <Button className="w-full bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90" size="lg" onClick={() => navigate({ to: "/checkout" })}>
+        <p className="mb-3 text-xs text-muted-foreground">Have a coupon? Apply it at checkout.</p>
+        <Button
+          className="hidden w-full bg-[var(--gold)] text-[var(--gold-foreground)] transition-transform hover:bg-[var(--gold)]/90 active:scale-[0.99] lg:flex"
+          size="lg"
+          onClick={() => navigate({ to: "/checkout" })}
+        >
           Place order
         </Button>
       </aside>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur lg:hidden">
+        <div className="mx-auto flex max-w-7xl items-center gap-3">
+          <div className="text-sm">
+            <p className="font-semibold leading-tight">{inr(subtotal + delivery)}</p>
+            <p className="text-xs leading-tight text-muted-foreground">{lines.length} items</p>
+          </div>
+          <Button
+            className="ml-auto flex-1 bg-[var(--gold)] text-[var(--gold-foreground)] transition-transform hover:bg-[var(--gold)]/90 active:scale-[0.99]"
+            size="lg"
+            onClick={() => navigate({ to: "/checkout" })}
+          >
+            Place order
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
+
