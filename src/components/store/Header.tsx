@@ -14,6 +14,7 @@ import {
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import { useCategories } from "@/lib/categories";
+import { categoryIcon } from "@/lib/category-icons";
 import { inr } from "@/lib/store-types";
 import logo from "@/assets/grandzone-logo.png.asset.json";
 import { Button } from "@/components/ui/button";
@@ -157,8 +158,9 @@ export function Header() {
           <Link
             to="/products"
             search={{ q: undefined, category: undefined }}
-            className="whitespace-nowrap rounded-full bg-muted px-3 py-1.5 text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-muted px-3 py-1.5 text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
           >
+            <LayoutGrid className="h-4 w-4 shrink-0" />
             All products
           </Link>
           {(categories.data ?? []).map((c: string) => {
