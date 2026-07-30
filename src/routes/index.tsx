@@ -3,38 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Banner, Product } from "@/lib/store-types";
-import { useCategories } from "@/lib/categories";
 import { ProductCard } from "@/components/store/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Smartphone,
-  Laptop,
-  Headphones,
-  Shirt,
-  Footprints,
-  WashingMachine,
-  Tv,
-  CookingPot,
-  Backpack,
-  Watch,
-  Tag,
-  ChevronLeft,
-  ChevronRight,
-  type LucideIcon,
-} from "lucide-react";
-
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  Mobiles: Smartphone,
-  Laptops: Laptop,
-  Audio: Headphones,
-  Fashion: Shirt,
-  Footwear: Footprints,
-  Appliances: WashingMachine,
-  Televisions: Tv,
-  Kitchen: CookingPot,
-  Bags: Backpack,
-  Wearables: Watch,
-};
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 
 export const Route = createFileRoute("/")({
@@ -79,7 +50,6 @@ function bannerTarget(banner: Banner) {
 function Home() {
   const navigate = useNavigate();
   const hero = useBanners("hero");
-  const categories = useCategories();
   const heroScroller = useRef<HTMLDivElement>(null);
 
   function scrollHero(direction: 1 | -1) {
