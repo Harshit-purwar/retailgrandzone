@@ -110,14 +110,39 @@ function Home() {
     <div className="mx-auto max-w-7xl px-4 py-4">
       <h1 className="sr-only">The Grand Zone online shopping</h1>
 
-      {/* Hero banners — scrollable image carousel */}
-      <section>
-        {hero.isLoading ? <Skeleton className="h-56 w-full rounded-2xl" /> : null}
+      {/* Hero banners — scrollable carousel (Blinkit-style cards on mobile) */}
+      <section className="-mx-4 sm:mx-0">
+        {hero.isLoading ? <Skeleton className="mx-4 h-44 rounded-2xl sm:mx-0 sm:h-72" /> : null}
         {(hero.data ?? []).length > 0 ? (
           <div className="relative">
+            {/* Mobile: compact swipeable tiles */}
+            <div className="flex snap-x gap-3 overflow-x-auto px-4 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:hidden [&::-webkit-scrollbar]:hidden">
+              {(hero.data ?? []).map((b) => {
+                const target = bannerTarget(b);
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => navigate(target as never)}
+                    className="relative w-[44%] shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm active:scale-[0.98]"
+                  >
+                    <img src={b.image_url} alt={b.title} className="aspect-[4/5] w-full object-cover" />
+                    <span className="absolute left-2 top-2 rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold text-brand-foreground">
+                      Featured
+                    </span>
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 pt-6 text-white">
+                      <p className="line-clamp-2 text-[13px] font-bold leading-tight">{b.title}</p>
+                      <p className="mt-0.5 line-clamp-1 text-[11px] opacity-85">{b.cta_text}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Desktop: full-width banner carousel */}
             <div
               ref={heroScroller}
-              className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="hidden snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] sm:flex [&::-webkit-scrollbar]:hidden"
             >
               {(hero.data ?? []).map((b) => {
                 const target = bannerTarget(b);
@@ -128,14 +153,14 @@ function Home() {
                     onClick={() => navigate(target as never)}
                     className="relative w-full shrink-0 snap-center overflow-hidden rounded-2xl text-left"
                   >
-                    <img src={b.image_url} alt={b.title} className="h-48 w-full object-cover sm:h-72" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent p-6 sm:p-10">
+                    <img src={b.image_url} alt={b.title} className="h-72 w-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent p-10">
                       <div className="max-w-md text-white">
                         <span className="inline-flex items-center rounded-full bg-brand px-3 py-1 text-xs font-bold text-brand-foreground">
                           Delivery in 12 minutes
                         </span>
-                        <h2 className="mt-3 text-2xl font-bold sm:text-4xl">{b.title}</h2>
-                        <p className="mt-2 text-sm opacity-90 sm:text-base">{b.subtitle}</p>
+                        <h2 className="mt-3 text-4xl font-bold">{b.title}</h2>
+                        <p className="mt-2 text-base opacity-90">{b.subtitle}</p>
                         <span className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
                           {b.cta_text}
                         </span>
@@ -169,6 +194,7 @@ function Home() {
           </div>
         ) : null}
       </section>
+
 
       {/* Category tiles */}
       <section className="mt-5 rounded-2xl bg-card p-4">
