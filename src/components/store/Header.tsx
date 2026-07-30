@@ -4,6 +4,7 @@ import {
   ShoppingCart,
   User,
   Search,
+  LayoutGrid,
   Package,
   LayoutDashboard,
   LogOut,
@@ -160,16 +161,20 @@ export function Header() {
           >
             All products
           </Link>
-          {(categories.data ?? []).map((c: string) => (
-            <Link
-              key={c}
-              to="/products"
-              search={{ q: undefined, category: c }}
-              className="whitespace-nowrap rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
-            >
-              {c}
-            </Link>
-          ))}
+          {(categories.data ?? []).map((c: string) => {
+            const Icon = categoryIcon(c);
+            return (
+              <Link
+                key={c}
+                to="/products"
+                search={{ q: undefined, category: c }}
+                className="flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+              >
+                <Icon className="h-4 w-4 shrink-0 text-primary" />
+                {c}
+              </Link>
+            );
+          })}
         </div>
       </nav>
     </header>

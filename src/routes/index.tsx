@@ -196,28 +196,6 @@ function Home() {
       </section>
 
 
-      {/* Category tiles */}
-      <section className="mt-5 rounded-2xl bg-card p-4">
-        <h2 className="mb-3 text-lg font-bold">Shop by category</h2>
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-10">
-          {(categories.data ?? []).map((name: string) => {
-            const Icon = CATEGORY_ICONS[name] ?? Tag;
-            return (
-              <Link
-                key={name}
-                to="/products"
-                search={{ q: undefined, category: name }}
-                className="flex flex-col items-center gap-2 rounded-xl bg-secondary p-2 text-center transition-colors hover:bg-accent"
-              >
-                <Icon className="h-6 w-6 text-primary" />
-                <span className="text-[11px] font-semibold leading-tight text-foreground">{name}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-
       {/* Deals */}
       <section className="mt-5 rounded-2xl bg-card p-4">
         <div className="mb-4 flex items-center justify-between">
