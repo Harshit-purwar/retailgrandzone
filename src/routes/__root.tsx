@@ -15,6 +15,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
 import { Header, Footer } from "@/components/store/Header";
 import { Toaster } from "@/components/ui/sonner";
+import { HelpChat } from "@/components/store/HelpChat";
 
 function NotFoundComponent() {
   return (
@@ -136,6 +137,7 @@ function RootComponent() {
               <Outlet />
             </main>
             <Footer />
+            <HelpChat />
           </div>
           <Toaster position="top-center" richColors />
         </CartProvider>

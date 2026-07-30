@@ -5,6 +5,9 @@ import {
   User,
   Search,
   LayoutGrid,
+  Mail,
+  Clock,
+  ShieldCheck,
   Package,
   LayoutDashboard,
   LogOut,
@@ -185,22 +188,79 @@ export function Header() {
 
 
 export function Footer() {
+  const year = new Date().getFullYear();
   return (
-    <footer className="mt-12 border-t border-border bg-card py-10 text-sm text-muted-foreground">
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:grid-cols-3">
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-foreground">About</p>
-          <p>The Grand Zone delivers everyday essentials and gadgets to your door in minutes.</p>
+    <footer className="mt-10 border-t border-border bg-card pb-24 pt-8 text-sm text-muted-foreground">
+      <div className="mx-auto max-w-7xl px-4">
+        <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <img src={logo.url} alt="The Grand Zone logo" className="h-9 w-9 rounded-full object-cover" />
+              <div>
+                <p className="text-sm font-extrabold text-foreground">The Grand Zone</p>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-gold">Best deals</p>
+              </div>
+            </div>
+            <p className="mt-3 leading-relaxed">
+              Everyday essentials, gadgets and fashion delivered to your door — genuine products, honest prices.
+            </p>
+          </div>
+
+          <div>
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-foreground">Shop</p>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/products" search={{ q: undefined, category: undefined }} className="hover:text-primary">
+                  All products
+                </Link>
+              </li>
+              <li>
+                <Link to="/cart" className="hover:text-primary">
+                  Your cart
+                </Link>
+              </li>
+              <li>
+                <Link to="/orders" className="hover:text-primary">
+                  Your orders
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-foreground">Help</p>
+            <ul className="space-y-2">
+              <li>Payments &amp; refunds</li>
+              <li>Shipping &amp; delivery</li>
+              <li>Cancellation &amp; returns</li>
+              <li>Coupons &amp; offers</li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-foreground">Contact</p>
+            <ul className="space-y-2">
+              <li className="flex items-center gap-2">
+                <Mail className="h-4 w-4 shrink-0 text-primary" />
+                <a href="mailto:purwarharshit3@gmail.com" className="hover:text-primary">
+                  purwarharshit3@gmail.com
+                </a>
+              </li>
+              <li className="flex items-center gap-2">
+                <Clock className="h-4 w-4 shrink-0 text-primary" />
+                Support 9 AM – 9 PM, all days
+              </li>
+              <li className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+                100% secure payments
+              </li>
+            </ul>
+          </div>
         </div>
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-foreground">Help</p>
-          <p>Payments · Shipping · Cancellation &amp; Returns · FAQ</p>
-        </div>
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-foreground">Shop</p>
-          <Link to="/products" search={{ q: undefined, category: undefined }} className="hover:text-primary">
-            Browse all products
-          </Link>
+
+        <div className="mt-8 flex flex-col gap-2 border-t border-border pt-4 text-xs sm:flex-row sm:items-center sm:justify-between">
+          <p>© {year} The Grand Zone. All rights reserved.</p>
+          <p>Cash on Delivery · UPI · Cards · Netbanking</p>
         </div>
       </div>
     </footer>
