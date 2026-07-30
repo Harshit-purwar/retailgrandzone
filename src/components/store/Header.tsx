@@ -5,6 +5,9 @@ import {
   User,
   Search,
   LayoutGrid,
+  Mail,
+  Clock,
+  ShieldCheck,
   Package,
   LayoutDashboard,
   LogOut,
@@ -192,7 +195,7 @@ export function Footer() {
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <div className="flex items-center gap-2">
-              <img src={logo.src} alt="The Grand Zone logo" className="h-9 w-9 rounded-full object-cover" />
+              <img src={logo.url} alt="The Grand Zone logo" className="h-9 w-9 rounded-full object-cover" />
               <div>
                 <p className="text-sm font-extrabold text-foreground">The Grand Zone</p>
                 <p className="text-[11px] font-semibold uppercase tracking-widest text-gold">Best deals</p>
