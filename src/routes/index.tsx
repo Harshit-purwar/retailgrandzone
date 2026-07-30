@@ -3,38 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Banner, Product } from "@/lib/store-types";
-import { useCategories } from "@/lib/categories";
 import { ProductCard } from "@/components/store/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Smartphone,
-  Laptop,
-  Headphones,
-  Shirt,
-  Footprints,
-  WashingMachine,
-  Tv,
-  CookingPot,
-  Backpack,
-  Watch,
-  Tag,
-  ChevronLeft,
-  ChevronRight,
-  type LucideIcon,
-} from "lucide-react";
-
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  Mobiles: Smartphone,
-  Laptops: Laptop,
-  Audio: Headphones,
-  Fashion: Shirt,
-  Footwear: Footprints,
-  Appliances: WashingMachine,
-  Televisions: Tv,
-  Kitchen: CookingPot,
-  Bags: Backpack,
-  Wearables: Watch,
-};
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 
 export const Route = createFileRoute("/")({
@@ -79,7 +50,6 @@ function bannerTarget(banner: Banner) {
 function Home() {
   const navigate = useNavigate();
   const hero = useBanners("hero");
-  const categories = useCategories();
   const heroScroller = useRef<HTMLDivElement>(null);
 
   function scrollHero(direction: 1 | -1) {
@@ -193,28 +163,6 @@ function Home() {
             ) : null}
           </div>
         ) : null}
-      </section>
-
-
-      {/* Category tiles */}
-      <section className="mt-5 rounded-2xl bg-card p-4">
-        <h2 className="mb-3 text-lg font-bold">Shop by category</h2>
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-10">
-          {(categories.data ?? []).map((name: string) => {
-            const Icon = CATEGORY_ICONS[name] ?? Tag;
-            return (
-              <Link
-                key={name}
-                to="/products"
-                search={{ q: undefined, category: name }}
-                className="flex flex-col items-center gap-2 rounded-xl bg-secondary p-2 text-center transition-colors hover:bg-accent"
-              >
-                <Icon className="h-6 w-6 text-primary" />
-                <span className="text-[11px] font-semibold leading-tight text-foreground">{name}</span>
-              </Link>
-            );
-          })}
-        </div>
       </section>
 
 
