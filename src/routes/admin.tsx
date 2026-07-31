@@ -10,6 +10,8 @@ import { uploadStoreImage } from "@/lib/storage-upload";
 import type { Banner, Order, Product } from "@/lib/store-types";
 import { ORDER_STATUSES, inr } from "@/lib/store-types";
 import { CouponsTab, DeliveryTab } from "@/components/admin/StoreConfigTabs";
+import { OrderDetailDialog } from "@/components/admin/OrderDetailDialog";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
