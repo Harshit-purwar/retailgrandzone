@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export const ADMIN_EMAIL = "purwarharshit3@gmail.com";
+/** Admin rights come from the server-side `user_roles` table, never from the email. */
 
 type AuthValue = {
   user: User | null;
