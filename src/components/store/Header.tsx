@@ -19,7 +19,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useCategories } from "@/lib/categories";
 import { categoryIcon } from "@/lib/category-icons";
 import { inr } from "@/lib/store-types";
-import logo from "@/assets/grandzone-logo.png.asset.json";
+import logo from "@/assets/grandzone-logo.png";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -44,7 +44,7 @@ export function Header() {
           <div className="flex items-center gap-2 sm:gap-3">
             <Link to="/" className="flex shrink-0 items-center gap-2">
               <img
-                src={logo.url}
+                src={logo}
                 alt="The Grand Zone logo"
                 className="h-9 w-9 rounded-full object-cover ring-1 ring-black/10 sm:h-11 sm:w-11"
               />
@@ -195,7 +195,7 @@ export function Footer() {
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <div className="flex items-center gap-2">
-              <img src={logo.url} alt="The Grand Zone logo" className="h-9 w-9 rounded-full object-cover" />
+              <img src={logo} alt="The Grand Zone logo" className="h-9 w-9 rounded-full object-cover" />
               <div>
                 <p className="text-sm font-extrabold text-foreground">The Grand Zone</p>
                 <p className="text-[11px] font-semibold uppercase tracking-widest text-gold">Best deals</p>
