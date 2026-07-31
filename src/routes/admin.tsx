@@ -10,6 +10,8 @@ import { uploadStoreImage } from "@/lib/storage-upload";
 import type { Banner, Order, Product } from "@/lib/store-types";
 import { ORDER_STATUSES, inr } from "@/lib/store-types";
 import { CouponsTab, DeliveryTab } from "@/components/admin/StoreConfigTabs";
+import { OrderDetailDialog } from "@/components/admin/OrderDetailDialog";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,6 +113,8 @@ function AdminPage() {
   });
 
   const [editing, setEditing] = useState<{ kind: "product" | "banner"; row: AnyRecord } | null>(null);
+  const [viewOrder, setViewOrder] = useState<Order | null>(null);
+
 
   if (!isAdmin) return null;
 
@@ -277,30 +281,43 @@ function AdminPage() {
               <p className="py-8 text-center text-muted-foreground">No orders yet.</p>
             ) : null}
             {(orders.data ?? []).map((o) => (
-              <div key={o.id} className="flex flex-wrap items-center gap-3 rounded border border-border p-3 text-sm">
+              <div
+                key={o.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setViewOrder(o)}
+                onKeyDown={(e) => e.key === "Enter" && setViewOrder(o)}
+                className="flex cursor-pointer flex-wrap items-center gap-3 rounded border border-border p-3 text-sm hover:bg-muted/50"
+              >
                 <div className="flex-1">
                   <p className="font-medium">
-                    {o.id.slice(0, 8).toUpperCase()} · {o.full_name}
+                    {o.id.slice(0, 8).toUpperCase()} · {o.full_name} · {o.phone}
                   </p>
                   <p className="text-muted-foreground">
-                    {o.city}, {o.state} — {o.pincode} · {o.payment_method} ({o.payment_status})
+                    {o.address_line}, {o.city}, {o.state} — {o.pincode}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {o.payment_method} ({o.payment_status}) · {new Date(o.created_at).toLocaleString("en-IN")}
                   </p>
                 </div>
                 <span className="font-semibold">{inr(Number(o.total))}</span>
-                <Select value={o.status} onValueChange={(v) => setOrderStatus(o.id, v)}>
-                  <SelectTrigger className="w-full sm:w-44">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ORDER_STATUSES.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div onClick={(e) => e.stopPropagation()} className="w-full sm:w-44">
+                  <Select value={o.status} onValueChange={(v) => setOrderStatus(o.id, v)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ORDER_STATUSES.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             ))}
+
           </div>
         </TabsContent>
 
@@ -328,6 +345,9 @@ function AdminPage() {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      <OrderDetailDialog order={viewOrder} onClose={() => setViewOrder(null)} />
+
     </div>
   );
 }

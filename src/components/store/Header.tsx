@@ -1,5 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
 import {
   ShoppingCart,
   User,
@@ -19,7 +21,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useCategories } from "@/lib/categories";
 import { categoryIcon } from "@/lib/category-icons";
 import { inr } from "@/lib/store-types";
-import logo from "@/assets/grandzone-logo.png.asset.json";
+import logo from "@/assets/grandzone-logo.png";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -36,6 +38,47 @@ export function Header() {
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
   const categories = useCategories();
+  const [place, setPlace] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("gz-location");
+    if (saved) setPlace(saved);
+  }, []);
+
+  function detectLocation() {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      toast.error("Location is not supported on this device");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`,
+          );
+          const json = (await res.json()) as { locality?: string; city?: string; principalSubdivision?: string };
+          const label =
+            [json.locality || json.city, json.principalSubdivision].filter(Boolean).join(", ") ||
+            `${latitude.toFixed(3)}, ${longitude.toFixed(3)}`;
+          setPlace(label);
+          localStorage.setItem("gz-location", label);
+        } catch {
+          toast.error("Could not read your location");
+        } finally {
+          setLocating(false);
+        }
+      },
+      () => {
+        setLocating(false);
+        toast.error("Location permission denied");
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  }
+
 
   return (
     <header className="sticky top-0 z-50 shadow-sm">
@@ -44,7 +87,7 @@ export function Header() {
           <div className="flex items-center gap-2 sm:gap-3">
             <Link to="/" className="flex shrink-0 items-center gap-2">
               <img
-                src={logo.url}
+                src={logo}
                 alt="The Grand Zone logo"
                 className="h-9 w-9 rounded-full object-cover ring-1 ring-black/10 sm:h-11 sm:w-11"
               />
@@ -58,15 +101,22 @@ export function Header() {
 
             <button
               type="button"
+              onClick={detectLocation}
+              disabled={locating}
               className="ml-4 hidden items-center gap-1.5 rounded-lg px-2 py-1 text-left text-sm transition-colors hover:bg-black/5 lg:flex"
             >
               <MapPin className="h-4 w-4 shrink-0" />
               <span>
-                <span className="block text-[13px] font-bold leading-tight">Delivery in 12 minutes</span>
-                <span className="block text-xs leading-tight opacity-75">Home · Sector 22, New Delhi</span>
+                <span className="block text-[13px] font-bold leading-tight">
+                  {locating ? "Detecting location…" : "Deliver to"}
+                </span>
+                <span className="block text-xs leading-tight opacity-75">
+                  {place ?? "Tap to use my current location"}
+                </span>
               </span>
               <ChevronDown className="h-4 w-4" />
             </button>
+
 
             <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
               {user ? (
@@ -195,7 +245,7 @@ export function Footer() {
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <div className="flex items-center gap-2">
-              <img src={logo.url} alt="The Grand Zone logo" className="h-9 w-9 rounded-full object-cover" />
+              <img src={logo} alt="The Grand Zone logo" className="h-9 w-9 rounded-full object-cover" />
               <div>
                 <p className="text-sm font-extrabold text-foreground">The Grand Zone</p>
                 <p className="text-[11px] font-semibold uppercase tracking-widest text-gold">Best deals</p>

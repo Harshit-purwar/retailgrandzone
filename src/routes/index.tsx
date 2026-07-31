@@ -186,27 +186,30 @@ function Home() {
       </section>
 
 
-      {/* Promo banners */}
-      <section className="mt-5 grid gap-3 sm:grid-cols-2">
-        {(promo.data ?? []).map((b) => {
-          const target = bannerTarget(b);
-          return (
-            <button
-              key={b.id}
-              type="button"
-              onClick={() => navigate(target as never)}
-              className="relative overflow-hidden rounded-2xl text-left"
-            >
-              <img src={b.image_url} alt={b.title} className="h-40 w-full object-cover" />
-              <div className="absolute inset-0 bg-black/45 p-5 text-white">
-                <h3 className="text-lg font-semibold">{b.title}</h3>
-                <p className="text-sm opacity-90">{b.subtitle}</p>
-                <span className="mt-3 inline-block text-sm font-semibold underline">{b.cta_text}</span>
-              </div>
-            </button>
-          );
-        })}
+      {/* Promo banners — horizontally scrollable */}
+      <section className="-mx-4 mt-5 sm:mx-0">
+        <div className="flex snap-x gap-3 overflow-x-auto px-4 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:px-0 [&::-webkit-scrollbar]:hidden">
+          {(promo.data ?? []).map((b) => {
+            const target = bannerTarget(b);
+            return (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => navigate(target as never)}
+                className="relative w-[80%] shrink-0 snap-start overflow-hidden rounded-2xl text-left active:scale-[0.98] sm:w-[48%]"
+              >
+                <img src={b.image_url} alt={b.title} className="h-40 w-full object-cover" />
+                <div className="absolute inset-0 bg-black/45 p-5 text-white">
+                  <h3 className="text-lg font-semibold">{b.title}</h3>
+                  <p className="text-sm opacity-90">{b.subtitle}</p>
+                  <span className="mt-3 inline-block text-sm font-semibold underline">{b.cta_text}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </section>
+
 
       {/* All products */}
       <section className="mt-5 rounded-2xl bg-card p-4">

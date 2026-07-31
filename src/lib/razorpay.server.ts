@@ -3,9 +3,15 @@
 function keys() {
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
-  if (!keyId || !keySecret) throw new Error("Razorpay keys are not configured");
-  return { keyId, keySecret };
+  const missing = [!keyId && "RAZORPAY_KEY_ID", !keySecret && "RAZORPAY_KEY_SECRET"].filter(Boolean);
+  if (missing.length) {
+    throw new Error(
+      `Online payment is unavailable: missing server environment variable(s) ${missing.join(", ")}. Add them to the deployment environment and redeploy.`,
+    );
+  }
+  return { keyId: keyId!, keySecret: keySecret! };
 }
+
 
 export async function createRemoteOrder(amountPaise: number, receipt: string) {
   const { keyId, keySecret } = keys();
