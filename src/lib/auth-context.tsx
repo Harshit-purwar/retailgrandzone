@@ -23,6 +23,7 @@ const AuthContext = createContext<AuthValue>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
@@ -36,17 +37,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  // Admin status is decided by the database (user_roles), not by any client-side value.
+  useEffect(() => {
+    const uid = session?.user?.id;
+    if (!uid) {
+      setIsAdmin(false);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setIsAdmin(!!data);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
+
   const value = useMemo<AuthValue>(
     () => ({
       user: session?.user ?? null,
       session,
       loading,
-      isAdmin: (session?.user?.email ?? "").toLowerCase() === ADMIN_EMAIL,
+      isAdmin,
       signOut: async () => {
         await supabase.auth.signOut();
       },
     }),
-    [session, loading],
+    [session, loading, isAdmin],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
