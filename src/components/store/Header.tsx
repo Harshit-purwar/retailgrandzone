@@ -36,6 +36,47 @@ export function Header() {
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
   const categories = useCategories();
+  const [place, setPlace] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("gz-location");
+    if (saved) setPlace(saved);
+  }, []);
+
+  function detectLocation() {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      toast.error("Location is not supported on this device");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`,
+          );
+          const json = (await res.json()) as { locality?: string; city?: string; principalSubdivision?: string };
+          const label =
+            [json.locality || json.city, json.principalSubdivision].filter(Boolean).join(", ") ||
+            `${latitude.toFixed(3)}, ${longitude.toFixed(3)}`;
+          setPlace(label);
+          localStorage.setItem("gz-location", label);
+        } catch {
+          toast.error("Could not read your location");
+        } finally {
+          setLocating(false);
+        }
+      },
+      () => {
+        setLocating(false);
+        toast.error("Location permission denied");
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  }
+
 
   return (
     <header className="sticky top-0 z-50 shadow-sm">
