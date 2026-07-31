@@ -343,6 +343,9 @@ function AdminPage() {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      <OrderDetailDialog order={viewOrder} onClose={() => setViewOrder(null)} />
+
     </div>
   );
 }
