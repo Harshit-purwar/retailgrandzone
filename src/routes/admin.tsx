@@ -111,6 +111,8 @@ function AdminPage() {
   });
 
   const [editing, setEditing] = useState<{ kind: "product" | "banner"; row: AnyRecord } | null>(null);
+  const [viewOrder, setViewOrder] = useState<Order | null>(null);
+
 
   if (!isAdmin) return null;
 
