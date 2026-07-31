@@ -58,15 +58,22 @@ export function Header() {
 
             <button
               type="button"
+              onClick={detectLocation}
+              disabled={locating}
               className="ml-4 hidden items-center gap-1.5 rounded-lg px-2 py-1 text-left text-sm transition-colors hover:bg-black/5 lg:flex"
             >
               <MapPin className="h-4 w-4 shrink-0" />
               <span>
-                <span className="block text-[13px] font-bold leading-tight">Delivery in 12 minutes</span>
-                <span className="block text-xs leading-tight opacity-75">Home · Sector 22, New Delhi</span>
+                <span className="block text-[13px] font-bold leading-tight">
+                  {locating ? "Detecting location…" : "Deliver to"}
+                </span>
+                <span className="block text-xs leading-tight opacity-75">
+                  {place ?? "Tap to use my current location"}
+                </span>
               </span>
               <ChevronDown className="h-4 w-4" />
             </button>
+
 
             <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
               {user ? (
