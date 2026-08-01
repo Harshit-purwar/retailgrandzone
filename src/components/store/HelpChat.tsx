@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, X, Send, Loader2, Sparkles } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { MessageCircle, X, Send, Loader2, Sparkles, Phone, LifeBuoy } from "lucide-react";
+import { supportPhone, useStoreSettings } from "@/lib/store-settings";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -9,6 +11,8 @@ const SUGGESTIONS = [
   "Cash on delivery available hai?",
   "How can I track my order?",
 ];
+
+const UNSURE = ["i don't know", "i do not know", "not sure", "sorry", "can't help", "cannot help", "unable to"];
 
 export function HelpChat() {
   const [open, setOpen] = useState(false);
