@@ -282,6 +282,9 @@ function AdminPage() {
         </TabsContent>
 
         <TabsContent value="orders" className="pt-4">
+          <Button className="mb-3" onClick={() => setNewOrderOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" /> New order
+          </Button>
           <div className="space-y-2">
             {(orders.data ?? []).length === 0 ? (
               <p className="py-8 text-center text-muted-foreground">No orders yet.</p>
@@ -325,6 +328,14 @@ function AdminPage() {
             ))}
 
           </div>
+        </TabsContent>
+
+        <TabsContent value="categories" className="pt-4">
+          <CategoriesTab />
+        </TabsContent>
+
+        <TabsContent value="help" className="pt-4">
+          <HelpRequestsTab />
         </TabsContent>
 
         <TabsContent value="coupons" className="pt-4">
