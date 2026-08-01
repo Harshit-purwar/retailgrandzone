@@ -89,6 +89,7 @@ function ProductPage() {
 
   const off = discountPercent(Number(product.price), Number(product.mrp));
   const highlights = toList(product.highlights);
+  const estimate = deliveryEstimate(settings.data, !!location);
   const specs = toSpecs(product.specs);
   const gallery = [product.image_url, ...toList(product.images)].filter(Boolean);
 
@@ -186,7 +187,7 @@ function ProductPage() {
             ) : null}
           </div>
           <p className="mt-1 text-sm text-[var(--deal)]">
-            {product.stock > 0 ? "In stock — free delivery in 2-4 days" : "Currently out of stock"}
+            {product.stock > 0 ? `In stock — estimated delivery: ${estimate}` : "Currently out of stock"}
           </p>
 
           {highlights.length > 0 ? (
