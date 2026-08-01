@@ -85,13 +85,23 @@ export function HelpChat() {
         }
       }
 
+      const lower = answer.toLowerCase();
+      const unsure = !answer || UNSURE.some((u) => lower.includes(u));
+      const fallback = `Need more help? Call us at ${phone}.`;
+
       if (!answer) {
         setMessages((prev) => {
           const copy = [...prev];
           copy[copy.length - 1] = {
             role: "assistant",
-            content: "Sorry, I couldn't answer that. Please try again.",
+            content: `Sorry, I couldn't answer that. ${fallback}`,
           };
+          return copy;
+        });
+      } else if (unsure && !answer.includes(phone)) {
+        setMessages((prev) => {
+          const copy = [...prev];
+          copy[copy.length - 1] = { role: "assistant", content: `${answer}\n\n${fallback}` };
           return copy;
         });
       }
@@ -99,7 +109,7 @@ export function HelpChat() {
       const message = err instanceof Error ? err.message : "Something went wrong.";
       setMessages((prev) => {
         const copy = [...prev];
-        copy[copy.length - 1] = { role: "assistant", content: message };
+        copy[copy.length - 1] = { role: "assistant", content: `${message}\n\nNeed more help? Call us at ${phone}.` };
         return copy;
       });
     } finally {
