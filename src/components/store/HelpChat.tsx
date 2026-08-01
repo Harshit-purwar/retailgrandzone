@@ -168,6 +168,24 @@ export function HelpChat() {
             ) : null}
           </div>
 
+          <div className="flex items-center gap-2 border-t border-border px-2 py-2">
+            <a
+              href={`tel:${phone}`}
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-brand px-3 py-2 text-xs font-bold text-brand-foreground"
+            >
+              <Phone className="h-3.5 w-3.5" /> Call {phone}
+            </a>
+            <Link
+              to="/help"
+              onClick={() => setOpen(false)}
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-semibold text-foreground hover:border-primary hover:text-primary"
+            >
+              <LifeBuoy className="h-3.5 w-3.5" /> Request help
+            </Link>
+          </div>
+
+
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
