@@ -365,6 +365,14 @@ function AdminPage() {
 
       <OrderDetailDialog order={viewOrder} onClose={() => setViewOrder(null)} />
 
+      <NewOrderDialog
+        open={newOrderOpen}
+        onClose={() => setNewOrderOpen(false)}
+        onCreated={() => qc.invalidateQueries({ queryKey: ["admin", "orders"] })}
+      />
+
+
+
     </div>
   );
 }
