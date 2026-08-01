@@ -1,11 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+export const SUPPORT_PHONE = "6392480868";
+
 export type StoreSettings = {
   id: string;
   delivery_fee_enabled: boolean;
   delivery_fee: number;
   free_delivery_above: number;
+  delivery_estimate: string;
+  support_phone: string;
 };
 
 export type Coupon = {
@@ -25,6 +29,8 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   delivery_fee_enabled: false,
   delivery_fee: 0,
   free_delivery_above: 0,
+  delivery_estimate: "2-4 Days",
+  support_phone: SUPPORT_PHONE,
 };
 
 export function useStoreSettings() {
@@ -33,9 +39,25 @@ export function useStoreSettings() {
     queryFn: async () => {
       const { data, error } = await supabase.from("store_settings").select("*").limit(1).maybeSingle();
       if (error) throw error;
-      return (data as unknown as StoreSettings | null) ?? DEFAULT_SETTINGS;
+      const row = data as unknown as Partial<StoreSettings> | null;
+      return row ? { ...DEFAULT_SETTINGS, ...row } : DEFAULT_SETTINGS;
     },
   });
+}
+
+/**
+ * Estimated delivery window shown to the customer.
+ * With a live location we can promise same/next-day; otherwise we fall back to
+ * the default estimate the admin configured.
+ */
+export function deliveryEstimate(settings?: StoreSettings | null, hasLiveLocation?: boolean): string {
+  const fallback = (settings?.delivery_estimate || DEFAULT_SETTINGS.delivery_estimate).trim();
+  if (!hasLiveLocation) return fallback;
+  return new Date().getHours() < 16 ? "Today" : "Tomorrow";
+}
+
+export function supportPhone(settings?: StoreSettings | null): string {
+  return (settings?.support_phone || SUPPORT_PHONE).trim();
 }
 
 /** Delivery fee for a subtotal — 0 when disabled or above the free-delivery threshold. */

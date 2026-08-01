@@ -11,6 +11,9 @@ import type { Banner, Order, Product } from "@/lib/store-types";
 import { ORDER_STATUSES, inr } from "@/lib/store-types";
 import { CouponsTab, DeliveryTab } from "@/components/admin/StoreConfigTabs";
 import { OrderDetailDialog } from "@/components/admin/OrderDetailDialog";
+import { CategoriesTab } from "@/components/admin/CategoriesTab";
+import { HelpRequestsTab } from "@/components/admin/HelpRequestsTab";
+import { NewOrderDialog } from "@/components/admin/NewOrderDialog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -114,6 +117,7 @@ function AdminPage() {
 
   const [editing, setEditing] = useState<{ kind: "product" | "banner"; row: AnyRecord } | null>(null);
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
+  const [newOrderOpen, setNewOrderOpen] = useState(false);
 
 
   if (!isAdmin) return null;
@@ -199,8 +203,10 @@ function AdminPage() {
       <Tabs defaultValue="products" className="rounded-lg bg-card p-4">
         <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="banners">Banners</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsTrigger value="help">Help requests</TabsTrigger>
           <TabsTrigger value="coupons">Coupons</TabsTrigger>
           <TabsTrigger value="delivery">Delivery</TabsTrigger>
         </TabsList>
@@ -276,6 +282,9 @@ function AdminPage() {
         </TabsContent>
 
         <TabsContent value="orders" className="pt-4">
+          <Button className="mb-3" onClick={() => setNewOrderOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" /> New order
+          </Button>
           <div className="space-y-2">
             {(orders.data ?? []).length === 0 ? (
               <p className="py-8 text-center text-muted-foreground">No orders yet.</p>
@@ -321,6 +330,14 @@ function AdminPage() {
           </div>
         </TabsContent>
 
+        <TabsContent value="categories" className="pt-4">
+          <CategoriesTab />
+        </TabsContent>
+
+        <TabsContent value="help" className="pt-4">
+          <HelpRequestsTab />
+        </TabsContent>
+
         <TabsContent value="coupons" className="pt-4">
           <CouponsTab />
         </TabsContent>
@@ -347,6 +364,14 @@ function AdminPage() {
       </Dialog>
 
       <OrderDetailDialog order={viewOrder} onClose={() => setViewOrder(null)} />
+
+      <NewOrderDialog
+        open={newOrderOpen}
+        onClose={() => setNewOrderOpen(false)}
+        onCreated={() => qc.invalidateQueries({ queryKey: ["admin", "orders"] })}
+      />
+
+
 
     </div>
   );

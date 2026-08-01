@@ -20,7 +20,9 @@ export const Route = createFileRoute("/api/chat")({
           "Help shoppers with orders, delivery, payments (Cash on Delivery and online payments), coupons, returns and finding products.",
           "Prices are in Indian Rupees. Keep answers short, warm and practical (2-4 sentences).",
           "You can reply in English or Hinglish, matching the customer's language.",
-          "If you do not know an order-specific detail, ask them to check the Orders page or contact support.",
+          "Refunds are processed manually by our team: ask the customer to raise a request in the Help Center (Payment / refund).",
+          "If you cannot answer a question, or it needs a human, reply with exactly this sentence at the end: 'Need more help? Call us at 6392480868.'",
+          "If you do not know an order-specific detail, ask them to check the Orders page or the Help Center.",
         ].join(" ");
 
         const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+import { useSavedLocation } from "@/lib/geo";
 
 import {
   ShoppingCart,
@@ -38,46 +39,21 @@ export function Header() {
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
   const categories = useCategories();
-  const [place, setPlace] = useState<string | null>(null);
+  const { location, refresh } = useSavedLocation();
   const [locating, setLocating] = useState(false);
+  const place = location?.label ?? null;
 
-  useEffect(() => {
-    const saved = localStorage.getItem("gz-location");
-    if (saved) setPlace(saved);
-  }, []);
-
-  function detectLocation() {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      toast.error("Location is not supported on this device");
-      return;
-    }
+  async function detectLocation() {
     setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const { latitude, longitude } = pos.coords;
-          const res = await fetch(
-            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`,
-          );
-          const json = (await res.json()) as { locality?: string; city?: string; principalSubdivision?: string };
-          const label =
-            [json.locality || json.city, json.principalSubdivision].filter(Boolean).join(", ") ||
-            `${latitude.toFixed(3)}, ${longitude.toFixed(3)}`;
-          setPlace(label);
-          localStorage.setItem("gz-location", label);
-        } catch {
-          toast.error("Could not read your location");
-        } finally {
-          setLocating(false);
-        }
-      },
-      () => {
-        setLocating(false);
-        toast.error("Location permission denied");
-      },
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
+    try {
+      await refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not read your location");
+    } finally {
+      setLocating(false);
+    }
   }
+
 
 
   return (
@@ -280,7 +256,16 @@ export function Footer() {
           <div>
             <p className="mb-3 text-xs font-bold uppercase tracking-widest text-foreground">Help</p>
             <ul className="space-y-2">
-              <li>Payments &amp; refunds</li>
+              <li>
+                <Link to="/help" className="hover:text-primary">
+                  Help Center
+                </Link>
+              </li>
+              <li>
+                <Link to="/help" hash="request-help" className="hover:text-primary">
+                  Request help
+                </Link>
+              </li>
               <li>Shipping &amp; delivery</li>
               <li>Cancellation &amp; returns</li>
               <li>Coupons &amp; offers</li>
@@ -306,6 +291,7 @@ export function Footer() {
               </li>
             </ul>
           </div>
+
         </div>
 
         <div className="mt-8 flex flex-col gap-2 border-t border-border pt-4 text-xs sm:flex-row sm:items-center sm:justify-between">

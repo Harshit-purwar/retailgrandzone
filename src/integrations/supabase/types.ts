@@ -64,6 +64,36 @@ export type Database = {
           },
         ]
       }
+      categories: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           active: boolean
@@ -102,6 +132,56 @@ export type Database = {
           value?: number
         }
         Relationships: []
+      }
+      help_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          full_name: string
+          id: string
+          issue_category: string
+          message: string
+          order_id: string | null
+          phone: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          issue_category?: string
+          message: string
+          order_id?: string | null
+          phone: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          issue_category?: string
+          message?: string
+          order_id?: string | null
+          phone?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_items: {
         Row: {
@@ -151,14 +231,20 @@ export type Database = {
       orders: {
         Row: {
           address_line: string
+          cancel_reason: string | null
+          cancelled_at: string | null
           city: string
           coupon_code: string | null
           created_at: string
+          delivery_estimate: string | null
           delivery_fee: number
           discount: number
           email: string | null
           full_name: string
           id: string
+          latitude: number | null
+          longitude: number | null
+          payment_id: string | null
           payment_method: string
           payment_status: string
           phone: string
@@ -166,18 +252,24 @@ export type Database = {
           state: string
           status: string
           total: number
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           address_line: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           city: string
           coupon_code?: string | null
           created_at?: string
+          delivery_estimate?: string | null
           delivery_fee?: number
           discount?: number
           email?: string | null
           full_name: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
+          payment_id?: string | null
           payment_method?: string
           payment_status?: string
           phone: string
@@ -185,18 +277,24 @@ export type Database = {
           state: string
           status?: string
           total?: number
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           address_line?: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           city?: string
           coupon_code?: string | null
           created_at?: string
+          delivery_estimate?: string | null
           delivery_fee?: number
           discount?: number
           email?: string | null
           full_name?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
+          payment_id?: string | null
           payment_method?: string
           payment_status?: string
           phone?: string
@@ -204,7 +302,7 @@ export type Database = {
           state?: string
           status?: string
           total?: number
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -291,24 +389,30 @@ export type Database = {
       }
       store_settings: {
         Row: {
+          delivery_estimate: string
           delivery_fee: number
           delivery_fee_enabled: boolean
           free_delivery_above: number
           id: string
+          support_phone: string
           updated_at: string
         }
         Insert: {
+          delivery_estimate?: string
           delivery_fee?: number
           delivery_fee_enabled?: boolean
           free_delivery_above?: number
           id?: string
+          support_phone?: string
           updated_at?: string
         }
         Update: {
+          delivery_estimate?: string
           delivery_fee?: number
           delivery_fee_enabled?: boolean
           free_delivery_above?: number
           id?: string
+          support_phone?: string
           updated_at?: string
         }
         Relationships: []

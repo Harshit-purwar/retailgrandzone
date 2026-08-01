@@ -49,8 +49,26 @@ export function OrderDetailDialog({ order, onClose }: { order: Order | null; onC
               <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Payment</p>
               <Row label="Method" value={o.payment_method} />
               <Row label="Status" value={o.payment_status} />
+              {o.payment_id ? <Row label="Payment ID" value={String(o.payment_id)} /> : null}
               <Row label="Order status" value={o.status} />
+              {o.delivery_estimate ? <Row label="Delivery estimate" value={String(o.delivery_estimate)} /> : null}
               <Row label="Placed on" value={new Date(o.created_at).toLocaleString("en-IN")} />
+              {o.cancel_reason ? <Row label="Cancellation reason" value={String(o.cancel_reason)} /> : null}
+              {o.latitude && o.longitude ? (
+                <Row
+                  label="Live location"
+                  value={
+                    <a
+                      className="text-primary underline"
+                      target="_blank"
+                      rel="noreferrer"
+                      href={`https://www.google.com/maps?q=${o.latitude},${o.longitude}`}
+                    >
+                      {Number(o.latitude).toFixed(4)}, {Number(o.longitude).toFixed(4)}
+                    </a>
+                  }
+                />
+              ) : null}
             </div>
 
             <div className="rounded-xl border border-border p-3">
