@@ -252,7 +252,7 @@ export type Database = {
           state: string
           status: string
           total: number
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           address_line: string
@@ -277,7 +277,7 @@ export type Database = {
           state: string
           status?: string
           total?: number
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           address_line?: string
@@ -302,7 +302,7 @@ export type Database = {
           state?: string
           status?: string
           total?: number
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
