@@ -280,7 +280,16 @@ export function Footer() {
           <div>
             <p className="mb-3 text-xs font-bold uppercase tracking-widest text-foreground">Help</p>
             <ul className="space-y-2">
-              <li>Payments &amp; refunds</li>
+              <li>
+                <Link to="/help" className="hover:text-primary">
+                  Help Center
+                </Link>
+              </li>
+              <li>
+                <Link to="/help" hash="request-help" className="hover:text-primary">
+                  Request help
+                </Link>
+              </li>
               <li>Shipping &amp; delivery</li>
               <li>Cancellation &amp; returns</li>
               <li>Coupons &amp; offers</li>
@@ -306,6 +315,7 @@ export function Footer() {
               </li>
             </ul>
           </div>
+
         </div>
 
         <div className="mt-8 flex flex-col gap-2 border-t border-border pt-4 text-xs sm:flex-row sm:items-center sm:justify-between">
