@@ -88,6 +88,29 @@ export function DeliveryTab() {
         />
       </div>
 
+      <div>
+        <Label htmlFor="estimate">Default delivery estimate</Label>
+        <Input
+          id="estimate"
+          placeholder="e.g. Today, Tomorrow, 2-4 Days"
+          value={row.delivery_estimate ?? ""}
+          onChange={(e) => setRow({ ...row, delivery_estimate: e.target.value })}
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          Shown on product, checkout and order pages when the customer has not shared a live location.
+        </p>
+      </div>
+
+      <div>
+        <Label htmlFor="support-phone">Support phone number</Label>
+        <Input
+          id="support-phone"
+          value={row.support_phone ?? ""}
+          onChange={(e) => setRow({ ...row, support_phone: e.target.value })}
+        />
+      </div>
+
+
       <Button disabled={busy} onClick={save}>
         {busy ? "Saving…" : "Save settings"}
       </Button>
