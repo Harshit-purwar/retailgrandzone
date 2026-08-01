@@ -9,6 +9,8 @@ import { ProductCard, Rating } from "@/components/store/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/lib/cart-context";
+import { deliveryEstimate, useStoreSettings } from "@/lib/store-settings";
+import { useSavedLocation } from "@/lib/geo";
 
 export const Route = createFileRoute("/product/$slug")({
   head: () => ({
@@ -26,6 +28,8 @@ function ProductPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
   const cart = useCart();
+  const settings = useStoreSettings();
+  const { location } = useSavedLocation();
 
   const productQuery = useQuery({
     queryKey: ["product", slug],
