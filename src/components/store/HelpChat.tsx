@@ -15,6 +15,8 @@ const SUGGESTIONS = [
 const UNSURE = ["i don't know", "i do not know", "not sure", "sorry", "can't help", "cannot help", "unable to"];
 
 export function HelpChat() {
+  const settings = useStoreSettings();
+  const phone = supportPhone(settings.data);
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
