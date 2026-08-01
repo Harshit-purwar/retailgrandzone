@@ -117,6 +117,7 @@ function AdminPage() {
 
   const [editing, setEditing] = useState<{ kind: "product" | "banner"; row: AnyRecord } | null>(null);
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
+  const [newOrderOpen, setNewOrderOpen] = useState(false);
 
 
   if (!isAdmin) return null;
@@ -202,8 +203,10 @@ function AdminPage() {
       <Tabs defaultValue="products" className="rounded-lg bg-card p-4">
         <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="banners">Banners</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsTrigger value="help">Help requests</TabsTrigger>
           <TabsTrigger value="coupons">Coupons</TabsTrigger>
           <TabsTrigger value="delivery">Delivery</TabsTrigger>
         </TabsList>
