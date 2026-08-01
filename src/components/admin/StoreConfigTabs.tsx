@@ -36,6 +36,8 @@ export function DeliveryTab() {
       delivery_fee_enabled: row.delivery_fee_enabled,
       delivery_fee: Number(row.delivery_fee) || 0,
       free_delivery_above: Number(row.free_delivery_above) || 0,
+      delivery_estimate: (row.delivery_estimate || "2-4 Days").trim(),
+      support_phone: (row.support_phone || "6392480868").trim(),
     };
     const res = row.id
       ? await supabase.from("store_settings").update(payload as never).eq("id", row.id)
