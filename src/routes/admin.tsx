@@ -11,6 +11,9 @@ import type { Banner, Order, Product } from "@/lib/store-types";
 import { ORDER_STATUSES, inr } from "@/lib/store-types";
 import { CouponsTab, DeliveryTab } from "@/components/admin/StoreConfigTabs";
 import { OrderDetailDialog } from "@/components/admin/OrderDetailDialog";
+import { CategoriesTab } from "@/components/admin/CategoriesTab";
+import { HelpRequestsTab } from "@/components/admin/HelpRequestsTab";
+import { NewOrderDialog } from "@/components/admin/NewOrderDialog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProductsRouteImport } from './routes/products'
 import { Route as OrdersRouteImport } from './routes/orders'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -28,6 +29,11 @@ const ProductsRoute = ProductsRouteImport.update({
 const OrdersRoute = OrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutRoute = CheckoutRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/help': typeof HelpRoute
   '/orders': typeof OrdersRoute
   '/products': typeof ProductsRoute
   '/api/chat': typeof ApiChatRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/help': typeof HelpRoute
   '/orders': typeof OrdersRoute
   '/products': typeof ProductsRoute
   '/api/chat': typeof ApiChatRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/help': typeof HelpRoute
   '/orders': typeof OrdersRoute
   '/products': typeof ProductsRoute
   '/api/chat': typeof ApiChatRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cart'
     | '/checkout'
+    | '/help'
     | '/orders'
     | '/products'
     | '/api/chat'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cart'
     | '/checkout'
+    | '/help'
     | '/orders'
     | '/products'
     | '/api/chat'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cart'
     | '/checkout'
+    | '/help'
     | '/orders'
     | '/products'
     | '/api/chat'
@@ -153,6 +165,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
+  HelpRoute: typeof HelpRoute
   OrdersRoute: typeof OrdersRoute
   ProductsRoute: typeof ProductsRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -174,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/orders'
       fullPath: '/orders'
       preLoaderRoute: typeof OrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout': {
@@ -241,6 +261,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
+  HelpRoute: HelpRoute,
   OrdersRoute: OrdersRoute,
   ProductsRoute: ProductsRoute,
   ApiChatRoute: ApiChatRoute,
