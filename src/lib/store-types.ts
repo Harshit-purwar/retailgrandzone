@@ -46,6 +46,25 @@ export type Order = {
   payment_status: string;
   status: string;
   created_at: string;
+  payment_id?: string | null;
+  cancel_reason?: string | null;
+  cancelled_at?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  delivery_estimate?: string | null;
+};
+
+export type HelpRequest = {
+  id: string;
+  user_id: string | null;
+  full_name: string;
+  phone: string;
+  order_id: string | null;
+  issue_category: string;
+  message: string;
+  status: string;
+  admin_notes: string | null;
+  created_at: string;
 };
 
 export type OrderItem = {
@@ -58,7 +77,34 @@ export type OrderItem = {
   quantity: number;
 };
 
-export const ORDER_STATUSES = ["Ordered", "Packed", "Shipped", "Out for delivery", "Delivered", "Cancelled"];
+export const CANCELLED_BY_CUSTOMER = "Cancelled by Customer";
+
+export const ORDER_STATUSES = [
+  "Ordered",
+  "Packed",
+  "Shipped",
+  "Out for delivery",
+  "Delivered",
+  "Cancelled",
+  CANCELLED_BY_CUSTOMER,
+];
+
+/** Customers may only cancel before the order leaves the warehouse. */
+export function canCustomerCancel(status: string): boolean {
+  return status === "Ordered" || status === "Packed";
+}
+
+export const HELP_CATEGORIES = [
+  "Order issue",
+  "Delivery delay",
+  "Payment / refund",
+  "Damaged or wrong item",
+  "Cancellation",
+  "Other",
+];
+
+export const HELP_STATUSES = ["Open", "In Progress", "Resolved"];
+
 
 export function inr(value: number): string {
   return "₹" + Math.round(Number(value) || 0).toLocaleString("en-IN");

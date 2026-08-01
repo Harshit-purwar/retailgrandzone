@@ -43,11 +43,17 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
       .single();
     if (error || !order || order.user_id !== context.userId) throw new Error("Order not found");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error: updateError } = await supabaseAdmin
+    // Uses the caller's RLS-scoped client on purpose: no service-role key is
+    // required at runtime, so deployments only need SUPABASE_URL + publishable key.
+    const { error: updateError } = await context.supabase
       .from("orders")
-      .update({ payment_status: "Paid", payment_method: "Razorpay" })
-      .eq("id", data.orderId);
+      .update({
+        payment_status: "Paid",
+        payment_method: "Razorpay",
+        payment_id: data.razorpay_payment_id,
+      })
+      .eq("id", data.orderId)
+      .eq("user_id", context.userId);
     if (updateError) throw new Error(updateError.message);
-    return { paid: true as const };
+    return { paid: true as const, paymentId: data.razorpay_payment_id };
   });
