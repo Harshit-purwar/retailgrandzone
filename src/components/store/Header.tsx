@@ -39,22 +39,10 @@ export function Header() {
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
   const categories = useCategories();
-  const { location, refresh } = useSavedLocation();
-  const [locating, setLocating] = useState(false);
-  const place = location?.label ?? null;
-
-  async function detectLocation() {
-    setLocating(true);
-    try {
-      await refresh();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not read your location");
-    } finally {
-      setLocating(false);
-    }
-  }
-
-
+  const { location } = useSavedLocation();
+  const { store } = useSelectedStore();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const place = store ? `${store.city} · ${location?.label ?? store.address || store.name}` : location?.label ?? null;
 
   return (
     <header className="sticky top-0 z-50 shadow-sm">
@@ -77,21 +65,21 @@ export function Header() {
 
             <button
               type="button"
-              onClick={detectLocation}
-              disabled={locating}
-              className="ml-4 hidden items-center gap-1.5 rounded-lg px-2 py-1 text-left text-sm transition-colors hover:bg-black/5 lg:flex"
+              onClick={() => setPickerOpen(true)}
+              className="ml-4 hidden max-w-[16rem] items-center gap-1.5 rounded-lg px-2 py-1 text-left text-sm transition-colors hover:bg-black/5 lg:flex"
             >
               <MapPin className="h-4 w-4 shrink-0" />
-              <span>
+              <span className="min-w-0">
                 <span className="block text-[13px] font-bold leading-tight">
-                  {locating ? "Detecting location…" : "Deliver to"}
+                  {store ? `Delivery in ${store.delivery_estimate}` : "Select your location"}
                 </span>
-                <span className="block text-xs leading-tight opacity-75">
-                  {place ?? "Tap to use my current location"}
+                <span className="block truncate text-xs leading-tight opacity-75">
+                  {place ?? "Tap to choose a store"}
                 </span>
               </span>
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-4 w-4 shrink-0" />
             </button>
+
 
 
             <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
