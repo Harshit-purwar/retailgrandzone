@@ -42,7 +42,8 @@ export function Header() {
   const { location } = useSavedLocation();
   const { store } = useSelectedStore();
   const [pickerOpen, setPickerOpen] = useState(false);
-  const place = store ? `${store.city} · ${location?.label ?? store.address || store.name}` : location?.label ?? null;
+  const place = store ? `${store.city} · ${location?.label ?? store.address ?? store.name}` : (location?.label ?? null);
+
 
   return (
     <header className="sticky top-0 z-50 shadow-sm">
