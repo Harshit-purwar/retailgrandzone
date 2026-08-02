@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/lib/store-types";
 import { ProductCard } from "@/components/store/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSelectedStore, scopeToStore } from "@/lib/stores";
 
 const searchSchema = z.object({
   q: z.string().optional(),
@@ -26,12 +27,15 @@ export const Route = createFileRoute("/products")({
 
 function ProductsPage() {
   const { q, category } = Route.useSearch();
+  const { store } = useSelectedStore();
+  const storeId = store?.id ?? null;
 
   const products = useQuery({
-    queryKey: ["products", "list", q ?? "", category ?? ""],
+    queryKey: ["products", "list", q ?? "", category ?? "", storeId ?? ""],
     queryFn: async () => {
       let query = supabase.from("products").select("*").eq("active", true);
       if (category) query = query.eq("category", category);
+      query = scopeToStore(query, storeId);
       if (q) query = query.or(`title.ilike.%${q}%,brand.ilike.%${q}%,category.ilike.%${q}%`);
       const { data, error } = await query.order("created_at", { ascending: false });
       if (error) throw error;

@@ -6,6 +6,7 @@ import type { Banner, Product } from "@/lib/store-types";
 import { ProductCard } from "@/components/store/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useSelectedStore, scopeToStore } from "@/lib/stores";
 
 
 export const Route = createFileRoute("/")({
@@ -23,16 +24,16 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-function useBanners(placement: string) {
+function useBanners(placement: string, storeId: string | null) {
   return useQuery({
-    queryKey: ["banners", placement],
+    queryKey: ["banners", placement, storeId ?? ""],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const base = supabase
         .from("banners")
         .select("*")
         .eq("active", true)
-        .eq("placement", placement)
-        .order("sort_order");
+        .eq("placement", placement);
+      const { data, error } = await scopeToStore(base, storeId).order("sort_order");
       if (error) throw error;
       return (data ?? []) as unknown as Banner[];
     },
@@ -49,7 +50,9 @@ function bannerTarget(banner: Banner) {
 
 function Home() {
   const navigate = useNavigate();
-  const hero = useBanners("hero");
+  const { store } = useSelectedStore();
+  const storeId = store?.id ?? null;
+  const hero = useBanners("hero", storeId);
   const heroScroller = useRef<HTMLDivElement>(null);
 
   function scrollHero(direction: 1 | -1) {
@@ -58,16 +61,13 @@ function Home() {
     el.scrollBy({ left: direction * el.clientWidth, behavior: "smooth" });
   }
 
-  const promo = useBanners("promo");
+  const promo = useBanners("promo", storeId);
 
   const products = useQuery({
-    queryKey: ["products", "home"],
+    queryKey: ["products", "home", storeId ?? ""],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("active", true)
-        .order("created_at", { ascending: false });
+      const base = supabase.from("products").select("*").eq("active", true);
+      const { data, error } = await scopeToStore(base, storeId).order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as Product[];
     },
