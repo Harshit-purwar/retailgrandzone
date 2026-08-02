@@ -2,13 +2,14 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useSavedLocation } from "@/lib/geo";
+import { useSelectedStore } from "@/lib/stores";
+import { StorePickerDialog } from "@/components/store/StoreGate";
 
 import {
   ShoppingCart,
   User,
   Search,
   LayoutGrid,
-  Mail,
   Clock,
   ShieldCheck,
   Package,
@@ -39,21 +40,10 @@ export function Header() {
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
   const categories = useCategories();
-  const { location, refresh } = useSavedLocation();
-  const [locating, setLocating] = useState(false);
-  const place = location?.label ?? null;
-
-  async function detectLocation() {
-    setLocating(true);
-    try {
-      await refresh();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not read your location");
-    } finally {
-      setLocating(false);
-    }
-  }
-
+  const { location } = useSavedLocation();
+  const { store } = useSelectedStore();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const place = store ? `${store.city} · ${location?.label ?? store.address ?? store.name}` : (location?.label ?? null);
 
 
   return (
@@ -77,21 +67,21 @@ export function Header() {
 
             <button
               type="button"
-              onClick={detectLocation}
-              disabled={locating}
-              className="ml-4 hidden items-center gap-1.5 rounded-lg px-2 py-1 text-left text-sm transition-colors hover:bg-black/5 lg:flex"
+              onClick={() => setPickerOpen(true)}
+              className="ml-4 hidden max-w-[16rem] items-center gap-1.5 rounded-lg px-2 py-1 text-left text-sm transition-colors hover:bg-black/5 lg:flex"
             >
               <MapPin className="h-4 w-4 shrink-0" />
-              <span>
+              <span className="min-w-0">
                 <span className="block text-[13px] font-bold leading-tight">
-                  {locating ? "Detecting location…" : "Deliver to"}
+                  {store ? `Delivery in ${store.delivery_estimate}` : "Select your location"}
                 </span>
-                <span className="block text-xs leading-tight opacity-75">
-                  {place ?? "Tap to use my current location"}
+                <span className="block truncate text-xs leading-tight opacity-75">
+                  {place ?? "Tap to choose a store"}
                 </span>
               </span>
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-4 w-4 shrink-0" />
             </button>
+
 
 
             <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -163,6 +153,21 @@ export function Header() {
             </div>
           </div>
 
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            className="mt-2 flex w-full items-center gap-2 rounded-xl bg-black/5 px-3 py-2 text-left text-xs transition-colors active:bg-black/10 lg:hidden"
+          >
+            <MapPin className="h-4 w-4 shrink-0" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[13px] font-bold leading-tight">
+                {store ? `Delivery in ${store.delivery_estimate}` : "Select your location"}
+              </span>
+              <span className="block truncate leading-tight opacity-75">{place ?? "Tap to choose a store"}</span>
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0" />
+          </button>
+
           <form
             className="mt-2 flex w-full items-center rounded-xl border border-border bg-card px-3 py-2.5 shadow-sm transition-shadow focus-within:shadow-md sm:mt-2.5"
             onSubmit={(e) => {
@@ -208,6 +213,8 @@ export function Header() {
           })}
         </div>
       </nav>
+
+      <StorePickerDialog open={pickerOpen} onClose={() => setPickerOpen(false)} />
     </header>
   );
 }
@@ -275,12 +282,6 @@ export function Footer() {
           <div>
             <p className="mb-3 text-xs font-bold uppercase tracking-widest text-foreground">Contact</p>
             <ul className="space-y-2">
-              <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4 shrink-0 text-primary" />
-                <a href="mailto:purwarharshit3@gmail.com" className="hover:text-primary">
-                  purwarharshit3@gmail.com
-                </a>
-              </li>
               <li className="flex items-center gap-2">
                 <Clock className="h-4 w-4 shrink-0 text-primary" />
                 Support 9 AM – 9 PM, all days

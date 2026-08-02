@@ -14,6 +14,7 @@ import { OrderDetailDialog } from "@/components/admin/OrderDetailDialog";
 import { CategoriesTab } from "@/components/admin/CategoriesTab";
 import { HelpRequestsTab } from "@/components/admin/HelpRequestsTab";
 import { NewOrderDialog } from "@/components/admin/NewOrderDialog";
+import { StoresTab, StoreField } from "@/components/admin/StoresTab";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,7 @@ const emptyProduct: AnyRecord = {
   stock: 10,
   highlights: "",
   specs: "",
+  store_id: "",
   active: true,
 };
 
@@ -70,6 +72,7 @@ const emptyBanner: AnyRecord = {
   placement: "hero",
   link_category: "",
   product_id: "",
+  store_id: "",
   sort_order: 0,
   active: true,
 };
@@ -136,6 +139,7 @@ function AdminPage() {
       rating: Number(row.rating),
       rating_count: Number(row.rating_count),
       stock: Number(row.stock),
+      store_id: row.store_id ? String(row.store_id) : null,
       active: !!row.active,
       highlights: String(row.highlights || "")
         .split("\n")
@@ -169,6 +173,7 @@ function AdminPage() {
       link_category: row.link_category || null,
       product_id: row.product_id || null,
       sort_order: Number(row.sort_order),
+      store_id: row.store_id ? String(row.store_id) : null,
       active: !!row.active,
     };
     const res = row.id
@@ -203,6 +208,7 @@ function AdminPage() {
       <Tabs defaultValue="products" className="rounded-lg bg-card p-4">
         <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="stores">Stores</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="banners">Banners</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
@@ -330,6 +336,10 @@ function AdminPage() {
           </div>
         </TabsContent>
 
+        <TabsContent value="stores" className="pt-4">
+          <StoresTab />
+        </TabsContent>
+
         <TabsContent value="categories" className="pt-4">
           <CategoriesTab />
         </TabsContent>
@@ -388,7 +398,7 @@ function EditForm({
   onChange: (row: AnyRecord) => void;
   onSave: () => void;
 }) {
-  const fields: [string, string, "text" | "number" | "area" | "gallery"][] =
+  const fields: [string, string, "text" | "number" | "area" | "gallery" | "store"][] =
     kind === "product"
       ? [
           ["title", "Title", "text"],
@@ -406,6 +416,7 @@ function EditForm({
           ["description", "Description", "area"],
           ["highlights", "Highlights (one per line)", "area"],
           ["specs", "Specifications (Key: value per line)", "area"],
+          ["store_id", "Store", "store"],
         ]
       : [
           ["title", "Title", "text"],
@@ -416,6 +427,7 @@ function EditForm({
           ["link_category", "Link to category", "text"],
           ["product_id", "Link to product ID", "text"],
           ["sort_order", "Sort order", "number"],
+          ["store_id", "Store", "store"],
         ];
 
   return (
@@ -429,7 +441,9 @@ function EditForm({
       {fields.map(([key, label, type]) => (
         <div key={key} className={type === "area" || type === "gallery" || key === "image_url" ? "sm:col-span-2" : ""}>
           <Label htmlFor={key}>{label}</Label>
-          {type === "gallery" ? (
+          {type === "store" ? (
+            <StoreField value={String(row[key] ?? "")} onChange={(v) => onChange({ ...row, [key]: v })} />
+          ) : type === "gallery" ? (
             <GalleryField
               value={Array.isArray(row[key]) ? (row[key] as string[]) : []}
               onChange={(v) => onChange({ ...row, [key]: v })}

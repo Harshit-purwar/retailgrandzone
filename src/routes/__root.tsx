@@ -16,6 +16,7 @@ import { CartProvider } from "@/lib/cart-context";
 import { Header, Footer } from "@/components/store/Header";
 import { Toaster } from "@/components/ui/sonner";
 import { HelpChat } from "@/components/store/HelpChat";
+import { StoreGate } from "@/components/store/StoreGate";
 
 function NotFoundComponent() {
   return (
@@ -138,6 +139,7 @@ function RootComponent() {
             </main>
             <Footer />
             <HelpChat />
+            <StoreGate />
           </div>
           <Toaster position="top-center" richColors />
         </CartProvider>

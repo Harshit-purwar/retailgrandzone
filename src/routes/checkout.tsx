@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useSelectedStore } from "@/lib/stores";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { inr } from "@/lib/store-types";
@@ -50,6 +51,7 @@ function CheckoutPage() {
   const { lines, subtotal, clear } = useCart();
   const [step, setStep] = useState<1 | 2>(1);
   const [busy, setBusy] = useState(false);
+  const { store } = useSelectedStore();
   const [form, setForm] = useState({
     full_name: "",
     phone: "",
@@ -148,6 +150,8 @@ function CheckoutPage() {
         coupon_code: coupon?.code ?? null,
         discount,
         delivery_fee: delivery,
+        store_id: store?.id ?? null,
+        delivery_estimate: store?.delivery_estimate ?? null,
         payment_method: payment,
         payment_status: "Pending",
         status: "Ordered",
