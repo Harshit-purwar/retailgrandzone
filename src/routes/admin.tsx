@@ -398,7 +398,7 @@ function EditForm({
   onChange: (row: AnyRecord) => void;
   onSave: () => void;
 }) {
-  const fields: [string, string, "text" | "number" | "area" | "gallery"][] =
+  const fields: [string, string, "text" | "number" | "area" | "gallery" | "store"][] =
     kind === "product"
       ? [
           ["title", "Title", "text"],
