@@ -25,6 +25,7 @@ export type Database = {
           placement: string
           product_id: string | null
           sort_order: number
+          store_id: string | null
           subtitle: string
           title: string
         }
@@ -38,6 +39,7 @@ export type Database = {
           placement?: string
           product_id?: string | null
           sort_order?: number
+          store_id?: string | null
           subtitle?: string
           title?: string
         }
@@ -51,6 +53,7 @@ export type Database = {
           placement?: string
           product_id?: string | null
           sort_order?: number
+          store_id?: string | null
           subtitle?: string
           title?: string
         }
@@ -60,6 +63,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "banners_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -251,6 +261,7 @@ export type Database = {
           pincode: string
           state: string
           status: string
+          store_id: string | null
           total: number
           user_id: string | null
         }
@@ -276,6 +287,7 @@ export type Database = {
           pincode: string
           state: string
           status?: string
+          store_id?: string | null
           total?: number
           user_id?: string | null
         }
@@ -301,10 +313,19 @@ export type Database = {
           pincode?: string
           state?: string
           status?: string
+          store_id?: string | null
           total?: number
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -324,6 +345,7 @@ export type Database = {
           slug: string | null
           specs: Json
           stock: number
+          store_id: string | null
           title: string
         }
         Insert: {
@@ -343,6 +365,7 @@ export type Database = {
           slug?: string | null
           specs?: Json
           stock?: number
+          store_id?: string | null
           title: string
         }
         Update: {
@@ -362,9 +385,18 @@ export type Database = {
           slug?: string | null
           specs?: Json
           stock?: number
+          store_id?: string | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -413,6 +445,51 @@ export type Database = {
           free_delivery_above?: number
           id?: string
           support_phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      stores: {
+        Row: {
+          active: boolean
+          address: string
+          city: string
+          created_at: string
+          delivery_estimate: string
+          id: string
+          latitude: number
+          longitude: number
+          name: string
+          radius_km: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address?: string
+          city?: string
+          created_at?: string
+          delivery_estimate?: string
+          id?: string
+          latitude: number
+          longitude: number
+          name: string
+          radius_km?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string
+          city?: string
+          created_at?: string
+          delivery_estimate?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          name?: string
+          radius_km?: number
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []
