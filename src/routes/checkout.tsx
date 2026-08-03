@@ -104,6 +104,14 @@ function CheckoutPage() {
     if (!ok || !window.Razorpay) throw new Error("Could not load Razorpay checkout");
     const rzp = await createRazorpayOrder({ data: { orderId } });
 
+    // Razorpay's UPI / QR flow validates prefill values strictly: an empty email
+    // or a phone without the country code makes it reject the VPA ("Invalid UPI ID").
+    const digits = form.phone.replace(/\D/g, "").slice(-10);
+    const prefill: Record<string, string> = {};
+    if (form.full_name.trim()) prefill.name = form.full_name.trim();
+    if (digits.length === 10) prefill.contact = `+91${digits}`;
+    if (user?.email) prefill.email = user.email;
+
     await new Promise<void>((resolve, reject) => {
       const checkout = new window.Razorpay!({
         key: rzp.keyId,
@@ -112,7 +120,8 @@ function CheckoutPage() {
         name: "The Grand Zone",
         description: "Order payment",
         order_id: rzp.razorpayOrderId,
-        prefill: { name: form.full_name, contact: form.phone, email: user?.email ?? "" },
+        prefill,
+        notes: { order_id: orderId },
         theme: { color: "#0d0d0d" },
         modal: { ondismiss: () => reject(new Error("Payment cancelled")) },
         handler: (response: Record<string, string>) => {
@@ -136,10 +145,16 @@ function CheckoutPage() {
               );
             });
         },
+      }) as { open: () => void; on?: (e: string, cb: (r: unknown) => void) => void };
+
+      checkout.on?.("payment.failed", (resp: unknown) => {
+        const desc = (resp as { error?: { description?: string; reason?: string } })?.error;
+        reject(new Error(desc?.description || desc?.reason || "Payment failed. Please try another UPI app or method."));
       });
       checkout.open();
     });
   }
+
 
   async function placeOrder() {
     if (!user) return;
