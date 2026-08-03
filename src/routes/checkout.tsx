@@ -125,7 +125,16 @@ function CheckoutPage() {
             },
           })
             .then(() => resolve())
-            .catch(reject);
+            .catch((err: unknown) => {
+              const msg = err instanceof Error ? err.message : String(err);
+              reject(
+                new Error(
+                  /unauthor|token|session/i.test(msg)
+                    ? `Payment received (ID ${response.razorpay_payment_id}) but we could not confirm it — your session expired. Please contact support with this payment ID.`
+                    : `Payment received (ID ${response.razorpay_payment_id}) but confirmation failed: ${msg}`,
+                ),
+              );
+            });
         },
       });
       checkout.open();
