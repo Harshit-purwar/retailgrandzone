@@ -22,6 +22,8 @@ export function ProductCard({ product }: { product: Product }) {
   const off = discountPercent(Number(product.price), Number(product.mrp));
   const { lines, add, setQuantity } = useCart();
   const line = lines.find((l) => l.productId === product.id);
+  const outOfStock = Number(product.stock) <= 0;
+  const atStockLimit = !!line && line.quantity >= Number(product.stock);
 
   return (
     <div className="group relative flex h-full flex-col rounded-2xl border border-border bg-card p-3 transition-shadow hover:shadow-md">
@@ -79,7 +81,8 @@ export function ProductCard({ product }: { product: Product }) {
               type="button"
               aria-label="Increase quantity"
               onClick={() => setQuantity(product.id, line.quantity + 1)}
-              className="p-1"
+              disabled={atStockLimit}
+              className="p-1 disabled:opacity-40"
             >
               <Plus className="h-3.5 w-3.5" />
             </button>
@@ -94,11 +97,13 @@ export function ProductCard({ product }: { product: Product }) {
                 image_url: product.image_url,
                 price: Number(product.price),
                 slug: product.slug ?? null,
+                stock: product.stock,
               })
             }
-            className="rounded-lg border border-primary bg-accent px-5 py-1.5 text-sm font-bold uppercase text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+            disabled={outOfStock}
+            className="rounded-lg border border-primary bg-accent px-5 py-1.5 text-sm font-bold uppercase text-primary transition-colors hover:bg-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:border-border disabled:bg-muted disabled:text-muted-foreground"
           >
-            Add
+            {outOfStock ? "Sold out" : "Add"}
           </button>
         )}
       </div>
