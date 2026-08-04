@@ -7,7 +7,16 @@ export type CartLine = {
   price: number;
   quantity: number;
   slug: string | null;
+  /** Available stock at the time the line was added — used to cap quantities. */
+  stock?: number | null;
 };
+
+/** Caps a requested quantity to the available stock (when known). */
+function capToStock(quantity: number, stock?: number | null): number {
+  if (stock === undefined || stock === null || !Number.isFinite(Number(stock))) return quantity;
+  return Math.min(quantity, Math.max(0, Number(stock)));
+}
+
 
 type CartValue = {
   lines: CartLine[];
