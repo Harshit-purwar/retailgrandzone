@@ -208,6 +208,12 @@ function CheckoutPage() {
         await payWithRazorpay(order.id);
         toast.success("Payment successful!");
       } catch (err) {
+        // Mark the order as a failed online payment: the customer still sees it
+        // in their orders as "Failed", while the admin panel hides it.
+        await supabase
+          .from("orders")
+          .update({ payment_status: "Failed", status: "Payment Failed" })
+          .eq("id", order.id);
         setBusy(false);
         return toast.error(err instanceof Error ? err.message : "Payment failed");
       }
@@ -222,7 +228,7 @@ function CheckoutPage() {
 
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[1fr_360px]">
+    <div className="mx-auto grid w-full max-w-[1600px] gap-4 px-3 py-4 sm:px-4 lg:grid-cols-[1fr_360px]">
       <div className="space-y-3">
         <section className="rounded-lg bg-card">
           <header className="flex items-center gap-3 border-b border-border px-4 py-3">

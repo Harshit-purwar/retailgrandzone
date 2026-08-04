@@ -114,7 +114,12 @@ function AdminPage() {
     queryFn: async () => {
       const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as unknown as Order[];
+      // Only COD orders and successfully paid online orders belong in the admin
+      // panel — failed / abandoned online payments stay in the customer's orders.
+      return ((data ?? []) as unknown as Order[]).filter((o) => {
+        const online = /razorpay|online|upi|card/i.test(o.payment_method ?? "");
+        return !online || (o.payment_status ?? "").toLowerCase() === "paid";
+      });
     },
   });
 
@@ -202,7 +207,7 @@ function AdminPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-4">
+    <div className="mx-auto w-full max-w-[1600px] px-4 py-4">
       <h1 className="mb-4 text-xl font-semibold">Admin panel</h1>
 
       <Tabs defaultValue="products" className="rounded-lg bg-card p-4">

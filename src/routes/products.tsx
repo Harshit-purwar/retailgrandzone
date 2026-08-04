@@ -46,7 +46,7 @@ function ProductsPage() {
   const list = products.data ?? [];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-4">
+    <div className="mx-auto w-full max-w-[1600px] px-4 py-4">
       <div className="rounded-lg bg-card p-4">
         <h1 className="text-xl font-semibold">
           {category ? category : q ? `Results for "${q}"` : "All products"}

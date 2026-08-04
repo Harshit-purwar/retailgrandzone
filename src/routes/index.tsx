@@ -4,9 +4,11 @@ import { useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Banner, Product } from "@/lib/store-types";
 import { ProductCard } from "@/components/store/ProductCard";
+import { ProductRow } from "@/components/store/ProductRow";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSelectedStore, scopeToStore } from "@/lib/stores";
+import { useRecentlyViewed } from "@/lib/recently-viewed";
 
 
 export const Route = createFileRoute("/")({
@@ -74,19 +76,38 @@ function Home() {
   });
 
   const list = products.data ?? [];
-  const deals = [...list].sort((a, b) => Number(b.mrp) - Number(b.price) - (Number(a.mrp) - Number(a.price))).slice(0, 5);
+  const deals = [...list]
+    .sort((a, b) => Number(b.mrp) - Number(b.price) - (Number(a.mrp) - Number(a.price)))
+    .slice(0, 15);
+  const newest = list.slice(0, 15);
+
+  const categoryRows = Array.from(new Set(list.map((p) => p.category)))
+    .map((category) => ({ category, items: list.filter((p) => p.category === category).slice(0, 15) }))
+    .filter((row) => row.items.length > 0);
+
+  const recentIds = useRecentlyViewed();
+  const recentProducts = useQuery({
+    enabled: recentIds.length > 0,
+    queryKey: ["recently-viewed", "home", recentIds.join(",")],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("products").select("*").in("id", recentIds).eq("active", true);
+      if (error) throw error;
+      const rows = (data ?? []) as unknown as Product[];
+      return recentIds.map((id) => rows.find((r) => r.id === id)).filter(Boolean) as Product[];
+    },
+  });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-4">
+    <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-4">
       <h1 className="sr-only">The Grand Zone online shopping</h1>
 
       {/* Hero banners — scrollable carousel (Blinkit-style cards on mobile) */}
-      <section className="-mx-4 sm:mx-0">
+      <section className="-mx-3 sm:mx-0">
         {hero.isLoading ? <Skeleton className="mx-4 h-44 rounded-2xl sm:mx-0 sm:h-72" /> : null}
         {(hero.data ?? []).length > 0 ? (
           <div className="relative">
             {/* Mobile: compact swipeable tiles */}
-            <div className="flex snap-x gap-3 overflow-x-auto px-4 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:hidden [&::-webkit-scrollbar]:hidden">
+            <div className="flex snap-x gap-3 overflow-x-auto px-3 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:hidden [&::-webkit-scrollbar]:hidden">
               {(hero.data ?? []).map((b) => {
                 const target = bannerTarget(b);
                 return (
@@ -166,29 +187,20 @@ function Home() {
       </section>
 
 
-      {/* Deals */}
-      <section className="mt-5 rounded-2xl bg-card p-4">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Deals of the day</h2>
-          <Link
-            to="/products"
-            search={{ q: undefined, category: undefined }}
-            className="text-sm font-bold text-primary hover:underline"
-          >
-            See all
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {products.isLoading
-            ? Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-72 rounded-2xl" />)
-            : deals.map((p) => <ProductCard key={p.id} product={p} />)}
-        </div>
-      </section>
+      <ProductRow
+        title="Deals of the day"
+        products={deals}
+        loading={products.isLoading}
+        seeAll={{}}
+      />
 
+      <ProductRow title="Recently viewed" products={recentProducts.data ?? []} />
+
+      <ProductRow title="Newest arrivals" products={newest} loading={products.isLoading} seeAll={{}} />
 
       {/* Promo banners — horizontally scrollable */}
-      <section className="-mx-4 mt-5 sm:mx-0">
-        <div className="flex snap-x gap-3 overflow-x-auto px-4 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:px-0 [&::-webkit-scrollbar]:hidden">
+      <section className="-mx-3 mt-4 sm:mx-0 sm:mt-5">
+        <div className="flex snap-x gap-3 overflow-x-auto px-3 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:px-0 [&::-webkit-scrollbar]:hidden">
           {(promo.data ?? []).map((b) => {
             const target = bannerTarget(b);
             return (
@@ -211,10 +223,13 @@ function Home() {
       </section>
 
 
-      {/* All products */}
-      <section className="mt-5 rounded-2xl bg-card p-4">
-        <h2 className="mb-4 text-xl font-bold">Recommended for you</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      {categoryRows.map((row) => (
+        <ProductRow key={row.category} title={row.category} products={row.items} seeAll={{ category: row.category }} />
+      ))}
+
+      <section className="mt-4 rounded-2xl bg-card p-3 sm:mt-5 sm:p-4">
+        <h2 className="mb-3 text-base font-bold sm:text-xl">Recommended for you</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
           {list.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

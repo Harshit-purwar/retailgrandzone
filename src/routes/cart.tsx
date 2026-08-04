@@ -43,7 +43,7 @@ function CartPage() {
   }
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-4 px-3 pb-28 pt-3 sm:px-4 sm:py-4 lg:grid-cols-[1fr_360px] lg:pb-8">
+    <div className="mx-auto grid w-full max-w-[1600px] gap-4 px-3 pb-28 pt-3 sm:px-4 sm:py-4 lg:grid-cols-[1fr_360px] lg:pb-8">
       <div className="overflow-hidden rounded-2xl bg-card shadow-sm">
         <h1 className="border-b border-border px-4 py-3 text-base font-semibold sm:text-lg">
           My Cart ({lines.length})
@@ -122,7 +122,7 @@ function CartPage() {
       </aside>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur lg:hidden">
-        <div className="mx-auto flex max-w-7xl items-center gap-3">
+        <div className="mx-auto flex w-full max-w-[1600px] items-center gap-3">
           <div className="text-sm">
             <p className="font-semibold leading-tight">{inr(subtotal + delivery)}</p>
             <p className="text-xs leading-tight text-muted-foreground">{lines.length} items</p>

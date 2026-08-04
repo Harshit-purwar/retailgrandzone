@@ -49,7 +49,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 shadow-sm">
       <div className="bg-brand text-brand-foreground">
-        <div className="mx-auto max-w-7xl px-3 pb-2 pt-2.5 sm:px-4 sm:pb-3 sm:pt-3">
+        <div className="mx-auto w-full max-w-[1600px] px-3 pb-2 pt-2.5 sm:px-4 sm:pb-3 sm:pt-3">
           <div className="flex items-center gap-2 sm:gap-3">
             <Link to="/" className="flex shrink-0 items-center gap-2">
               <img
@@ -188,7 +188,7 @@ export function Header() {
       </div>
 
       <nav className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-3 py-2 text-sm font-medium [scrollbar-width:none] sm:px-4 [&::-webkit-scrollbar]:hidden">
+        <div className="mx-auto flex w-full max-w-[1600px] gap-2 overflow-x-auto px-3 py-2 text-sm font-medium [scrollbar-width:none] sm:px-4 [&::-webkit-scrollbar]:hidden">
           <Link
             to="/products"
             search={{ q: undefined, category: undefined }}
@@ -224,7 +224,7 @@ export function Footer() {
   const year = new Date().getFullYear();
   return (
     <footer className="mt-10 border-t border-border bg-card pb-24 pt-8 text-sm text-muted-foreground">
-      <div className="mx-auto max-w-7xl px-4">
+      <div className="mx-auto w-full max-w-[1600px] px-4">
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <div className="flex items-center gap-2">

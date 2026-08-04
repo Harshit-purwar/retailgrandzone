@@ -66,7 +66,11 @@ function OrdersPage() {
               </div>
               <div className="text-right text-sm">
                 <p className="font-semibold">{inr(Number(o.total))}</p>
-                <p className="text-[var(--deal)]">{o.status}</p>
+                {(o.payment_status ?? "").toLowerCase() === "failed" ? (
+                  <p className="font-semibold text-destructive">Failed</p>
+                ) : (
+                  <p className="text-[var(--deal)]">{o.status}</p>
+                )}
               </div>
             </Link>
           ))}
