@@ -5,7 +5,7 @@ import { ShieldCheck, Truck, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/lib/store-types";
 import { discountPercent, inr, toList, toSpecs } from "@/lib/store-types";
-import { ProductCard, Rating } from "@/components/store/ProductCard";
+import { Rating } from "@/components/store/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/lib/cart-context";
