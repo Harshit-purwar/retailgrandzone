@@ -207,7 +207,7 @@ function AdminPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-4">
+    <div className="mx-auto w-full max-w-[1600px] px-4 py-4">
       <h1 className="mb-4 text-xl font-semibold">Admin panel</h1>
 
       <Tabs defaultValue="products" className="rounded-lg bg-card p-4">

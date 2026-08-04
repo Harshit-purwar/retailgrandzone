@@ -86,7 +86,7 @@ function ProductPage() {
 
   if (productQuery.isLoading) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-6">
+      <div className="mx-auto w-full max-w-[1600px] px-4 py-6">
         <Skeleton className="h-96 w-full rounded-lg" />
       </div>
     );
