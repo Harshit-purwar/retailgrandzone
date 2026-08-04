@@ -9,8 +9,9 @@ import { ProductCard, Rating } from "@/components/store/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/lib/cart-context";
-import { deliveryEstimate, useStoreSettings } from "@/lib/store-settings";
-import { useSavedLocation } from "@/lib/geo";
+import { ProductRow } from "@/components/store/ProductRow";
+import { recordRecentlyViewed, useRecentlyViewed } from "@/lib/recently-viewed";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/product/$slug")({
   head: () => ({
@@ -28,8 +29,6 @@ function ProductPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
   const cart = useCart();
-  const settings = useStoreSettings();
-  const { location } = useSavedLocation();
 
   const productQuery = useQuery({
     queryKey: ["product", slug],
@@ -55,18 +54,35 @@ function ProductPage() {
         .from("products")
         .select("*")
         .eq("active", true)
-        .eq("category", product!.category)
+        .or(`category.eq.${product!.category},brand.eq.${product!.brand}`)
         .neq("id", product!.id)
-        .limit(5);
+        .limit(12);
       if (error) throw error;
       let rows = (data ?? []) as unknown as Product[];
       if (rows.length === 0) {
-        const fallback = await supabase.from("products").select("*").neq("id", product!.id).limit(5);
+        const fallback = await supabase.from("products").select("*").eq("active", true).neq("id", product!.id).limit(12);
         rows = (fallback.data ?? []) as unknown as Product[];
       }
       return rows;
     },
   });
+
+  const recentIds = useRecentlyViewed().filter((id) => id !== product?.id);
+
+  const recentlyViewed = useQuery({
+    enabled: recentIds.length > 0,
+    queryKey: ["recently-viewed", recentIds.join(",")],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("products").select("*").in("id", recentIds).eq("active", true);
+      if (error) throw error;
+      const rows = (data ?? []) as unknown as Product[];
+      return recentIds.map((id) => rows.find((r) => r.id === id)).filter(Boolean) as Product[];
+    },
+  });
+
+  useEffect(() => {
+    if (product?.id) recordRecentlyViewed(product.id);
+  }, [product?.id]);
 
   if (productQuery.isLoading) {
     return (
@@ -93,9 +109,10 @@ function ProductPage() {
 
   const off = discountPercent(Number(product.price), Number(product.mrp));
   const highlights = toList(product.highlights);
-  const estimate = deliveryEstimate(settings.data, !!location);
   const specs = toSpecs(product.specs);
   const gallery = [product.image_url, ...toList(product.images)].filter(Boolean);
+
+  const outOfStock = Number(product.stock) <= 0;
 
   const line = {
     productId: product.id,
@@ -103,10 +120,11 @@ function ProductPage() {
     image_url: product.image_url,
     price: Number(product.price),
     slug: product.slug,
+    stock: product.stock,
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-4">
+    <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-4">
       <nav className="mb-3 text-xs text-muted-foreground">
         <Link to="/" className="hover:underline">
           Home
@@ -154,16 +172,18 @@ function ProductPage() {
           <div className="mt-4 grid grid-cols-2 gap-3">
             <Button
               size="lg"
+              disabled={outOfStock}
               className="bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90"
               onClick={() => {
                 cart.add(line);
                 toast.success("Added to cart");
               }}
             >
-              Add to cart
+              {outOfStock ? "Sold out" : "Add to cart"}
             </Button>
             <Button
               size="lg"
+              disabled={outOfStock}
               onClick={() => {
                 cart.add(line);
                 navigate({ to: "/checkout" });
@@ -175,7 +195,13 @@ function ProductPage() {
         </div>
 
         <div>
-          <p className="text-sm text-muted-foreground">{product.brand}</p>
+          <Link
+            to="/brand/$brand"
+            params={{ brand: product.brand }}
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            {product.brand}
+          </Link>
           <h1 className="text-xl font-semibold sm:text-2xl">{product.title}</h1>
           <div className="mt-2">
             <Rating value={Number(product.rating)} count={product.rating_count} />
@@ -191,7 +217,11 @@ function ProductPage() {
             ) : null}
           </div>
           <p className="mt-1 text-sm text-[var(--deal)]">
-            {product.stock > 0 ? `In stock — estimated delivery: ${estimate}` : "Currently out of stock"}
+            {outOfStock
+              ? "Currently out of stock"
+              : product.stock <= 5
+                ? `Hurry, only ${product.stock} left in stock`
+                : "In stock"}
           </p>
 
           {highlights.length > 0 ? (
@@ -242,14 +272,19 @@ function ProductPage() {
         </div>
       </div>
 
-      <section className="mt-6 rounded-lg bg-card p-4">
-        <h2 className="mb-4 text-lg font-semibold">Similar products</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {(related.data ?? []).map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
+      <ProductRow
+        title="Similar products"
+        products={related.data ?? []}
+        seeAll={{ category: product.category }}
+      />
+
+      <ProductRow
+        title={`More from ${product.brand}`}
+        products={(related.data ?? []).filter((p) => p.brand === product.brand)}
+        seeAll={{ brand: product.brand }}
+      />
+
+      <ProductRow title="Recently viewed" products={recentlyViewed.data ?? []} />
     </div>
   );
 }
