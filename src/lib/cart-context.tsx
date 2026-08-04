@@ -62,12 +62,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const add = useCallback((line: Omit<CartLine, "quantity">, quantity = 1) => {
     setLines((prev) => {
       const existing = prev.find((l) => l.productId === line.productId);
+      const stock = line.stock ?? existing?.stock ?? null;
       if (existing) {
+        const wanted = existing.quantity + quantity;
+        const capped = capToStock(wanted, stock);
+        if (capped < wanted) toast.warning(`Only ${capped} left in stock`);
         return prev.map((l) =>
-          l.productId === line.productId ? { ...l, quantity: l.quantity + quantity } : l,
+          l.productId === line.productId ? { ...l, stock, quantity: Math.max(1, capped) } : l,
         );
       }
-      return [...prev, { ...line, quantity }];
+      const capped = capToStock(quantity, stock);
+      if (capped <= 0) {
+        toast.error("This product is out of stock");
+        return prev;
+      }
+      if (capped < quantity) toast.warning(`Only ${capped} left in stock`);
+      return [...prev, { ...line, stock, quantity: capped }];
     });
   }, []);
 
@@ -75,9 +85,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setLines((prev) =>
       quantity <= 0
         ? prev.filter((l) => l.productId !== productId)
-        : prev.map((l) => (l.productId === productId ? { ...l, quantity } : l)),
+        : prev.map((l) => {
+            if (l.productId !== productId) return l;
+            const capped = capToStock(quantity, l.stock);
+            if (capped < quantity) toast.warning(`Only ${capped} left in stock`);
+            return { ...l, quantity: Math.max(1, capped) };
+          }),
     );
   }, []);
+
 
   const remove = useCallback((productId: string) => {
     setLines((prev) => prev.filter((l) => l.productId !== productId));
