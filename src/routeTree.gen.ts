@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProductsRouteImport } from './routes/products'
+import { Route as PolicyRouteImport } from './routes/policy'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as CheckoutRouteImport } from './routes/checkout'
@@ -25,6 +26,11 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 const ProductsRoute = ProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PolicyRoute = PolicyRouteImport.update({
+  id: '/policy',
+  path: '/policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrdersRoute = OrdersRouteImport.update({
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/help': typeof HelpRoute
   '/orders': typeof OrdersRoute
+  '/policy': typeof PolicyRoute
   '/products': typeof ProductsRoute
   '/api/chat': typeof ApiChatRoute
   '/brand/$brand': typeof BrandBrandRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/help': typeof HelpRoute
   '/orders': typeof OrdersRoute
+  '/policy': typeof PolicyRoute
   '/products': typeof ProductsRoute
   '/api/chat': typeof ApiChatRoute
   '/brand/$brand': typeof BrandBrandRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/help': typeof HelpRoute
   '/orders': typeof OrdersRoute
+  '/policy': typeof PolicyRoute
   '/products': typeof ProductsRoute
   '/api/chat': typeof ApiChatRoute
   '/brand/$brand': typeof BrandBrandRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/help'
     | '/orders'
+    | '/policy'
     | '/products'
     | '/api/chat'
     | '/brand/$brand'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/help'
     | '/orders'
+    | '/policy'
     | '/products'
     | '/api/chat'
     | '/brand/$brand'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/help'
     | '/orders'
+    | '/policy'
     | '/products'
     | '/api/chat'
     | '/brand/$brand'
@@ -179,6 +191,7 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   HelpRoute: typeof HelpRoute
   OrdersRoute: typeof OrdersRoute
+  PolicyRoute: typeof PolicyRoute
   ProductsRoute: typeof ProductsRoute
   ApiChatRoute: typeof ApiChatRoute
   BrandBrandRoute: typeof BrandBrandRoute
@@ -193,6 +206,13 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/products'
       preLoaderRoute: typeof ProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/policy': {
+      id: '/policy'
+      path: '/policy'
+      fullPath: '/policy'
+      preLoaderRoute: typeof PolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orders': {
@@ -283,6 +303,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   HelpRoute: HelpRoute,
   OrdersRoute: OrdersRoute,
+  PolicyRoute: PolicyRoute,
   ProductsRoute: ProductsRoute,
   ApiChatRoute: ApiChatRoute,
   BrandBrandRoute: BrandBrandRoute,
