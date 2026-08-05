@@ -16,7 +16,16 @@ export type Product = {
   specs: unknown;
   active: boolean;
   created_at: string;
+  gift_available?: boolean;
+  gift_note?: string;
+  warranty?: string;
+  colors?: unknown;
+  combo_product_ids?: unknown;
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string;
 };
+
 
 export type Banner = {
   id: string;
