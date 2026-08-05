@@ -230,6 +230,35 @@ function ProductPage() {
                 : "In stock"}
           </p>
 
+          {colors.length > 0 ? (
+            <div className="mt-4">
+              <h2 className="mb-2 text-sm font-semibold">
+                Colour{color ? `: ${color}` : ""}
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {colors.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setColor(c === color ? "" : c)}
+                    className={`rounded-full border px-3 py-1.5 text-sm ${
+                      c === color ? "border-primary bg-primary/10 font-semibold" : "border-border hover:bg-muted"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {product.gift_available ? (
+            <p className="mt-4 flex items-center gap-2 rounded-xl border border-dashed border-primary/50 p-3 text-sm">
+              <Gift className="h-4 w-4 shrink-0 text-primary" />
+              {product.gift_note?.trim() || "Gift wrapping available — add a note at checkout."}
+            </p>
+          ) : null}
+
           {highlights.length > 0 ? (
             <div className="mt-5">
               <h2 className="mb-2 font-semibold">Highlights</h2>
