@@ -262,6 +262,10 @@ function AdminPage() {
                       row: {
                         ...(p as unknown as AnyRecord),
                         images: Array.isArray(p.images) ? (p.images as string[]) : [],
+                        colors: Array.isArray((p as AnyRecord).colors) ? ((p as AnyRecord).colors as string[]).join(", ") : "",
+                        combo_product_ids: Array.isArray((p as AnyRecord).combo_product_ids)
+                          ? ((p as AnyRecord).combo_product_ids as string[]).join(",")
+                          : "",
                         highlights: Array.isArray(p.highlights) ? (p.highlights as string[]).join("\n") : "",
 
                         specs:
@@ -478,7 +482,11 @@ function EditForm({
               onChange={(v) => onChange({ ...row, [key]: v })}
             />
           ) : key === "image_url" ? (
-            <ImageField value={String(row[key] ?? "")} onChange={(v) => onChange({ ...row, [key]: v })} />
+            <ImageManager
+              kind="banner"
+              value={String(row[key] ?? "") ? [String(row[key])] : []}
+              onChange={(v) => onChange({ ...row, [key]: v[0] ?? "" })}
+            />
           ) : key === "category" || key === "link_category" ? (
 
             <CategoryField
