@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import { Gift, ShieldCheck, Truck, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/lib/store-types";
 import { discountPercent, inr, toList, toSpecs } from "@/lib/store-types";
@@ -10,8 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/lib/cart-context";
 import { ProductRow } from "@/components/store/ProductRow";
+import { ComboSection } from "@/components/store/ComboSection";
 import { recordRecentlyViewed, useRecentlyViewed } from "@/lib/recently-viewed";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
 
 export const Route = createFileRoute("/product/$slug")({
   head: () => ({
