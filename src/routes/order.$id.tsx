@@ -26,6 +26,9 @@ export const Route = createFileRoute("/order/$id")({
 
 function OrderPage() {
   const { id } = Route.useParams();
+  const qc = useQueryClient();
+  const settings = useStoreSettings();
+
 
   const query = useQuery({
     queryKey: ["order", id],
