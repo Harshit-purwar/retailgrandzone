@@ -115,17 +115,19 @@ function ProductPage() {
   const highlights = toList(product.highlights);
   const specs = toSpecs(product.specs);
   const gallery = [product.image_url, ...toList(product.images)].filter(Boolean);
+  const colors = toList(product.colors).filter(Boolean);
 
   const outOfStock = Number(product.stock) <= 0;
 
   const line = {
     productId: product.id,
-    title: product.title,
+    title: color ? `${product.title} (${color})` : product.title,
     image_url: product.image_url,
     price: Number(product.price),
     slug: product.slug,
     stock: product.stock,
   };
+
 
   return (
     <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-4">
