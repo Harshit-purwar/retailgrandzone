@@ -332,8 +332,12 @@ export type Database = {
           active: boolean
           brand: string
           category: string
+          colors: Json
+          combo_product_ids: Json
           created_at: string
           description: string
+          gift_available: boolean
+          gift_note: string
           highlights: Json
           id: string
           image_url: string
@@ -342,18 +346,26 @@ export type Database = {
           price: number
           rating: number
           rating_count: number
+          seo_description: string
+          seo_keywords: string
+          seo_title: string
           slug: string | null
           specs: Json
           stock: number
           store_id: string | null
           title: string
+          warranty: string
         }
         Insert: {
           active?: boolean
           brand?: string
           category?: string
+          colors?: Json
+          combo_product_ids?: Json
           created_at?: string
           description?: string
+          gift_available?: boolean
+          gift_note?: string
           highlights?: Json
           id?: string
           image_url?: string
@@ -362,18 +374,26 @@ export type Database = {
           price?: number
           rating?: number
           rating_count?: number
+          seo_description?: string
+          seo_keywords?: string
+          seo_title?: string
           slug?: string | null
           specs?: Json
           stock?: number
           store_id?: string | null
           title: string
+          warranty?: string
         }
         Update: {
           active?: boolean
           brand?: string
           category?: string
+          colors?: Json
+          combo_product_ids?: Json
           created_at?: string
           description?: string
+          gift_available?: boolean
+          gift_note?: string
           highlights?: Json
           id?: string
           image_url?: string
@@ -382,11 +402,15 @@ export type Database = {
           price?: number
           rating?: number
           rating_count?: number
+          seo_description?: string
+          seo_keywords?: string
+          seo_title?: string
           slug?: string | null
           specs?: Json
           stock?: number
           store_id?: string | null
           title?: string
+          warranty?: string
         }
         Relationships: [
           {
@@ -421,6 +445,8 @@ export type Database = {
       }
       store_settings: {
         Row: {
+          admin_whatsapp: string
+          cancellation_fee_percent: number
           delivery_estimate: string
           delivery_fee: number
           delivery_fee_enabled: boolean
@@ -430,6 +456,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admin_whatsapp?: string
+          cancellation_fee_percent?: number
           delivery_estimate?: string
           delivery_fee?: number
           delivery_fee_enabled?: boolean
@@ -439,6 +467,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admin_whatsapp?: string
+          cancellation_fee_percent?: number
           delivery_estimate?: string
           delivery_fee?: number
           delivery_fee_enabled?: boolean

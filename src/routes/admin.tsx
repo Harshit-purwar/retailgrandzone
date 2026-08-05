@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ProductForm } from "@/components/admin/ProductForm";
+import { ImageManager } from "@/components/admin/ImageManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -145,7 +147,22 @@ function AdminPage() {
       rating_count: Number(row.rating_count),
       stock: Number(row.stock),
       store_id: row.store_id ? String(row.store_id) : null,
+      gift_available: !!row.gift_available,
+      gift_note: String(row.gift_note ?? ""),
+      warranty: String(row.warranty ?? ""),
+      colors: String(row.colors ?? "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      combo_product_ids: String(row.combo_product_ids ?? "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      seo_title: String(row.seo_title ?? ""),
+      seo_description: String(row.seo_description ?? ""),
+      seo_keywords: String(row.seo_keywords ?? ""),
       active: !!row.active,
+
       highlights: String(row.highlights || "")
         .split("\n")
         .map((s) => s.trim())
@@ -245,6 +262,10 @@ function AdminPage() {
                       row: {
                         ...(p as unknown as AnyRecord),
                         images: Array.isArray(p.images) ? (p.images as string[]) : [],
+                        colors: Array.isArray((p as AnyRecord).colors) ? ((p as AnyRecord).colors as string[]).join(", ") : "",
+                        combo_product_ids: Array.isArray((p as AnyRecord).combo_product_ids)
+                          ? ((p as AnyRecord).combo_product_ids as string[]).join(",")
+                          : "",
                         highlights: Array.isArray(p.highlights) ? (p.highlights as string[]).join("\n") : "",
 
                         specs:
@@ -367,14 +388,21 @@ function AdminPage() {
           <DialogHeader>
             <DialogTitle>{editing?.kind === "banner" ? "Banner" : "Product"} details</DialogTitle>
           </DialogHeader>
-          {editing ? (
+          {editing?.kind === "product" ? (
+            <ProductForm
+              row={editing.row}
+              onChange={(row) => setEditing({ ...editing, row })}
+              onSave={() => saveProduct(editing.row)}
+            />
+          ) : editing ? (
             <EditForm
               kind={editing.kind}
               row={editing.row}
               onChange={(row) => setEditing({ ...editing, row })}
-              onSave={() => (editing.kind === "product" ? saveProduct(editing.row) : saveBanner(editing.row))}
+              onSave={() => saveBanner(editing.row)}
             />
           ) : null}
+
         </DialogContent>
       </Dialog>
 
@@ -454,7 +482,11 @@ function EditForm({
               onChange={(v) => onChange({ ...row, [key]: v })}
             />
           ) : key === "image_url" ? (
-            <ImageField value={String(row[key] ?? "")} onChange={(v) => onChange({ ...row, [key]: v })} />
+            <ImageManager
+              kind="banner"
+              value={String(row[key] ?? "") ? [String(row[key])] : []}
+              onChange={(v) => onChange({ ...row, [key]: v[0] ?? "" })}
+            />
           ) : key === "category" || key === "link_category" ? (
 
             <CategoryField

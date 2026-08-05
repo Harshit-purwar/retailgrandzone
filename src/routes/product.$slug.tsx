@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import { Gift, ShieldCheck, Truck, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/lib/store-types";
 import { discountPercent, inr, toList, toSpecs } from "@/lib/store-types";
@@ -10,8 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/lib/cart-context";
 import { ProductRow } from "@/components/store/ProductRow";
+import { ComboSection } from "@/components/store/ComboSection";
 import { recordRecentlyViewed, useRecentlyViewed } from "@/lib/recently-viewed";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
 
 export const Route = createFileRoute("/product/$slug")({
   head: () => ({
@@ -29,6 +31,8 @@ function ProductPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
   const cart = useCart();
+  const [color, setColor] = useState<string>("");
+
 
   const productQuery = useQuery({
     queryKey: ["product", slug],
@@ -111,17 +115,19 @@ function ProductPage() {
   const highlights = toList(product.highlights);
   const specs = toSpecs(product.specs);
   const gallery = [product.image_url, ...toList(product.images)].filter(Boolean);
+  const colors = toList(product.colors).filter(Boolean);
 
   const outOfStock = Number(product.stock) <= 0;
 
   const line = {
     productId: product.id,
-    title: product.title,
+    title: color ? `${product.title} (${color})` : product.title,
     image_url: product.image_url,
     price: Number(product.price),
     slug: product.slug,
     stock: product.stock,
   };
+
 
   return (
     <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-4">
@@ -224,6 +230,35 @@ function ProductPage() {
                 : "In stock"}
           </p>
 
+          {colors.length > 0 ? (
+            <div className="mt-4">
+              <h2 className="mb-2 text-sm font-semibold">
+                Colour{color ? `: ${color}` : ""}
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {colors.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setColor(c === color ? "" : c)}
+                    className={`rounded-full border px-3 py-1.5 text-sm ${
+                      c === color ? "border-primary bg-primary/10 font-semibold" : "border-border hover:bg-muted"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {product.gift_available ? (
+            <p className="mt-4 flex items-center gap-2 rounded-xl border border-dashed border-primary/50 p-3 text-sm">
+              <Gift className="h-4 w-4 shrink-0 text-primary" />
+              {product.gift_note?.trim() || "Gift wrapping available — add a note at checkout."}
+            </p>
+          ) : null}
+
           {highlights.length > 0 ? (
             <div className="mt-5">
               <h2 className="mb-2 font-semibold">Highlights</h2>
@@ -262,15 +297,20 @@ function ProductPage() {
             <span className="flex items-center gap-2 rounded border border-border p-3">
               <Truck className="h-4 w-4 text-primary" /> Free delivery
             </span>
-            <span className="flex items-center gap-2 rounded border border-border p-3">
+            <Link to="/policy" className="flex items-center gap-2 rounded border border-border p-3 hover:border-primary">
               <RotateCcw className="h-4 w-4 text-primary" /> 7 day replacement
-            </span>
+            </Link>
             <span className="flex items-center gap-2 rounded border border-border p-3">
-              <ShieldCheck className="h-4 w-4 text-primary" /> Warranty included
+              <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+              {product.warranty?.trim() || "Warranty included"}
             </span>
           </div>
         </div>
       </div>
+
+      <ComboSection product={product} />
+
+
 
       <ProductRow
         title="Similar products"
