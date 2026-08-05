@@ -297,15 +297,20 @@ function ProductPage() {
             <span className="flex items-center gap-2 rounded border border-border p-3">
               <Truck className="h-4 w-4 text-primary" /> Free delivery
             </span>
-            <span className="flex items-center gap-2 rounded border border-border p-3">
+            <Link to="/policy" className="flex items-center gap-2 rounded border border-border p-3 hover:border-primary">
               <RotateCcw className="h-4 w-4 text-primary" /> 7 day replacement
-            </span>
+            </Link>
             <span className="flex items-center gap-2 rounded border border-border p-3">
-              <ShieldCheck className="h-4 w-4 text-primary" /> Warranty included
+              <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+              {product.warranty?.trim() || "Warranty included"}
             </span>
           </div>
         </div>
       </div>
+
+      <ComboSection product={product} />
+
+
 
       <ProductRow
         title="Similar products"
