@@ -367,14 +367,21 @@ function AdminPage() {
           <DialogHeader>
             <DialogTitle>{editing?.kind === "banner" ? "Banner" : "Product"} details</DialogTitle>
           </DialogHeader>
-          {editing ? (
+          {editing?.kind === "product" ? (
+            <ProductForm
+              row={editing.row}
+              onChange={(row) => setEditing({ ...editing, row })}
+              onSave={() => saveProduct(editing.row)}
+            />
+          ) : editing ? (
             <EditForm
               kind={editing.kind}
               row={editing.row}
               onChange={(row) => setEditing({ ...editing, row })}
-              onSave={() => (editing.kind === "product" ? saveProduct(editing.row) : saveBanner(editing.row))}
+              onSave={() => saveBanner(editing.row)}
             />
           ) : null}
+
         </DialogContent>
       </Dialog>
 
