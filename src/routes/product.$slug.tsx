@@ -31,6 +31,8 @@ function ProductPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
   const cart = useCart();
+  const [color, setColor] = useState<string>("");
+
 
   const productQuery = useQuery({
     queryKey: ["product", slug],
