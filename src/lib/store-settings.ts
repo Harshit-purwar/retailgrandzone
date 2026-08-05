@@ -10,6 +10,8 @@ export type StoreSettings = {
   free_delivery_above: number;
   delivery_estimate: string;
   support_phone: string;
+  cancellation_fee_percent: number;
+  admin_whatsapp: string;
 };
 
 export type Coupon = {
@@ -31,7 +33,10 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   free_delivery_above: 0,
   delivery_estimate: "2-4 Days",
   support_phone: SUPPORT_PHONE,
+  cancellation_fee_percent: 4,
+  admin_whatsapp: SUPPORT_PHONE,
 };
+
 
 export function useStoreSettings() {
   return useQuery({
