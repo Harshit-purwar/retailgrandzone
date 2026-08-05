@@ -155,6 +155,29 @@ function OrderPage() {
         </p>
       </div>
 
+      <div className="rounded-lg bg-card p-4 text-sm">
+        <h2 className="mb-2 font-semibold">Cancellation &amp; refund</h2>
+        {prepaid ? (
+          <p>
+            This order is prepaid. If you cancel or return it, a {percent}% processing fee ({inr(refund.fee)}) is
+            deducted and <strong>{inr(refund.refund)}</strong> is refunded to your original payment method.
+          </p>
+        ) : (
+          <p>Cash on delivery orders can be cancelled free of charge before dispatch.</p>
+        )}
+        <div className="mt-3 flex flex-wrap gap-2">
+          {canCustomerCancel(order.status) ? (
+            <Button variant="destructive" size="sm" onClick={cancelOrder}>
+              Cancel order
+            </Button>
+          ) : null}
+          <Button asChild variant="outline" size="sm">
+            <Link to="/policy">Read full policy</Link>
+          </Button>
+        </div>
+      </div>
+
+
       <Link
         to="/products"
         search={{ q: undefined, category: undefined }}
