@@ -1,10 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CheckCircle2, MessageCircle } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Order, OrderItem } from "@/lib/store-types";
-import { ORDER_STATUSES, inr } from "@/lib/store-types";
+import { CANCELLED_BY_CUSTOMER, ORDER_STATUSES, canCustomerCancel, inr } from "@/lib/store-types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { useStoreSettings } from "@/lib/store-settings";
+import { cancellationFeePercent, refundBreakdown } from "@/lib/policy";
+import { orderMessage, waLink } from "@/lib/whatsapp";
+
 
 export const Route = createFileRoute("/order/$id")({
   head: () => ({
