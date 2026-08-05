@@ -273,9 +273,18 @@ export function Footer() {
                   Request help
                 </Link>
               </li>
+              <li>
+                <Link to="/policy" className="hover:text-primary">
+                  Cancellation &amp; returns
+                </Link>
+              </li>
+              <li>
+                <Link to="/policy" hash="refunds" className="hover:text-primary">
+                  Refund policy
+                </Link>
+              </li>
               <li>Shipping &amp; delivery</li>
-              <li>Cancellation &amp; returns</li>
-              <li>Coupons &amp; offers</li>
+
             </ul>
           </div>
 

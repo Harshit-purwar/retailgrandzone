@@ -384,6 +384,16 @@ function CheckoutPage() {
           <span>Total</span>
           <span>{inr(total)}</span>
         </div>
+
+        <p className="mt-3 text-xs text-muted-foreground">
+          Prepaid orders cancelled or returned are refunded after a{" "}
+          {settings.data?.cancellation_fee_percent ?? 4}% payment processing fee.{" "}
+          <Link to="/policy" className="text-primary underline">
+            Read the policy
+          </Link>
+          .
+        </p>
+
       </aside>
 
     </div>
