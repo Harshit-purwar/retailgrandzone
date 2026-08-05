@@ -68,6 +68,26 @@ function OrderPage() {
 
   const steps = ORDER_STATUSES.slice(0, 5);
   const activeIndex = steps.indexOf(order.status);
+  const items = query.data?.items ?? [];
+  const prepaid = (order.payment_status ?? "").toLowerCase() === "paid";
+  const percent = cancellationFeePercent(settings.data);
+  const refund = refundBreakdown(Number(order.total), percent);
+  const adminPhone = settings.data?.admin_whatsapp || settings.data?.support_phone || "6392480868";
+
+  async function cancelOrder() {
+    if (!order) return;
+    const message = prepaid
+      ? `Cancel this order? A ${percent}% processing fee (${inr(refund.fee)}) will be deducted and ${inr(refund.refund)} refunded.`
+      : "Cancel this order?";
+    if (!window.confirm(message)) return;
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: CANCELLED_BY_CUSTOMER, cancelled_at: new Date().toISOString() })
+      .eq("id", order.id);
+    if (error) return toast.error(error.message);
+    toast.success(prepaid ? `Order cancelled — ${inr(refund.refund)} will be refunded` : "Order cancelled");
+    qc.invalidateQueries({ queryKey: ["order", order.id] });
+  }
 
   return (
     <div className="mx-auto max-w-4xl space-y-4 px-4 py-4">
@@ -77,10 +97,23 @@ function OrderPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           Order ID {order.id.slice(0, 8).toUpperCase()} · {order.payment_method} · {order.payment_status}
         </p>
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <Button asChild variant="outline">
+            <a href={waLink(order.phone, orderMessage(order, items, false))} target="_blank" rel="noreferrer">
+              <MessageCircle className="mr-1 h-4 w-4" /> Send details on WhatsApp
+            </a>
+          </Button>
+          <Button asChild className="bg-[var(--deal)] text-white hover:bg-[var(--deal)]/90">
+            <a href={waLink(adminPhone, orderMessage(order, items, true))} target="_blank" rel="noreferrer">
+              <MessageCircle className="mr-1 h-4 w-4" /> Notify the store
+            </a>
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-lg bg-card p-4">
         <h2 className="mb-4 font-semibold">Order status</h2>
+
         <ol className="grid gap-3 sm:grid-cols-5">
           {steps.map((s, i) => (
             <li key={s} className="text-center text-xs">
