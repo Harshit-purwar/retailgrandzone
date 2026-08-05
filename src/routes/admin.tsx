@@ -147,7 +147,22 @@ function AdminPage() {
       rating_count: Number(row.rating_count),
       stock: Number(row.stock),
       store_id: row.store_id ? String(row.store_id) : null,
+      gift_available: !!row.gift_available,
+      gift_note: String(row.gift_note ?? ""),
+      warranty: String(row.warranty ?? ""),
+      colors: String(row.colors ?? "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      combo_product_ids: String(row.combo_product_ids ?? "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      seo_title: String(row.seo_title ?? ""),
+      seo_description: String(row.seo_description ?? ""),
+      seo_keywords: String(row.seo_keywords ?? ""),
       active: !!row.active,
+
       highlights: String(row.highlights || "")
         .split("\n")
         .map((s) => s.trim())
