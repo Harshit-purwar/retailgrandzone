@@ -246,12 +246,16 @@ export type Database = {
           city: string
           coupon_code: string | null
           created_at: string
+          customer_gstin: string
           delivery_estimate: string | null
           delivery_fee: number
           discount: number
           email: string | null
           full_name: string
+          gst_percent: number
           id: string
+          invoice_notes: string
+          invoice_number: string | null
           latitude: number | null
           longitude: number | null
           payment_id: string | null
@@ -259,6 +263,7 @@ export type Database = {
           payment_status: string
           phone: string
           pincode: string
+          seller_gstin: string
           state: string
           status: string
           store_id: string | null
@@ -272,12 +277,16 @@ export type Database = {
           city: string
           coupon_code?: string | null
           created_at?: string
+          customer_gstin?: string
           delivery_estimate?: string | null
           delivery_fee?: number
           discount?: number
           email?: string | null
           full_name: string
+          gst_percent?: number
           id?: string
+          invoice_notes?: string
+          invoice_number?: string | null
           latitude?: number | null
           longitude?: number | null
           payment_id?: string | null
@@ -285,6 +294,7 @@ export type Database = {
           payment_status?: string
           phone: string
           pincode: string
+          seller_gstin?: string
           state: string
           status?: string
           store_id?: string | null
@@ -298,12 +308,16 @@ export type Database = {
           city?: string
           coupon_code?: string | null
           created_at?: string
+          customer_gstin?: string
           delivery_estimate?: string | null
           delivery_fee?: number
           discount?: number
           email?: string | null
           full_name?: string
+          gst_percent?: number
           id?: string
+          invoice_notes?: string
+          invoice_number?: string | null
           latitude?: number | null
           longitude?: number | null
           payment_id?: string | null
@@ -311,6 +325,7 @@ export type Database = {
           payment_status?: string
           phone?: string
           pincode?: string
+          seller_gstin?: string
           state?: string
           status?: string
           store_id?: string | null
