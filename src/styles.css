@@ -156,3 +156,22 @@
     color: var(--color-foreground);
   }
 }
+
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  header,
+  footer,
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  #invoice-sheet {
+    box-shadow: none;
+    max-width: none;
+    padding: 0;
+  }
+}
