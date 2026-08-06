@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, MessageCircle } from "lucide-react";
+import { CheckCircle2, Clock, FileText, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Order, OrderItem } from "@/lib/store-types";
@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useStoreSettings } from "@/lib/store-settings";
 import { cancellationFeePercent, refundBreakdown } from "@/lib/policy";
-import { orderMessage, waLink } from "@/lib/whatsapp";
+import { orderState, orderStateLabel } from "@/lib/order-status";
 
 
 export const Route = createFileRoute("/order/$id")({
@@ -72,7 +72,7 @@ function OrderPage() {
   const prepaid = (order.payment_status ?? "").toLowerCase() === "paid";
   const percent = cancellationFeePercent(settings.data);
   const refund = refundBreakdown(Number(order.total), percent);
-  const adminPhone = settings.data?.admin_whatsapp || settings.data?.support_phone || "6392480868";
+  const state = orderState(order);
 
   async function cancelOrder() {
     if (!order) return;
