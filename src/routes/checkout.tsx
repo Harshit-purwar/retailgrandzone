@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSelectedStore } from "@/lib/stores";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
+import type { Order, OrderItem } from "@/lib/store-types";
 import { inr } from "@/lib/store-types";
+import { openAdminWhatsApp } from "@/lib/whatsapp";
 import { createRazorpayOrder, verifyRazorpayPayment } from "@/lib/razorpay.functions";
 import type { Coupon } from "@/lib/store-settings";
 import { couponDiscount, deliveryFeeFor, fetchCoupon, useStoreSettings } from "@/lib/store-settings";
@@ -222,7 +224,7 @@ function CheckoutPage() {
     }
 
     // Successful orders are pushed to the admin's WhatsApp automatically.
-    notifyAdminOnWhatsApp(
+    openAdminWhatsApp(
       {
         ...(order as unknown as Order),
         payment_status: payment === "RAZORPAY" ? "Paid" : "Pending",
@@ -235,7 +237,8 @@ function CheckoutPage() {
         image_url: l.image_url,
         price: l.price,
         quantity: l.quantity,
-      })),
+      })) as OrderItem[],
+      settings.data?.admin_whatsapp || settings.data?.support_phone || "6392480868",
     );
 
     setBusy(false);
