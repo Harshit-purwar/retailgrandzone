@@ -221,10 +221,28 @@ function CheckoutPage() {
       toast.success("Order placed!");
     }
 
+    // Successful orders are pushed to the admin's WhatsApp automatically.
+    notifyAdminOnWhatsApp(
+      {
+        ...(order as unknown as Order),
+        payment_status: payment === "RAZORPAY" ? "Paid" : "Pending",
+      },
+      lines.map((l) => ({
+        id: l.productId,
+        order_id: order.id,
+        product_id: l.productId,
+        title: l.title,
+        image_url: l.image_url,
+        price: l.price,
+        quantity: l.quantity,
+      })),
+    );
+
     setBusy(false);
     clear();
     navigate({ to: "/order/$id", params: { id: order.id } });
   }
+
 
 
   return (
