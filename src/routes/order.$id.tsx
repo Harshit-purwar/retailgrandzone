@@ -92,24 +92,36 @@ function OrderPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-4 px-4 py-4">
       <div className="rounded-lg bg-card p-6 text-center">
-        <CheckCircle2 className="mx-auto h-12 w-12 text-[var(--deal)]" />
-        <h1 className="mt-3 text-xl font-semibold">Order placed successfully</h1>
+        {state === "successful" ? (
+          <CheckCircle2 className="mx-auto h-12 w-12 text-[var(--deal)]" />
+        ) : state === "pending" ? (
+          <Clock className="mx-auto h-12 w-12 text-[var(--brand,orange)]" />
+        ) : (
+          <XCircle className="mx-auto h-12 w-12 text-destructive" />
+        )}
+        <h1 className="mt-3 text-xl font-semibold">{orderStateLabel(state)}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Order ID {order.id.slice(0, 8).toUpperCase()} · {order.payment_method} · {order.payment_status}
         </p>
+        {state === "failed" ? (
+          <p className="mt-2 text-sm text-destructive">
+            Your payment was not completed, so this order has not been confirmed. You can place it again from your cart.
+          </p>
+        ) : null}
+        {state === "pending" ? (
+          <p className="mt-2 text-sm text-muted-foreground">
+            We are waiting for payment confirmation. The order is confirmed only once the payment succeeds.
+          </p>
+        ) : null}
         <div className="mt-4 flex flex-wrap justify-center gap-2">
           <Button asChild variant="outline">
-            <a href={waLink(order.phone, orderMessage(order, items, false))} target="_blank" rel="noreferrer">
-              <MessageCircle className="mr-1 h-4 w-4" /> Send details on WhatsApp
-            </a>
-          </Button>
-          <Button asChild className="bg-[var(--deal)] text-white hover:bg-[var(--deal)]/90">
-            <a href={waLink(adminPhone, orderMessage(order, items, true))} target="_blank" rel="noreferrer">
-              <MessageCircle className="mr-1 h-4 w-4" /> Notify the store
-            </a>
+            <Link to="/invoice/$id" params={{ id: order.id }}>
+              <FileText className="mr-1 h-4 w-4" /> View invoice
+            </Link>
           </Button>
         </div>
       </div>
+
 
       <div className="rounded-lg bg-card p-4">
         <h2 className="mb-4 font-semibold">Order status</h2>
