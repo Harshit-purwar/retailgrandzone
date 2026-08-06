@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Link2, Sparkles, Wand2 } from "lucide-react";
+import { Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { BASE_CATEGORIES, useCategories } from "@/lib/categories";
 import type { Product } from "@/lib/store-types";
@@ -225,7 +226,7 @@ export function ProductForm({
           checked={!!row.gift_available}
           onChange={(e) => onChange({ ...row, gift_available: e.target.checked })}
         />
-        Gift option available
+        <Gift className="h-4 w-4 text-primary" /> Gift option available
       </label>
       <div>
         <Label htmlFor="gift_note">Gift note</Label>
