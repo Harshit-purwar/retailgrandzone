@@ -47,6 +47,18 @@ function AuthPage() {
     navigate({ to: target, replace: true });
   }
 
+  async function sendReset() {
+    if (!email.trim()) return toast.error("Enter your email address first");
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Password reset link sent — check your email");
+  }
+
+
   async function signup(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
