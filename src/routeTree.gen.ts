@@ -20,6 +20,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as OrderIdRouteImport } from './routes/order.$id'
+import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as BrandBrandRouteImport } from './routes/brand.$brand'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
@@ -78,6 +79,11 @@ const OrderIdRoute = OrderIdRouteImport.update({
   path: '/order/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InvoiceIdRoute = InvoiceIdRouteImport.update({
+  id: '/invoice/$id',
+  path: '/invoice/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrandBrandRoute = BrandBrandRouteImport.update({
   id: '/brand/$brand',
   path: '/brand/$brand',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/products': typeof ProductsRoute
   '/api/chat': typeof ApiChatRoute
   '/brand/$brand': typeof BrandBrandRoute
+  '/invoice/$id': typeof InvoiceIdRoute
   '/order/$id': typeof OrderIdRoute
   '/product/$slug': typeof ProductSlugRoute
 }
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/products': typeof ProductsRoute
   '/api/chat': typeof ApiChatRoute
   '/brand/$brand': typeof BrandBrandRoute
+  '/invoice/$id': typeof InvoiceIdRoute
   '/order/$id': typeof OrderIdRoute
   '/product/$slug': typeof ProductSlugRoute
 }
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/products': typeof ProductsRoute
   '/api/chat': typeof ApiChatRoute
   '/brand/$brand': typeof BrandBrandRoute
+  '/invoice/$id': typeof InvoiceIdRoute
   '/order/$id': typeof OrderIdRoute
   '/product/$slug': typeof ProductSlugRoute
 }
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/api/chat'
     | '/brand/$brand'
+    | '/invoice/$id'
     | '/order/$id'
     | '/product/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/api/chat'
     | '/brand/$brand'
+    | '/invoice/$id'
     | '/order/$id'
     | '/product/$slug'
   id:
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/api/chat'
     | '/brand/$brand'
+    | '/invoice/$id'
     | '/order/$id'
     | '/product/$slug'
   fileRoutesById: FileRoutesById
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   ProductsRoute: typeof ProductsRoute
   ApiChatRoute: typeof ApiChatRoute
   BrandBrandRoute: typeof BrandBrandRoute
+  InvoiceIdRoute: typeof InvoiceIdRoute
   OrderIdRoute: typeof OrderIdRoute
   ProductSlugRoute: typeof ProductSlugRoute
 }
@@ -278,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/invoice/$id': {
+      id: '/invoice/$id'
+      path: '/invoice/$id'
+      fullPath: '/invoice/$id'
+      preLoaderRoute: typeof InvoiceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/brand/$brand': {
       id: '/brand/$brand'
       path: '/brand/$brand'
@@ -307,19 +327,10 @@ const rootRouteChildren: RootRouteChildren = {
   ProductsRoute: ProductsRoute,
   ApiChatRoute: ApiChatRoute,
   BrandBrandRoute: BrandBrandRoute,
+  InvoiceIdRoute: InvoiceIdRoute,
   OrderIdRoute: OrderIdRoute,
   ProductSlugRoute: ProductSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
