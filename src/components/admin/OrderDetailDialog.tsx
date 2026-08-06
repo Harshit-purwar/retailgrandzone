@@ -220,6 +220,8 @@ export function OrderDetailDialog({ order, onClose }: { order: Order | null; onC
                 <Row label="Total" value={<span className="text-base">{inr(Number(o.total))}</span>} />
               </div>
             </div>
+
+            <InvoicePanel order={o as unknown as InvoiceOrder} items={items.data ?? []} />
           </div>
         ) : null}
       </DialogContent>
