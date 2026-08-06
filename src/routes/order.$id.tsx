@@ -68,7 +68,6 @@ function OrderPage() {
 
   const steps = ORDER_STATUSES.slice(0, 5);
   const activeIndex = steps.indexOf(order.status);
-  const items = query.data?.items ?? [];
   const prepaid = (order.payment_status ?? "").toLowerCase() === "paid";
   const percent = cancellationFeePercent(settings.data);
   const refund = refundBreakdown(Number(order.total), percent);
