@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProductsRouteImport } from './routes/products'
 import { Route as PolicyRouteImport } from './routes/policy'
 import { Route as OrdersRouteImport } from './routes/orders'
@@ -20,9 +21,15 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as OrderIdRouteImport } from './routes/order.$id'
+import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as BrandBrandRouteImport } from './routes/brand.$brand'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsRoute = ProductsRouteImport.update({
   id: '/products',
   path: '/products',
@@ -78,6 +85,11 @@ const OrderIdRoute = OrderIdRouteImport.update({
   path: '/order/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InvoiceIdRoute = InvoiceIdRouteImport.update({
+  id: '/invoice/$id',
+  path: '/invoice/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrandBrandRoute = BrandBrandRouteImport.update({
   id: '/brand/$brand',
   path: '/brand/$brand',
@@ -99,8 +111,10 @@ export interface FileRoutesByFullPath {
   '/orders': typeof OrdersRoute
   '/policy': typeof PolicyRoute
   '/products': typeof ProductsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/api/chat': typeof ApiChatRoute
   '/brand/$brand': typeof BrandBrandRoute
+  '/invoice/$id': typeof InvoiceIdRoute
   '/order/$id': typeof OrderIdRoute
   '/product/$slug': typeof ProductSlugRoute
 }
@@ -114,8 +128,10 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersRoute
   '/policy': typeof PolicyRoute
   '/products': typeof ProductsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/api/chat': typeof ApiChatRoute
   '/brand/$brand': typeof BrandBrandRoute
+  '/invoice/$id': typeof InvoiceIdRoute
   '/order/$id': typeof OrderIdRoute
   '/product/$slug': typeof ProductSlugRoute
 }
@@ -130,8 +146,10 @@ export interface FileRoutesById {
   '/orders': typeof OrdersRoute
   '/policy': typeof PolicyRoute
   '/products': typeof ProductsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/api/chat': typeof ApiChatRoute
   '/brand/$brand': typeof BrandBrandRoute
+  '/invoice/$id': typeof InvoiceIdRoute
   '/order/$id': typeof OrderIdRoute
   '/product/$slug': typeof ProductSlugRoute
 }
@@ -147,8 +165,10 @@ export interface FileRouteTypes {
     | '/orders'
     | '/policy'
     | '/products'
+    | '/reset-password'
     | '/api/chat'
     | '/brand/$brand'
+    | '/invoice/$id'
     | '/order/$id'
     | '/product/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -162,8 +182,10 @@ export interface FileRouteTypes {
     | '/orders'
     | '/policy'
     | '/products'
+    | '/reset-password'
     | '/api/chat'
     | '/brand/$brand'
+    | '/invoice/$id'
     | '/order/$id'
     | '/product/$slug'
   id:
@@ -177,8 +199,10 @@ export interface FileRouteTypes {
     | '/orders'
     | '/policy'
     | '/products'
+    | '/reset-password'
     | '/api/chat'
     | '/brand/$brand'
+    | '/invoice/$id'
     | '/order/$id'
     | '/product/$slug'
   fileRoutesById: FileRoutesById
@@ -193,14 +217,23 @@ export interface RootRouteChildren {
   OrdersRoute: typeof OrdersRoute
   PolicyRoute: typeof PolicyRoute
   ProductsRoute: typeof ProductsRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ApiChatRoute: typeof ApiChatRoute
   BrandBrandRoute: typeof BrandBrandRoute
+  InvoiceIdRoute: typeof InvoiceIdRoute
   OrderIdRoute: typeof OrderIdRoute
   ProductSlugRoute: typeof ProductSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products': {
       id: '/products'
       path: '/products'
@@ -278,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/invoice/$id': {
+      id: '/invoice/$id'
+      path: '/invoice/$id'
+      fullPath: '/invoice/$id'
+      preLoaderRoute: typeof InvoiceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/brand/$brand': {
       id: '/brand/$brand'
       path: '/brand/$brand'
@@ -305,8 +345,10 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersRoute: OrdersRoute,
   PolicyRoute: PolicyRoute,
   ProductsRoute: ProductsRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ApiChatRoute: ApiChatRoute,
   BrandBrandRoute: BrandBrandRoute,
+  InvoiceIdRoute: InvoiceIdRoute,
   OrderIdRoute: OrderIdRoute,
   ProductSlugRoute: ProductSlugRoute,
 }

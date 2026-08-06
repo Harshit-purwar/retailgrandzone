@@ -103,7 +103,7 @@ function Home() {
 
       {/* Hero banners — scrollable carousel (Blinkit-style cards on mobile) */}
       <section className="-mx-3 sm:mx-0">
-        {hero.isLoading ? <Skeleton className="mx-4 h-44 rounded-2xl sm:mx-0 sm:h-72" /> : null}
+        {hero.isLoading ? <Skeleton className="mx-4 aspect-[16/6] rounded-2xl sm:mx-0" /> : null}
         {(hero.data ?? []).length > 0 ? (
           <div className="relative">
             {/* Mobile: compact swipeable tiles */}
@@ -117,7 +117,20 @@ function Home() {
                     onClick={() => navigate(target as never)}
                     className="relative w-[44%] shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm active:scale-[0.98]"
                   >
-                    <img src={b.image_url} alt={b.title} className="aspect-[4/5] w-full object-cover" />
+                    <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted">
+                      <img
+                        src={b.image_url}
+                        alt=""
+                        aria-hidden
+                        className="absolute inset-0 h-full w-full scale-110 object-cover blur-xl opacity-60"
+                      />
+                      <img
+                        src={b.image_url}
+                        alt={b.title}
+                        loading="lazy"
+                        className="relative h-full w-full object-contain"
+                      />
+                    </div>
                     <span className="absolute left-2 top-2 rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold text-brand-foreground">
                       Featured
                     </span>
@@ -144,7 +157,19 @@ function Home() {
                     onClick={() => navigate(target as never)}
                     className="relative w-full shrink-0 snap-center overflow-hidden rounded-2xl text-left"
                   >
-                    <img src={b.image_url} alt={b.title} className="h-72 w-full object-cover" />
+                    <div className="relative aspect-[16/6] w-full overflow-hidden bg-muted">
+                      <img
+                        src={b.image_url}
+                        alt=""
+                        aria-hidden
+                        className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl opacity-60"
+                      />
+                      <img
+                        src={b.image_url}
+                        alt={b.title}
+                        className="relative h-full w-full object-contain"
+                      />
+                    </div>
                     <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent p-10">
                       <div className="max-w-md text-white">
                         <span className="inline-flex items-center rounded-full bg-brand px-3 py-1 text-xs font-bold text-brand-foreground">
@@ -210,7 +235,20 @@ function Home() {
                 onClick={() => navigate(target as never)}
                 className="relative w-[80%] shrink-0 snap-start overflow-hidden rounded-2xl text-left active:scale-[0.98] sm:w-[48%]"
               >
-                <img src={b.image_url} alt={b.title} className="h-40 w-full object-cover" />
+                <div className="relative aspect-[16/7] w-full overflow-hidden bg-muted">
+                  <img
+                    src={b.image_url}
+                    alt=""
+                    aria-hidden
+                    className="absolute inset-0 h-full w-full scale-110 object-cover blur-xl opacity-60"
+                  />
+                  <img
+                    src={b.image_url}
+                    alt={b.title}
+                    loading="lazy"
+                    className="relative h-full w-full object-contain"
+                  />
+                </div>
                 <div className="absolute inset-0 bg-black/45 p-5 text-white">
                   <h3 className="text-lg font-semibold">{b.title}</h3>
                   <p className="text-sm opacity-90">{b.subtitle}</p>

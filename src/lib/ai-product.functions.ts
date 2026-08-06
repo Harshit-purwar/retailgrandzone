@@ -30,7 +30,11 @@ async function assertAdmin(context: { supabase: { rpc: (fn: string) => Promise<{
 
 async function askAI(system: string, user: string): Promise<ProductDraft> {
   const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("AI is not configured");
+  if (!key) {
+    throw new Error(
+      "AI is not configured: the server environment variable LOVABLE_API_KEY is missing. Add it to the deployment environment (e.g. Vercel → Settings → Environment Variables) and redeploy.",
+    );
+  }
 
   const res = await fetch(GATEWAY, {
     method: "POST",
@@ -43,7 +47,13 @@ async function askAI(system: string, user: string): Promise<ProductDraft> {
       ],
     }),
   });
-  if (!res.ok) throw new Error((await res.text()) || "AI request failed");
+  if (!res.ok) {
+    const body = await res.text();
+    if (res.status === 429) throw new Error("AI is busy right now (rate limited). Please try again in a moment.");
+    if (res.status === 402) throw new Error("AI credits are exhausted. Add credits to continue using AI tools.");
+    if (res.status === 401 || res.status === 403) throw new Error("AI key rejected — check LOVABLE_API_KEY on the server.");
+    throw new Error(body || "AI request failed");
+  }
   const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   const raw = json.choices?.[0]?.message?.content ?? "{}";
   const cleaned = raw.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
@@ -91,7 +101,16 @@ export const importProductFromUrl = createServerFn({ method: "POST" })
     let page = "";
     try {
       const res = await fetch(data.url, {
-        headers: { "user-agent": "Mozilla/5.0 (compatible; GrandZoneBot/1.0)" },
+        redirect: "follow",
+        signal: AbortSignal.timeout(15000),
+        headers: {
+          // Retailer pages block unknown bots; a normal desktop browser
+          // signature works from serverless runtimes too.
+          "user-agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36",
+          accept: "text/html,application/xhtml+xml",
+          "accept-language": "en-IN,en;q=0.9",
+        },
       });
       if (res.ok) page = await res.text();
     } catch {

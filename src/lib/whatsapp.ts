@@ -37,3 +37,12 @@ export function orderMessage(order: Order, items: OrderItem[], forAdmin: boolean
 export function waLink(phone: string, message: string): string {
   return `https://wa.me/${waNumber(phone)}?text=${encodeURIComponent(message)}`;
 }
+
+/**
+ * Fire-and-forget WhatsApp notification to the store admin for a successful
+ * order. Uses a click-to-send wa.me link opened in a new tab (no paid API).
+ */
+export function openAdminWhatsApp(order: Order, items: OrderItem[], phone: string): void {
+  if (typeof window === "undefined") return;
+  window.open(waLink(phone, orderMessage(order, items, true)), "_blank", "noopener");
+}

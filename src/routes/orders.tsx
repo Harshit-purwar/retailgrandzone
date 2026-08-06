@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import type { Order } from "@/lib/store-types";
 import { inr } from "@/lib/store-types";
+import { orderState, orderStateLabel } from "@/lib/order-status";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/orders")({
@@ -66,11 +67,19 @@ function OrdersPage() {
               </div>
               <div className="text-right text-sm">
                 <p className="font-semibold">{inr(Number(o.total))}</p>
-                {(o.payment_status ?? "").toLowerCase() === "failed" ? (
-                  <p className="font-semibold text-destructive">Failed</p>
-                ) : (
-                  <p className="text-[var(--deal)]">{o.status}</p>
-                )}
+                {(() => {
+                  const state = orderState(o);
+                  if (state === "successful") return <p className="text-[var(--deal)]">{o.status}</p>;
+                  return (
+                    <p
+                      className={
+                        state === "pending" ? "font-semibold text-muted-foreground" : "font-semibold text-destructive"
+                      }
+                    >
+                      {orderStateLabel(state)}
+                    </p>
+                  );
+                })()}
               </div>
             </Link>
           ))}

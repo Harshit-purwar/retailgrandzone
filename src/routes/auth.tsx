@@ -47,6 +47,18 @@ function AuthPage() {
     navigate({ to: target, replace: true });
   }
 
+  async function sendReset() {
+    if (!email.trim()) return toast.error("Enter your email address first");
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Password reset link sent — check your email");
+  }
+
+
   async function signup(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -96,8 +108,17 @@ function AuthPage() {
               <Button className="w-full" type="submit" disabled={busy}>
                 {busy ? "Please wait…" : "Login"}
               </Button>
+              <button
+                type="button"
+                onClick={sendReset}
+                disabled={busy}
+                className="w-full text-center text-sm text-primary underline"
+              >
+                Forgot password?
+              </button>
             </form>
           </TabsContent>
+
 
           <TabsContent value="signup">
             <form className="space-y-4 pt-4" onSubmit={signup}>
