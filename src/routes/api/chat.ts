@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { postChatCompletion } from "@/lib/ai-config";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -12,9 +13,6 @@ export const Route = createFileRoute("/api/chat")({
           return new Response("Messages are required", { status: 400 });
         }
 
-        const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("Missing AI key", { status: 500 });
-
         const system = [
           "You are the friendly support assistant for The Grand Zone, an online store in India.",
           "Help shoppers with orders, delivery, payments (Cash on Delivery and online payments), coupons, returns and finding products.",
@@ -25,17 +23,10 @@ export const Route = createFileRoute("/api/chat")({
           "If you do not know an order-specific detail, ask them to check the Orders page or the Help Center.",
         ].join(" ");
 
-        const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${key}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-3.6-flash",
-            stream: true,
-            messages: [{ role: "system", content: system }, ...messages.slice(-14)],
-          }),
+        const upstream = await postChatCompletion({
+          model: "",
+          stream: true,
+          messages: [{ role: "system", content: system }, ...messages.slice(-14)],
         });
 
         if (!upstream.ok || !upstream.body) {

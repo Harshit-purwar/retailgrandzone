@@ -5,16 +5,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSelectedStore } from "@/lib/stores";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
-import type { Order, OrderItem } from "@/lib/store-types";
 import { inr } from "@/lib/store-types";
-import { openAdminWhatsApp } from "@/lib/whatsapp";
 import { createRazorpayOrder, verifyRazorpayPayment } from "@/lib/razorpay.functions";
 import type { Coupon } from "@/lib/store-settings";
-import { couponDiscount, deliveryFeeFor, fetchCoupon, useStoreSettings } from "@/lib/store-settings";
+import {
+  couponDiscount,
+  deliveryFeeFor,
+  fetchCoupon,
+  useStoreSettings,
+} from "@/lib/store-settings";
+import { detectCurrentLocation } from "@/lib/geo";
+import { listAddresses, saveAddress, type Address } from "@/lib/addresses";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { MapPin, Loader2, Home, Building2 } from "lucide-react";
 
 declare global {
   interface Window {
@@ -34,14 +41,20 @@ function loadRazorpayScript(): Promise<boolean> {
   });
 }
 
-
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
       { title: "Checkout — The Grand Zone" },
-      { name: "description", content: "Enter your delivery address and payment method to place your The Grand Zone order." },
+      {
+        name: "description",
+        content:
+          "Enter your delivery address and payment method to place your The Grand Zone order.",
+      },
       { property: "og:title", content: "Checkout — The Grand Zone" },
-      { property: "og:description", content: "Enter delivery address and payment method to place your order." },
+      {
+        property: "og:description",
+        content: "Enter delivery address and payment method to place your order.",
+      },
     ],
   }),
   component: CheckoutPage,
@@ -61,11 +74,60 @@ function CheckoutPage() {
     city: "",
     state: "",
     pincode: "",
+    latitude: null as number | null,
+    longitude: null as number | null,
   });
   const [payment, setPayment] = useState("COD");
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<Coupon | null>(null);
   const [couponBusy, setCouponBusy] = useState(false);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [addressesLoading, setAddressesLoading] = useState(true);
+  const [locating, setLocating] = useState(false);
+  const [saveAddressOnPlace, setSaveAddressOnPlace] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    listAddresses(user.id)
+      .then(setAddresses)
+      .catch(() => setAddresses([]))
+      .finally(() => setAddressesLoading(false));
+  }, [user]);
+
+  async function useCurrentLocation() {
+    setLocating(true);
+    try {
+      const loc = await detectCurrentLocation();
+      setForm((f) => ({
+        ...f,
+        address_line: loc.address_line || f.address_line,
+        city: loc.city || f.city,
+        state: loc.state || f.state,
+        pincode: loc.pincode || f.pincode,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+      }));
+      toast.success(`Location detected — ${loc.label}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not detect your location");
+    } finally {
+      setLocating(false);
+    }
+  }
+
+  function useSavedAddress(a: Address) {
+    setForm({
+      full_name: a.full_name || form.full_name,
+      phone: a.phone || form.phone,
+      address_line: a.address_line,
+      city: a.city,
+      state: a.state,
+      pincode: a.pincode,
+      latitude: a.latitude ?? null,
+      longitude: a.longitude ?? null,
+    });
+    toast.success(`Delivering to ${a.label}`);
+  }
 
   const settings = useStoreSettings();
   const discount = couponDiscount(subtotal, coupon);
@@ -88,9 +150,9 @@ function CheckoutPage() {
     }
   }
 
-
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth", search: { redirect: "/checkout" }, replace: true });
+    if (!loading && !user)
+      navigate({ to: "/auth", search: { redirect: "/checkout" }, replace: true });
   }, [loading, user, navigate]);
 
   useEffect(() => {
@@ -98,7 +160,8 @@ function CheckoutPage() {
   }, [loading, user, lines.length, navigate]);
 
   function set(key: keyof typeof form) {
-    return (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [key]: e.target.value }));
+    return (e: React.ChangeEvent<HTMLInputElement>) =>
+      setForm((f) => ({ ...f, [key]: e.target.value }));
   }
 
   async function payWithRazorpay(orderId: string) {
@@ -151,16 +214,34 @@ function CheckoutPage() {
 
       checkout.on?.("payment.failed", (resp: unknown) => {
         const desc = (resp as { error?: { description?: string; reason?: string } })?.error;
-        reject(new Error(desc?.description || desc?.reason || "Payment failed. Please try another UPI app or method."));
+        reject(
+          new Error(
+            desc?.description ||
+              desc?.reason ||
+              "Payment failed. Please try another UPI app or method.",
+          ),
+        );
       });
       checkout.open();
     });
   }
 
-
   async function placeOrder() {
     if (!user) return;
     setBusy(true);
+
+    const saved = await (async () => {
+      if (!saveAddressOnPlace) return null;
+      try {
+        return await saveAddress(user.id, { ...form }, false);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (/PGRST205|PGRST204|Could not find the table|Failed to fetch/i.test(msg)) return null;
+        console.error("save address failed", msg);
+        return null;
+      }
+    })();
+
     const { data: order, error } = await supabase
       .from("orders")
       .insert({
@@ -172,6 +253,8 @@ function CheckoutPage() {
         city: form.city,
         state: form.state,
         pincode: form.pincode,
+        latitude: form.latitude ?? null,
+        longitude: form.longitude ?? null,
         total,
         coupon_code: coupon?.code ?? null,
         discount,
@@ -223,37 +306,19 @@ function CheckoutPage() {
       toast.success("Order placed!");
     }
 
-    // Successful orders are pushed to the admin's WhatsApp automatically.
-    openAdminWhatsApp(
-      {
-        ...(order as unknown as Order),
-        payment_status: payment === "RAZORPAY" ? "Paid" : "Pending",
-      },
-      lines.map((l) => ({
-        id: l.productId,
-        order_id: order.id,
-        product_id: l.productId,
-        title: l.title,
-        image_url: l.image_url,
-        price: l.price,
-        quantity: l.quantity,
-      })) as OrderItem[],
-      settings.data?.admin_whatsapp || settings.data?.support_phone || "6392480868",
-    );
-
     setBusy(false);
     clear();
     navigate({ to: "/order/$id", params: { id: order.id } });
   }
-
-
 
   return (
     <div className="mx-auto grid w-full max-w-[1600px] gap-4 px-3 py-4 sm:px-4 lg:grid-cols-[1fr_360px]">
       <div className="space-y-3">
         <section className="rounded-lg bg-card">
           <header className="flex items-center gap-3 border-b border-border px-4 py-3">
-            <span className="rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">1</span>
+            <span className="rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+              1
+            </span>
             <h2 className="font-semibold uppercase tracking-wide">Delivery address</h2>
           </header>
           {step === 1 ? (
@@ -264,17 +329,85 @@ function CheckoutPage() {
                 setStep(2);
               }}
             >
-              <div>
-                <Label htmlFor="name">Full name</Label>
-                <Input id="name" required value={form.full_name} onChange={set("full_name")} />
+              {!addressesLoading && addresses.length > 0 ? (
+                <div className="sm:col-span-2">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Saved addresses
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {addresses.map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => useSavedAddress(a)}
+                        className="flex items-start gap-2.5 rounded-xl border border-border p-3 text-left text-sm transition-colors hover:border-primary"
+                      >
+                        {a.label.toLowerCase().includes("work") ||
+                        a.label.toLowerCase().includes("office") ? (
+                          <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        ) : (
+                          <Home className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        )}
+                        <span className="min-w-0">
+                          <span className="block font-semibold">
+                            {a.label}
+                            {a.is_default ? (
+                              <span className="ml-1.5 rounded bg-primary/10 px-1 py-0.5 text-[10px] font-bold text-primary">
+                                DEFAULT
+                              </span>
+                            ) : null}
+                          </span>
+                          <span className="block text-xs text-muted-foreground">
+                            {a.address_line}, {a.city}, {a.state} — {a.pincode}
+                          </span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="flex items-end gap-2 sm:col-span-2">
+                <div className="flex-1">
+                  <Label htmlFor="name">Full name</Label>
+                  <Input id="name" required value={form.full_name} onChange={set("full_name")} />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={locating}
+                  onClick={useCurrentLocation}
+                  className="shrink-0"
+                >
+                  {locating ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <MapPin className="h-4 w-4" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {locating ? "Locating…" : "Use my location"}
+                  </span>
+                  <span className="sm:hidden">{locating ? "…" : "GPS"}</span>
+                </Button>
               </div>
               <div>
                 <Label htmlFor="phone">Phone number</Label>
-                <Input id="phone" required pattern="[0-9]{10}" value={form.phone} onChange={set("phone")} />
+                <Input
+                  id="phone"
+                  required
+                  pattern="[0-9]{10}"
+                  value={form.phone}
+                  onChange={set("phone")}
+                />
               </div>
               <div className="sm:col-span-2">
                 <Label htmlFor="address">Address (house no, area, street)</Label>
-                <Input id="address" required value={form.address_line} onChange={set("address_line")} />
+                <Input
+                  id="address"
+                  required
+                  value={form.address_line}
+                  onChange={set("address_line")}
+                />
               </div>
               <div>
                 <Label htmlFor="city">City</Label>
@@ -286,10 +419,26 @@ function CheckoutPage() {
               </div>
               <div>
                 <Label htmlFor="pincode">Pincode</Label>
-                <Input id="pincode" required pattern="[0-9]{6}" value={form.pincode} onChange={set("pincode")} />
+                <Input
+                  id="pincode"
+                  required
+                  pattern="[0-9]{6}"
+                  value={form.pincode}
+                  onChange={set("pincode")}
+                />
               </div>
+              <label className="flex items-center gap-2 text-sm text-muted-foreground sm:col-span-2">
+                <Checkbox
+                  checked={saveAddressOnPlace}
+                  onCheckedChange={(v) => setSaveAddressOnPlace(v === true)}
+                />
+                Save this address for next time
+              </label>
               <div className="sm:col-span-2">
-                <Button type="submit" className="bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90">
+                <Button
+                  type="submit"
+                  className="bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90"
+                >
                   Deliver here
                 </Button>
               </div>
@@ -310,14 +459,20 @@ function CheckoutPage() {
 
         <section className="rounded-lg bg-card">
           <header className="flex items-center gap-3 border-b border-border px-4 py-3">
-            <span className="rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">2</span>
+            <span className="rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+              2
+            </span>
             <h2 className="font-semibold uppercase tracking-wide">Payment options</h2>
           </header>
           {step === 2 ? (
             <div className="p-4">
               <RadioGroup value={payment} onValueChange={setPayment} className="space-y-3">
                 {[
-                  { v: "RAZORPAY", l: "Pay online (Razorpay)", d: "UPI, cards, netbanking & wallets — secure payment" },
+                  {
+                    v: "RAZORPAY",
+                    l: "Pay online (Razorpay)",
+                    d: "UPI, cards, netbanking & wallets — secure payment",
+                  },
                   { v: "COD", l: "Cash on delivery", d: "Pay in cash when the order arrives" },
                 ].map((o) => (
                   <label
@@ -342,13 +497,17 @@ function CheckoutPage() {
               </Button>
             </div>
           ) : (
-            <p className="p-4 text-sm text-muted-foreground">Complete the delivery address first.</p>
+            <p className="p-4 text-sm text-muted-foreground">
+              Complete the delivery address first.
+            </p>
           )}
         </section>
       </div>
 
       <aside className="h-fit rounded-2xl bg-card p-4 shadow-sm lg:sticky lg:top-32">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Price details</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Price details
+        </h2>
         <div className="space-y-2 text-sm">
           {lines.map((l) => (
             <div key={l.productId} className="flex justify-between gap-3">
@@ -366,12 +525,16 @@ function CheckoutPage() {
           ) : null}
           <div className="flex justify-between border-t border-dashed border-border pt-2">
             <span>Delivery</span>
-            <span className={delivery ? "" : "text-[var(--deal)]"}>{delivery ? inr(delivery) : "FREE"}</span>
+            <span className={delivery ? "" : "text-[var(--deal)]"}>
+              {delivery ? inr(delivery) : "FREE"}
+            </span>
           </div>
         </div>
 
         <div className="mt-4 rounded-xl border border-dashed border-border p-3">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Coupon code</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Coupon code
+          </p>
           {coupon ? (
             <div className="flex items-center justify-between gap-3 text-sm">
               <span className="font-semibold">{coupon.code} applied</span>
@@ -414,9 +577,7 @@ function CheckoutPage() {
           </Link>
           .
         </p>
-
       </aside>
-
     </div>
   );
 }

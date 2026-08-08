@@ -1,14 +1,12 @@
-import { supabase } from "@/integrations/supabase/client";
 import type { ImageKind } from "@/lib/image-tools";
 import { optimizeFile } from "@/lib/image-tools";
-
-const BUCKET = "store-images";
-const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
+import { getCloudinaryUploadParams } from "@/lib/cloudinary.functions";
 
 /**
- * Uploads a picked file to the store bucket and returns a long-lived URL.
+ * Uploads a picked file to Cloudinary and returns a long-lived URL.
  * Images are automatically resized and compressed (WebP where supported)
- * for the place they will be shown.
+ * for the place they will be shown. The upload is signed server-side, so the
+ * Cloudinary API secret never reaches the browser.
  */
 export async function uploadStoreImage(file: File, kind: ImageKind = "product"): Promise<string> {
   let upload = file;
@@ -17,33 +15,36 @@ export async function uploadStoreImage(file: File, kind: ImageKind = "product"):
   } catch {
     /* fall back to the original file if the browser can't process it */
   }
-
-  const ext = upload.name.split(".").pop()?.toLowerCase() || "jpg";
-  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-
-  const { error } = await supabase.storage.from(BUCKET).upload(path, upload, {
-    cacheControl: "31536000",
-    upsert: false,
-    contentType: upload.type || undefined,
-  });
-  if (error) throw error;
-
-  const { data, error: signError } = await supabase.storage.from(BUCKET).createSignedUrl(path, TEN_YEARS);
-  if (signError || !data?.signedUrl) throw signError ?? new Error("Could not create image URL");
-  return data.signedUrl;
+  return uploadToCloudinary(upload);
 }
 
 /** Uploads an already-processed (cropped) file without re-optimising it. */
 export async function uploadProcessedImage(file: File): Promise<string> {
-  const ext = file.name.split(".").pop()?.toLowerCase() || "webp";
-  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
-    cacheControl: "31536000",
-    upsert: false,
-    contentType: file.type || undefined,
+  return uploadToCloudinary(file);
+}
+
+async function uploadToCloudinary(file: File): Promise<string> {
+  const { cloudName, apiKey, timestamp, folder, signature } = await getCloudinaryUploadParams({
+    data: { folder: "store-images" },
   });
-  if (error) throw error;
-  const { data, error: signError } = await supabase.storage.from(BUCKET).createSignedUrl(path, TEN_YEARS);
-  if (signError || !data?.signedUrl) throw signError ?? new Error("Could not create image URL");
-  return data.signedUrl;
+
+  const form = new FormData();
+  form.append("file", file);
+  form.append("api_key", apiKey);
+  form.append("timestamp", String(timestamp));
+  form.append("folder", folder);
+  form.append("signature", signature);
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: "POST",
+    body: form,
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(body || "Cloudinary upload failed");
+  }
+  const json = (await res.json()) as { secure_url?: string; error?: { message?: string } };
+  if (!json.secure_url) throw new Error(json.error?.message || "Cloudinary upload failed");
+  return json.secure_url;
 }

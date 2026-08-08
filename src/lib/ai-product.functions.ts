@@ -1,8 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+import { postChatCompletion } from "@/lib/ai-config";
 
 const draftSchema = z.object({
   title: z.string().default(""),
@@ -23,40 +22,37 @@ const draftSchema = z.object({
 
 export type ProductDraft = z.infer<typeof draftSchema>;
 
-async function assertAdmin(context: { supabase: { rpc: (fn: string) => Promise<{ data: unknown }> } }) {
+async function assertAdmin(context: {
+  supabase: { rpc: (fn: string) => Promise<{ data: unknown }> };
+}) {
   const { data } = await context.supabase.rpc("is_admin");
   if (!data) throw new Error("Forbidden");
 }
 
 async function askAI(system: string, user: string): Promise<ProductDraft> {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) {
-    throw new Error(
-      "AI is not configured: the server environment variable LOVABLE_API_KEY is missing. Add it to the deployment environment (e.g. Vercel → Settings → Environment Variables) and redeploy.",
-    );
-  }
-
-  const res = await fetch(GATEWAY, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-3.6-flash",
-      messages: [
-        { role: "system", content: `${system} Reply ONLY with a JSON object, no markdown fences.` },
-        { role: "user", content: user },
-      ],
-    }),
+  const res = await postChatCompletion({
+    model: "",
+    messages: [
+      { role: "system", content: `${system} Reply ONLY with a JSON object, no markdown fences.` },
+      { role: "user", content: user },
+    ],
   });
   if (!res.ok) {
     const body = await res.text();
-    if (res.status === 429) throw new Error("AI is busy right now (rate limited). Please try again in a moment.");
-    if (res.status === 402) throw new Error("AI credits are exhausted. Add credits to continue using AI tools.");
-    if (res.status === 401 || res.status === 403) throw new Error("AI key rejected — check LOVABLE_API_KEY on the server.");
+    if (res.status === 429)
+      throw new Error("AI is busy right now (rate limited). Please try again in a moment.");
+    if (res.status === 402)
+      throw new Error("AI credits are exhausted. Add credits to continue using AI tools.");
+    if (res.status === 401 || res.status === 403)
+      throw new Error("AI key rejected — check AI_API_KEY on the server.");
     throw new Error(body || "AI request failed");
   }
   const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   const raw = json.choices?.[0]?.message?.content ?? "{}";
-  const cleaned = raw.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  const cleaned = raw
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/, "")
+    .trim();
   let parsed: unknown = {};
   try {
     parsed = JSON.parse(cleaned);
@@ -77,7 +73,12 @@ seo_keywords (comma separated), images (array of absolute image URLs if known, e
 export const generateProductDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
-    z.object({ prompt: z.string().min(2).max(2000), categories: z.array(z.string()).max(60).default([]) }).parse(data),
+    z
+      .object({
+        prompt: z.string().min(2).max(2000),
+        categories: z.array(z.string()).max(60).default([]),
+      })
+      .parse(data),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
@@ -93,7 +94,12 @@ ${SHAPE}`,
 export const importProductFromUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
-    z.object({ url: z.string().url().max(2000), categories: z.array(z.string()).max(60).default([]) }).parse(data),
+    z
+      .object({
+        url: z.string().url().max(2000),
+        categories: z.array(z.string()).max(60).default([]),
+      })
+      .parse(data),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
@@ -143,7 +149,12 @@ ${SHAPE}`,
 export const improveProductDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
-    z.object({ draft: z.record(z.string(), z.unknown()), categories: z.array(z.string()).max(60).default([]) }).parse(data),
+    z
+      .object({
+        draft: z.record(z.string(), z.unknown()),
+        categories: z.array(z.string()).max(60).default([]),
+      })
+      .parse(data),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);

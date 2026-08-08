@@ -2,7 +2,16 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2, Upload } from "lucide-react";
+import {
+  Pencil,
+  Plus,
+  Trash2,
+  Upload,
+  IndianRupee,
+  Package,
+  ShoppingBag,
+  Clock,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { BASE_CATEGORIES, useCategories } from "@/lib/categories";
@@ -36,10 +45,16 @@ export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
       { title: "Admin panel — The Grand Zone" },
-      { name: "description", content: "Manage The Grand Zone products, banners and customer orders." },
+      {
+        name: "description",
+        content: "Manage The Grand Zone products, banners and customer orders.",
+      },
       { name: "robots", content: "noindex" },
       { property: "og:title", content: "Admin panel — The Grand Zone" },
-      { property: "og:description", content: "Manage The Grand Zone products, banners and customer orders." },
+      {
+        property: "og:description",
+        content: "Manage The Grand Zone products, banners and customer orders.",
+      },
     ],
   }),
   component: AdminPage,
@@ -94,7 +109,10 @@ function AdminPage() {
     enabled: isAdmin,
     queryKey: ["admin", "products"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as Product[];
     },
@@ -114,7 +132,10 @@ function AdminPage() {
     enabled: isAdmin,
     queryKey: ["admin", "orders"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       // Only COD orders and successfully paid online orders belong in the admin
       // panel — failed / abandoned online payments stay in the customer's orders.
@@ -125,17 +146,48 @@ function AdminPage() {
     },
   });
 
-  const [editing, setEditing] = useState<{ kind: "product" | "banner"; row: AnyRecord } | null>(null);
+  const [editing, setEditing] = useState<{ kind: "product" | "banner"; row: AnyRecord } | null>(
+    null,
+  );
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
   const [newOrderOpen, setNewOrderOpen] = useState(false);
 
+  // Live order updates (requires the realtime publication to include `orders`
+  // — see supabase/migrations). Silently no-ops until that migration runs.
+  useEffect(() => {
+    if (!isAdmin) return;
+    const channel = supabase
+      .channel("admin-orders")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, (payload) => {
+        const row = payload.new as Partial<Order> | null;
+        if (row?.id) {
+          toast.success(`New order received — ${row.full_name ?? "Customer"}`, {
+            description: `₹${Number(row.total ?? 0).toLocaleString("en-IN")} · ${row.payment_method ?? ""}`,
+            duration: 6000,
+          });
+        }
+        qc.invalidateQueries({ queryKey: ["admin", "orders"] });
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, () =>
+        qc.invalidateQueries({ queryKey: ["admin", "orders"] }),
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAdmin, qc]);
 
   if (!isAdmin) return null;
 
   async function saveProduct(row: AnyRecord) {
     const payload: AnyRecord = {
       title: row.title,
-      slug: String(row.slug || "").trim() || String(row.title).toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      slug:
+        String(row.slug || "").trim() ||
+        String(row.title)
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-"),
       brand: row.brand,
       category: row.category,
       description: row.description,
@@ -176,7 +228,10 @@ function AdminPage() {
       ),
     };
     const res = row.id
-      ? await supabase.from("products").update(payload as never).eq("id", row.id as string)
+      ? await supabase
+          .from("products")
+          .update(payload as never)
+          .eq("id", row.id as string)
       : await supabase.from("products").insert(payload as never);
     if (res.error) return toast.error(res.error.message);
     toast.success("Product saved");
@@ -198,9 +253,34 @@ function AdminPage() {
       store_id: row.store_id ? String(row.store_id) : null,
       active: !!row.active,
     };
-    const res = row.id
-      ? await supabase.from("banners").update(payload as never).eq("id", row.id as string)
+    const multi = String(row.product_ids ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (multi.length > 0) payload.product_ids = multi;
+
+    let res = row.id
+      ? await supabase
+          .from("banners")
+          .update(payload as never)
+          .eq("id", row.id as string)
       : await supabase.from("banners").insert(payload as never);
+    if (
+      res.error &&
+      multi.length > 0 &&
+      /PGRST204|PGRST205|Could not find the table/i.test(res.error.message)
+    ) {
+      // product_ids column not available yet — save the rest and notify.
+      delete payload.product_ids;
+      res = row.id
+        ? await supabase
+            .from("banners")
+            .update(payload as never)
+            .eq("id", row.id as string)
+        : await supabase.from("banners").insert(payload as never);
+      if (!res.error)
+        toast.info("Saved, but multiple product links need the DB migration to activate.");
+    }
     if (res.error) return toast.error(res.error.message);
     toast.success("Banner saved");
     setEditing(null);
@@ -227,6 +307,8 @@ function AdminPage() {
     <div className="mx-auto w-full max-w-[1600px] px-4 py-4">
       <h1 className="mb-4 text-xl font-semibold">Admin panel</h1>
 
+      <AdminStats orders={orders.data ?? []} products={products.data ?? []} />
+
       <Tabs defaultValue="products" className="rounded-lg bg-card p-4">
         <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="products">Products</TabsTrigger>
@@ -240,12 +322,18 @@ function AdminPage() {
         </TabsList>
 
         <TabsContent value="products" className="pt-4">
-          <Button className="mb-3" onClick={() => setEditing({ kind: "product", row: { ...emptyProduct } })}>
+          <Button
+            className="mb-3"
+            onClick={() => setEditing({ kind: "product", row: { ...emptyProduct } })}
+          >
             <Plus className="mr-1 h-4 w-4" /> New product
           </Button>
           <div className="space-y-2">
             {(products.data ?? []).map((p) => (
-              <div key={p.id} className="flex flex-wrap items-center gap-3 rounded border border-border p-3">
+              <div
+                key={p.id}
+                className="flex flex-wrap items-center gap-3 rounded border border-border p-3"
+              >
                 <img src={p.image_url} alt={p.title} className="h-12 w-12 object-contain" />
                 <div className="flex-1 text-sm">
                   <p className="font-medium">{p.title}</p>
@@ -262,11 +350,15 @@ function AdminPage() {
                       row: {
                         ...(p as unknown as AnyRecord),
                         images: Array.isArray(p.images) ? (p.images as string[]) : [],
-                        colors: Array.isArray((p as AnyRecord).colors) ? ((p as AnyRecord).colors as string[]).join(", ") : "",
+                        colors: Array.isArray((p as AnyRecord).colors)
+                          ? ((p as AnyRecord).colors as string[]).join(", ")
+                          : "",
                         combo_product_ids: Array.isArray((p as AnyRecord).combo_product_ids)
                           ? ((p as AnyRecord).combo_product_ids as string[]).join(",")
                           : "",
-                        highlights: Array.isArray(p.highlights) ? (p.highlights as string[]).join("\n") : "",
+                        highlights: Array.isArray(p.highlights)
+                          ? (p.highlights as string[]).join("\n")
+                          : "",
 
                         specs:
                           p.specs && typeof p.specs === "object"
@@ -289,12 +381,18 @@ function AdminPage() {
         </TabsContent>
 
         <TabsContent value="banners" className="pt-4">
-          <Button className="mb-3" onClick={() => setEditing({ kind: "banner", row: { ...emptyBanner } })}>
+          <Button
+            className="mb-3"
+            onClick={() => setEditing({ kind: "banner", row: { ...emptyBanner } })}
+          >
             <Plus className="mr-1 h-4 w-4" /> New banner
           </Button>
           <div className="space-y-2">
             {(banners.data ?? []).map((b) => (
-              <div key={b.id} className="flex flex-wrap items-center gap-3 rounded border border-border p-3">
+              <div
+                key={b.id}
+                className="flex flex-wrap items-center gap-3 rounded border border-border p-3"
+              >
                 <img src={b.image_url} alt={b.title} className="h-12 w-20 rounded object-cover" />
                 <div className="flex-1 text-sm">
                   <p className="font-medium">{b.title}</p>
@@ -302,7 +400,13 @@ function AdminPage() {
                     {b.placement} · {b.link_category ?? b.product_id ?? "no link"}
                   </p>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => setEditing({ kind: "banner", row: { ...(b as unknown as AnyRecord) } })}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    setEditing({ kind: "banner", row: { ...(b as unknown as AnyRecord) } })
+                  }
+                >
                   <Pencil className="h-4 w-4" />
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => remove("banners", b.id)}>
@@ -338,7 +442,8 @@ function AdminPage() {
                     {o.address_line}, {o.city}, {o.state} — {o.pincode}
                   </p>
                   <p className="text-muted-foreground">
-                    {o.payment_method} ({o.payment_status}) · {new Date(o.created_at).toLocaleString("en-IN")}
+                    {o.payment_method} ({o.payment_status}) ·{" "}
+                    {new Date(o.created_at).toLocaleString("en-IN")}
                   </p>
                 </div>
                 <span className="font-semibold">{inr(Number(o.total))}</span>
@@ -358,7 +463,6 @@ function AdminPage() {
                 </div>
               </div>
             ))}
-
           </div>
         </TabsContent>
 
@@ -402,7 +506,6 @@ function AdminPage() {
               onSave={() => saveBanner(editing.row)}
             />
           ) : null}
-
         </DialogContent>
       </Dialog>
 
@@ -413,9 +516,6 @@ function AdminPage() {
         onClose={() => setNewOrderOpen(false)}
         onCreated={() => qc.invalidateQueries({ queryKey: ["admin", "orders"] })}
       />
-
-
-
     </div>
   );
 }
@@ -431,7 +531,7 @@ function EditForm({
   onChange: (row: AnyRecord) => void;
   onSave: () => void;
 }) {
-  const fields: [string, string, "text" | "number" | "area" | "gallery" | "store"][] =
+  const fields: [string, string, "text" | "number" | "area" | "gallery" | "store" | "products"][] =
     kind === "product"
       ? [
           ["title", "Title", "text"],
@@ -459,6 +559,7 @@ function EditForm({
           ["placement", "Placement (hero or promo)", "text"],
           ["link_category", "Link to category", "text"],
           ["product_id", "Link to product ID", "text"],
+          ["product_ids", "Link to multiple products", "products"],
           ["sort_order", "Sort order", "number"],
           ["store_id", "Store", "store"],
         ];
@@ -472,10 +573,26 @@ function EditForm({
       }}
     >
       {fields.map(([key, label, type]) => (
-        <div key={key} className={type === "area" || type === "gallery" || key === "image_url" ? "sm:col-span-2" : ""}>
+        <div
+          key={key}
+          className={
+            type === "area" || type === "gallery" || key === "image_url" ? "sm:col-span-2" : ""
+          }
+        >
           <Label htmlFor={key}>{label}</Label>
           {type === "store" ? (
-            <StoreField value={String(row[key] ?? "")} onChange={(v) => onChange({ ...row, [key]: v })} />
+            <StoreField
+              value={String(row[key] ?? "")}
+              onChange={(v) => onChange({ ...row, [key]: v })}
+            />
+          ) : type === "products" ? (
+            <ProductPicker
+              value={String(row[key] ?? "")
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean)}
+              onChange={(v) => onChange({ ...row, [key]: v.join(",") })}
+            />
           ) : type === "gallery" ? (
             <GalleryField
               value={Array.isArray(row[key]) ? (row[key] as string[]) : []}
@@ -488,7 +605,6 @@ function EditForm({
               onChange={(v) => onChange({ ...row, [key]: v[0] ?? "" })}
             />
           ) : key === "category" || key === "link_category" ? (
-
             <CategoryField
               allowEmpty={key === "link_category"}
               value={String(row[key] ?? "")}
@@ -528,7 +644,13 @@ function EditForm({
   );
 }
 
-function GalleryField({ value, onChange }: { value: string[]; onChange: (value: string[]) => void }) {
+function GalleryField({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (value: string[]) => void;
+}) {
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState("");
 
@@ -552,7 +674,11 @@ function GalleryField({ value, onChange }: { value: string[]; onChange: (value: 
         <div className="flex flex-wrap gap-2">
           {value.map((src, i) => (
             <div key={`${src}-${i}`} className="relative">
-              <img src={src} alt="" className="h-16 w-16 rounded-lg border border-border object-cover" />
+              <img
+                src={src}
+                alt=""
+                className="h-16 w-16 rounded-lg border border-border object-cover"
+              />
               <button
                 type="button"
                 aria-label="Remove image"
@@ -601,7 +727,6 @@ function GalleryField({ value, onChange }: { value: string[]; onChange: (value: 
 }
 
 function ImageField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
-
   const [busy, setBusy] = useState(false);
 
   async function pick(file: File | undefined) {
@@ -622,7 +747,11 @@ function ImageField({ value, onChange }: { value: string; onChange: (value: stri
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-3">
         {value ? (
-          <img src={value} alt="Selected" className="h-16 w-16 rounded-lg border border-border object-cover" />
+          <img
+            src={value}
+            alt="Selected"
+            className="h-16 w-16 rounded-lg border border-border object-cover"
+          />
         ) : null}
         <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-accent">
           <Upload className="h-4 w-4" />
@@ -700,5 +829,105 @@ function CategoryField({
         <SelectItem value="__new">+ Create new category…</SelectItem>
       </SelectContent>
     </Select>
+  );
+}
+
+function AdminStats({ orders, products }: { orders: Order[]; products: Product[] }) {
+  const activeOrders = orders.filter((o) => !/delivered|cancelled/i.test(o.status ?? ""));
+  const revenue = orders.reduce((n, o) => {
+    const online = /razorpay|online|upi|card/i.test(o.payment_method ?? "");
+    if (online && (o.payment_status ?? "").toLowerCase() !== "paid") return n;
+    return n + Number(o.total || 0);
+  }, 0);
+  const lowStock = products.filter((p) => Number(p.stock) <= 5);
+
+  const cards = [
+    {
+      label: "Revenue",
+      value: inr(revenue),
+      sub: `${orders.length} orders`,
+      icon: <IndianRupee className="h-4 w-4" />,
+      tone: "text-[var(--deal)]",
+    },
+    {
+      label: "Active orders",
+      value: String(activeOrders.length),
+      sub: "awaiting delivery",
+      icon: <Clock className="h-4 w-4" />,
+      tone: "text-primary",
+    },
+    {
+      label: "Products",
+      value: String(products.length),
+      sub: `${lowStock.length} low on stock`,
+      icon: <Package className="h-4 w-4" />,
+      tone: "text-primary",
+    },
+    {
+      label: "Total orders",
+      value: String(orders.length),
+      sub: "all time",
+      icon: <ShoppingBag className="h-4 w-4" />,
+      tone: "text-primary",
+    },
+  ];
+
+  return (
+    <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {cards.map((c) => (
+        <div key={c.label} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <span className={c.tone}>{c.icon}</span>
+            {c.label}
+          </div>
+          <p className="mt-2 text-2xl font-bold">{c.value}</p>
+          <p className="text-xs text-muted-foreground">{c.sub}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProductPicker({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (value: string[]) => void;
+}) {
+  const products = useQuery({
+    queryKey: ["admin", "product-picker"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id,title")
+        .order("title")
+        .limit(300);
+      if (error) throw error;
+      return (data ?? []) as unknown as Pick<Product, "id" | "title">[];
+    },
+  });
+
+  function toggle(id: string) {
+    onChange(value.includes(id) ? value.filter((v) => v !== id) : [...value, id]);
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="max-h-40 space-y-1 overflow-y-auto rounded border border-border p-2 text-sm">
+        {(products.data ?? []).map((p) => (
+          <label key={p.id} className="flex items-center gap-2">
+            <input type="checkbox" checked={value.includes(p.id)} onChange={() => toggle(p.id)} />
+            {p.title}
+          </label>
+        ))}
+        {!products.isLoading && (products.data ?? []).length === 0 ? (
+          <p className="p-2 text-xs text-muted-foreground">No products yet.</p>
+        ) : null}
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Banner will link to the first selected product. Leave empty to link to a category instead.
+      </p>
+    </div>
   );
 }

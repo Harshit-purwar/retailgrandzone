@@ -26,7 +26,6 @@ export type Product = {
   seo_keywords?: string;
 };
 
-
 export type Banner = {
   id: string;
   title: string;
@@ -38,6 +37,7 @@ export type Banner = {
   link_category: string | null;
   sort_order: number;
   active: boolean;
+  product_ids?: unknown;
 };
 
 export type Order = {
@@ -113,7 +113,6 @@ export const HELP_CATEGORIES = [
 ];
 
 export const HELP_STATUSES = ["Open", "In Progress", "Resolved"];
-
 
 export function inr(value: number): string {
   return "₹" + Math.round(Number(value) || 0).toLocaleString("en-IN");

@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
 import { Header, Footer } from "@/components/store/Header";
+import { MobileNav } from "@/components/store/MobileNav";
 import { Toaster } from "@/components/ui/sonner";
 import { HelpChat } from "@/components/store/HelpChat";
 import { StoreGate } from "@/components/store/StoreGate";
@@ -86,10 +87,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "The Grand Zone — Online Shopping for Mobiles, Fashion & More" },
       {
         name: "description",
-        content: "Shop mobiles, laptops, audio, fashion and home appliances at The Grand Zone with fast delivery and easy returns.",
+        content:
+          "Shop mobiles, laptops, audio, fashion and home appliances at The Grand Zone with fast delivery and easy returns.",
       },
       { property: "og:title", content: "The Grand Zone — Online Shopping" },
-      { property: "og:description", content: "Shop mobiles, laptops, audio, fashion and home appliances at The Grand Zone." },
+      {
+        property: "og:description",
+        content: "Shop mobiles, laptops, audio, fashion and home appliances at The Grand Zone.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#f8cb46" },
@@ -103,7 +108,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
-
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -140,6 +144,7 @@ function RootComponent() {
             <Footer />
             <HelpChat />
             <StoreGate />
+            <MobileNav />
           </div>
           <Toaster position="top-center" richColors />
         </CartProvider>

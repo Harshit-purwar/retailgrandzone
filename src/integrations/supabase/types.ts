@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      addresses: {
+        Row: {
+          id: string
+          user_id: string
+          label: string
+          full_name: string
+          phone: string
+          address_line: string
+          city: string
+          state: string
+          pincode: string
+          latitude: number | null
+          longitude: number | null
+          is_default: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          label?: string
+          full_name?: string
+          phone?: string
+          address_line?: string
+          city?: string
+          state?: string
+          pincode?: string
+          latitude?: number | null
+          longitude?: number | null
+          is_default?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          label?: string
+          full_name?: string
+          phone?: string
+          address_line?: string
+          city?: string
+          state?: string
+          pincode?: string
+          latitude?: number | null
+          longitude?: number | null
+          is_default?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           active: boolean
@@ -24,6 +72,7 @@ export type Database = {
           link_category: string | null
           placement: string
           product_id: string | null
+          product_ids: Json
           sort_order: number
           store_id: string | null
           subtitle: string
@@ -38,6 +87,7 @@ export type Database = {
           link_category?: string | null
           placement?: string
           product_id?: string | null
+          product_ids?: Json
           sort_order?: number
           store_id?: string | null
           subtitle?: string
@@ -52,6 +102,7 @@ export type Database = {
           link_category?: string | null
           placement?: string
           product_id?: string | null
+          product_ids?: Json
           sort_order?: number
           store_id?: string | null
           subtitle?: string

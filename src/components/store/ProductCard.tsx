@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { Star, Clock, Plus, Minus } from "lucide-react";
+import { Star, Clock, Plus, Minus, Heart } from "lucide-react";
+import { toast } from "sonner";
 import type { Product } from "@/lib/store-types";
 import { discountPercent, inr } from "@/lib/store-types";
 import { useCart } from "@/lib/cart-context";
+import { useToggleWishlist, useWishlist } from "@/lib/wishlist";
 
 export function Rating({ value, count }: { value: number; count?: number }) {
   return (
@@ -24,11 +26,32 @@ export function ProductCard({ product }: { product: Product }) {
   const line = lines.find((l) => l.productId === product.id);
   const outOfStock = Number(product.stock) <= 0;
   const atStockLimit = !!line && line.quantity >= Number(product.stock);
+  const wishlisted = useWishlist().includes(product.id);
+  const toggleWish = useToggleWishlist();
+
+  function onToggleWish(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const added = toggleWish(product.id);
+    toast.success(added ? "Added to wishlist" : "Removed from wishlist", {
+      position: "bottom-center",
+    });
+  }
 
   return (
-    <div className="group relative flex h-full flex-col rounded-2xl border border-border bg-card p-3 transition-shadow hover:shadow-md">
+    <div className="group relative flex h-full flex-col rounded-2xl border border-border bg-card p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+      <button
+        type="button"
+        aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+        onClick={onToggleWish}
+        className="absolute right-2 top-2 z-10 rounded-full bg-background/90 p-1.5 shadow-sm backdrop-blur transition-transform active:scale-90"
+      >
+        <Heart
+          className={`h-4 w-4 ${wishlisted ? "fill-red-500 text-red-500" : "text-muted-foreground hover:text-red-500"}`}
+        />
+      </button>
       {off > 0 ? (
-        <span className="absolute left-0 top-3 rounded-r-md bg-[oklch(0.55_0.16_255)] px-2 py-0.5 text-[10px] font-bold text-white">
+        <span className="absolute left-0 top-3 z-10 rounded-r-md bg-[oklch(0.55_0.16_255)] px-2 py-0.5 text-[10px] font-bold text-white">
           {off}% OFF
         </span>
       ) : null}
@@ -51,7 +74,9 @@ export function ProductCard({ product }: { product: Product }) {
           <Clock className="h-3 w-3" /> 12 MINS
         </span>
 
-        <h3 className="mt-1.5 line-clamp-2 text-sm font-semibold text-foreground">{product.title}</h3>
+        <h3 className="mt-1.5 line-clamp-2 text-sm font-semibold text-foreground">
+          {product.title}
+        </h3>
         <p className="mt-0.5 text-xs text-muted-foreground">{product.brand}</p>
         <div className="mt-1.5">
           <Rating value={Number(product.rating)} count={product.rating_count} />
@@ -60,14 +85,16 @@ export function ProductCard({ product }: { product: Product }) {
 
       <div className="mt-3 flex items-end justify-between gap-2">
         <div className="leading-tight">
-          <span className="block text-sm font-bold">{inr(Number(product.price))}</span>
+          <span className="block text-base font-bold">{inr(Number(product.price))}</span>
           {off > 0 ? (
-            <span className="block text-xs text-muted-foreground line-through">{inr(Number(product.mrp))}</span>
+            <span className="block text-xs text-muted-foreground line-through">
+              {inr(Number(product.mrp))}
+            </span>
           ) : null}
         </div>
 
         {line ? (
-          <div className="flex items-center gap-2 rounded-lg bg-primary px-1.5 py-1 text-primary-foreground">
+          <div className="flex items-center gap-2 rounded-full bg-primary px-1.5 py-1 text-primary-foreground shadow-sm">
             <button
               type="button"
               aria-label="Decrease quantity"
@@ -101,7 +128,7 @@ export function ProductCard({ product }: { product: Product }) {
               })
             }
             disabled={outOfStock}
-            className="rounded-lg border border-primary bg-accent px-5 py-1.5 text-sm font-bold uppercase text-primary transition-colors hover:bg-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:border-border disabled:bg-muted disabled:text-muted-foreground"
+            className="rounded-full border border-primary bg-accent px-5 py-1.5 text-sm font-bold uppercase text-primary transition-all hover:bg-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:border-border disabled:bg-muted disabled:text-muted-foreground"
           >
             {outOfStock ? "Sold out" : "Add"}
           </button>

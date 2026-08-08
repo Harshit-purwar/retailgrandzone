@@ -17,12 +17,14 @@ import {
   LogOut,
   MapPin,
   ChevronDown,
+  Heart,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import { useCategories } from "@/lib/categories";
 import { categoryIcon } from "@/lib/category-icons";
 import { inr } from "@/lib/store-types";
+import { useWishlist } from "@/lib/wishlist";
 import logo from "@/assets/grandzone-logo.png";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,8 +45,10 @@ export function Header() {
   const { location } = useSavedLocation();
   const { store } = useSelectedStore();
   const [pickerOpen, setPickerOpen] = useState(false);
-  const place = store ? `${store.city} · ${location?.label ?? store.address ?? store.name}` : (location?.label ?? null);
-
+  const wishCount = useWishlist().length;
+  const place = store
+    ? `${store.city} · ${location?.label ?? store.address ?? store.name}`
+    : (location?.label ?? null);
 
   return (
     <header className="sticky top-0 z-50 shadow-sm">
@@ -58,7 +62,9 @@ export function Header() {
                 className="h-9 w-9 rounded-full object-cover ring-1 ring-black/10 sm:h-11 sm:w-11"
               />
               <span className="flex flex-col leading-none">
-                <span className="text-base font-extrabold tracking-tight sm:text-xl">The Grand Zone</span>
+                <span className="text-base font-extrabold tracking-tight sm:text-xl">
+                  The Grand Zone
+                </span>
                 <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] opacity-70">
                   Best deals
                 </span>
@@ -81,8 +87,6 @@ export function Header() {
               </span>
               <ChevronDown className="h-4 w-4 shrink-0" />
             </button>
-
-
 
             <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
               {user ? (
@@ -131,6 +135,20 @@ export function Header() {
               )}
 
               <Link
+                to="/wishlist"
+                aria-label={`Wishlist${wishCount > 0 ? `, ${wishCount} items` : ""}`}
+                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-brand-foreground transition-colors hover:bg-black/5 sm:h-auto sm:w-auto sm:rounded-lg sm:px-3"
+              >
+                <Heart className="h-5 w-5 sm:mr-1 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Wishlist</span>
+                {wishCount > 0 ? (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                    {wishCount}
+                  </span>
+                ) : null}
+              </Link>
+
+              <Link
                 to="/cart"
                 aria-label="Cart"
                 className="relative inline-flex items-center gap-2 rounded-full bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:bg-primary/90 active:scale-95 sm:rounded-xl sm:px-4"
@@ -163,7 +181,9 @@ export function Header() {
               <span className="block text-[13px] font-bold leading-tight">
                 {store ? `Delivery in ${store.delivery_estimate}` : "Select your location"}
               </span>
-              <span className="block truncate leading-tight opacity-75">{place ?? "Tap to choose a store"}</span>
+              <span className="block truncate leading-tight opacity-75">
+                {place ?? "Tap to choose a store"}
+              </span>
             </span>
             <ChevronDown className="h-4 w-4 shrink-0" />
           </button>
@@ -219,7 +239,6 @@ export function Header() {
   );
 }
 
-
 export function Footer() {
   const year = new Date().getFullYear();
   return (
@@ -228,14 +247,21 @@ export function Footer() {
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <div className="flex items-center gap-2">
-              <img src={logo} alt="The Grand Zone logo" className="h-9 w-9 rounded-full object-cover" />
+              <img
+                src={logo}
+                alt="The Grand Zone logo"
+                className="h-9 w-9 rounded-full object-cover"
+              />
               <div>
                 <p className="text-sm font-extrabold text-foreground">The Grand Zone</p>
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-gold">Best deals</p>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-gold">
+                  Best deals
+                </p>
               </div>
             </div>
             <p className="mt-3 leading-relaxed">
-              Everyday essentials, gadgets and fashion delivered to your door — genuine products, honest prices.
+              Everyday essentials, gadgets and fashion delivered to your door — genuine products,
+              honest prices.
             </p>
           </div>
 
@@ -243,7 +269,11 @@ export function Footer() {
             <p className="mb-3 text-xs font-bold uppercase tracking-widest text-foreground">Shop</p>
             <ul className="space-y-2">
               <li>
-                <Link to="/products" search={{ q: undefined, category: undefined }} className="hover:text-primary">
+                <Link
+                  to="/products"
+                  search={{ q: undefined, category: undefined }}
+                  className="hover:text-primary"
+                >
                   All products
                 </Link>
               </li>
@@ -284,12 +314,13 @@ export function Footer() {
                 </Link>
               </li>
               <li>Shipping &amp; delivery</li>
-
             </ul>
           </div>
 
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-foreground">Contact</p>
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-foreground">
+              Contact
+            </p>
             <ul className="space-y-2">
               <li className="flex items-center gap-2">
                 <Clock className="h-4 w-4 shrink-0 text-primary" />
@@ -301,7 +332,6 @@ export function Footer() {
               </li>
             </ul>
           </div>
-
         </div>
 
         <div className="mt-8 flex flex-col gap-2 border-t border-border pt-4 text-xs sm:flex-row sm:items-center sm:justify-between">

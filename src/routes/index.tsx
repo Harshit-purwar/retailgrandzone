@@ -1,15 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Banner, Product } from "@/lib/store-types";
+import { toList } from "@/lib/store-types";
 import { ProductCard } from "@/components/store/ProductCard";
 import { ProductRow } from "@/components/store/ProductRow";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Zap, ShieldCheck, RotateCcw, Truck } from "lucide-react";
 import { useSelectedStore, scopeToStore } from "@/lib/stores";
 import { useRecentlyViewed } from "@/lib/recently-viewed";
-
+import { useCategories } from "@/lib/categories";
+import { categoryIcon } from "@/lib/category-icons";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -17,10 +19,14 @@ export const Route = createFileRoute("/")({
       { title: "The Grand Zone — Online Shopping for Mobiles, Fashion & Appliances" },
       {
         name: "description",
-        content: "Browse the latest deals on mobiles, laptops, audio, fashion, footwear and home appliances at The Grand Zone.",
+        content:
+          "Browse the latest deals on mobiles, laptops, audio, fashion, footwear and home appliances at The Grand Zone.",
       },
       { property: "og:title", content: "The Grand Zone — Online Shopping" },
-      { property: "og:description", content: "Deals on mobiles, laptops, audio, fashion and appliances." },
+      {
+        property: "og:description",
+        content: "Deals on mobiles, laptops, audio, fashion and appliances.",
+      },
     ],
   }),
   component: Home,
@@ -43,7 +49,9 @@ function useBanners(placement: string, storeId: string | null) {
 }
 
 function bannerTarget(banner: Banner) {
-  if (banner.product_id) return { to: "/product/$slug", params: { slug: banner.product_id } } as const;
+  const multi = toList(banner.product_ids).filter(Boolean);
+  const first = multi[0] ?? banner.product_id;
+  if (first) return { to: "/product/$slug", params: { slug: first } } as const;
   return {
     to: "/products",
     search: { q: undefined, category: banner.link_category ?? undefined },
@@ -56,6 +64,7 @@ function Home() {
   const storeId = store?.id ?? null;
   const hero = useBanners("hero", storeId);
   const heroScroller = useRef<HTMLDivElement>(null);
+  const [heroIdx, setHeroIdx] = useState(0);
 
   function scrollHero(direction: 1 | -1) {
     const el = heroScroller.current;
@@ -63,13 +72,28 @@ function Home() {
     el.scrollBy({ left: direction * el.clientWidth, behavior: "smooth" });
   }
 
+  const heroCount = hero.data?.length ?? 0;
+
+  useEffect(() => {
+    const el = heroScroller.current;
+    if (!el || heroCount <= 1) return;
+    const id = setInterval(() => {
+      const i = Math.round(el.scrollLeft / el.clientWidth);
+      const next = (i + 1) % heroCount;
+      el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+    }, 5000);
+    return () => clearInterval(id);
+  }, [heroCount]);
+
   const promo = useBanners("promo", storeId);
 
   const products = useQuery({
     queryKey: ["products", "home", storeId ?? ""],
     queryFn: async () => {
       const base = supabase.from("products").select("*").eq("active", true);
-      const { data, error } = await scopeToStore(base, storeId).order("created_at", { ascending: false });
+      const { data, error } = await scopeToStore(base, storeId).order("created_at", {
+        ascending: false,
+      });
       if (error) throw error;
       return (data ?? []) as unknown as Product[];
     },
@@ -82,7 +106,10 @@ function Home() {
   const newest = list.slice(0, 15);
 
   const categoryRows = Array.from(new Set(list.map((p) => p.category)))
-    .map((category) => ({ category, items: list.filter((p) => p.category === category).slice(0, 15) }))
+    .map((category) => ({
+      category,
+      items: list.filter((p) => p.category === category).slice(0, 15),
+    }))
     .filter((row) => row.items.length > 0);
 
   const recentIds = useRecentlyViewed();
@@ -90,7 +117,11 @@ function Home() {
     enabled: recentIds.length > 0,
     queryKey: ["recently-viewed", "home", recentIds.join(",")],
     queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("*").in("id", recentIds).eq("active", true);
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .in("id", recentIds)
+        .eq("active", true);
       if (error) throw error;
       const rows = (data ?? []) as unknown as Product[];
       return recentIds.map((id) => rows.find((r) => r.id === id)).filter(Boolean) as Product[];
@@ -146,6 +177,12 @@ function Home() {
             {/* Desktop: full-width banner carousel */}
             <div
               ref={heroScroller}
+              onScroll={() => {
+                const el = heroScroller.current;
+                if (!el) return;
+                const i = Math.round(el.scrollLeft / el.clientWidth);
+                setHeroIdx(Math.min(i, Math.max(0, heroCount - 1)));
+              }}
               className="hidden snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] sm:flex [&::-webkit-scrollbar]:hidden"
             >
               {(hero.data ?? []).map((b) => {
@@ -162,11 +199,13 @@ function Home() {
                         src={b.image_url}
                         alt=""
                         aria-hidden
+                        loading="lazy"
                         className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl opacity-60"
                       />
                       <img
                         src={b.image_url}
                         alt={b.title}
+                        loading="lazy"
                         className="relative h-full w-full object-contain"
                       />
                     </div>
@@ -207,10 +246,56 @@ function Home() {
                 </button>
               </>
             ) : null}
+
+            {heroCount > 1 ? (
+              <div className="mt-1 hidden items-center justify-center gap-1.5 sm:flex">
+                {Array.from({ length: heroCount }).map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    aria-label={`Go to banner ${i + 1}`}
+                    onClick={() => {
+                      const el = heroScroller.current;
+                      if (!el) return;
+                      el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+                    }}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === heroIdx
+                        ? "w-6 bg-primary"
+                        : "w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/60"
+                    }`}
+                  />
+                ))}
+              </div>
+            ) : null}
           </div>
         ) : null}
       </section>
 
+      {/* Quick category shortcuts (mobile-first, Blinkit-style) */}
+      <CategoryStrip />
+
+      {/* Trust / USP strip */}
+      <section className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-card p-3 text-xs sm:mt-5 sm:grid-cols-4 sm:gap-3 sm:p-4 sm:text-sm">
+        <span className="flex items-center gap-2 font-semibold">
+          <Zap className="h-4 w-4 shrink-0 text-primary" />
+          {store?.delivery_estimate
+            ? `Delivery in ${store.delivery_estimate}`
+            : "Superfast delivery"}
+        </span>
+        <span className="flex items-center gap-2 font-semibold">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+          100% genuine products
+        </span>
+        <span className="flex items-center gap-2 font-semibold">
+          <RotateCcw className="h-4 w-4 shrink-0 text-primary" />
+          7-day easy replacement
+        </span>
+        <span className="flex items-center gap-2 font-semibold">
+          <Truck className="h-4 w-4 shrink-0 text-primary" />
+          COD &amp; online payments
+        </span>
+      </section>
 
       <ProductRow
         title="Deals of the day"
@@ -221,7 +306,12 @@ function Home() {
 
       <ProductRow title="Recently viewed" products={recentProducts.data ?? []} />
 
-      <ProductRow title="Newest arrivals" products={newest} loading={products.isLoading} seeAll={{}} />
+      <ProductRow
+        title="Newest arrivals"
+        products={newest}
+        loading={products.isLoading}
+        seeAll={{}}
+      />
 
       {/* Promo banners — horizontally scrollable */}
       <section className="-mx-3 mt-4 sm:mx-0 sm:mt-5">
@@ -252,7 +342,9 @@ function Home() {
                 <div className="absolute inset-0 bg-black/45 p-5 text-white">
                   <h3 className="text-lg font-semibold">{b.title}</h3>
                   <p className="text-sm opacity-90">{b.subtitle}</p>
-                  <span className="mt-3 inline-block text-sm font-semibold underline">{b.cta_text}</span>
+                  <span className="mt-3 inline-block text-sm font-semibold underline">
+                    {b.cta_text}
+                  </span>
                 </div>
               </button>
             );
@@ -260,9 +352,13 @@ function Home() {
         </div>
       </section>
 
-
       {categoryRows.map((row) => (
-        <ProductRow key={row.category} title={row.category} products={row.items} seeAll={{ category: row.category }} />
+        <ProductRow
+          key={row.category}
+          title={row.category}
+          products={row.items}
+          seeAll={{ category: row.category }}
+        />
       ))}
 
       <section className="mt-4 rounded-2xl bg-card p-3 sm:mt-5 sm:p-4">
@@ -274,5 +370,38 @@ function Home() {
         </div>
       </section>
     </div>
+  );
+}
+
+/** Horizontal scrollable category shortcut strip with circular icons. */
+function CategoryStrip() {
+  const categories = useCategories();
+  const items = (categories.data ?? []) as string[];
+
+  if (items.length === 0) return null;
+
+  return (
+    <section className="-mx-3 mt-4 sm:mx-0 sm:mt-5">
+      <div className="flex snap-x gap-2 overflow-x-auto px-3 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:px-0 [&::-webkit-scrollbar]:hidden">
+        {items.map((c) => {
+          const Icon = categoryIcon(c);
+          return (
+            <Link
+              key={c}
+              to="/products"
+              search={{ q: undefined, category: c }}
+              className="flex w-16 shrink-0 snap-start flex-col items-center gap-1.5 text-center active:scale-95 sm:w-20"
+            >
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-gradient-to-b from-muted to-secondary shadow-sm transition-transform hover:scale-105 sm:h-16 sm:w-16">
+                <Icon className="h-6 w-6 text-primary" />
+              </span>
+              <span className="line-clamp-2 text-[11px] font-medium leading-tight text-foreground">
+                {c}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
   );
 }
