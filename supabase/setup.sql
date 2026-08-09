@@ -359,7 +359,8 @@ ALTER TABLE public.orders
   ADD COLUMN IF NOT EXISTS longitude double precision;
 
 ALTER TABLE public.banners
-  ADD COLUMN IF NOT EXISTS product_ids jsonb NOT NULL DEFAULT '[]'::jsonb;
+  ADD COLUMN IF NOT EXISTS product_ids jsonb NOT NULL DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS price numeric NOT NULL DEFAULT 0;
 
 -- ADDRESSES -------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.addresses (

@@ -38,6 +38,8 @@ export type Banner = {
   sort_order: number;
   active: boolean;
   product_ids?: unknown;
+  /** Combo price for the banner — when set with product_ids it becomes a combo offer. */
+  price?: number;
 };
 
 export type Order = {

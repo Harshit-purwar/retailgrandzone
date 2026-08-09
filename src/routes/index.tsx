@@ -1,9 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Banner, Product } from "@/lib/store-types";
 import { toList } from "@/lib/store-types";
+import { useFastQuery } from "@/lib/fast-query";
+import { isComboBanner } from "@/lib/banner-combo";
+import { ComboBanner } from "@/components/store/BannerCombo";
 import { ProductCard } from "@/components/store/ProductCard";
 import { ProductRow } from "@/components/store/ProductRow";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,7 +35,7 @@ export const Route = createFileRoute("/")({
 });
 
 function useBanners(placement: string, storeId: string | null) {
-  return useQuery({
+  return useFastQuery<Banner[]>({
     queryKey: ["banners", placement, storeId ?? ""],
     queryFn: async () => {
       const base = supabase
@@ -87,7 +89,7 @@ function Home() {
 
   const promo = useBanners("promo", storeId);
 
-  const products = useQuery({
+  const products = useFastQuery<Product[]>({
     queryKey: ["products", "home", storeId ?? ""],
     queryFn: async () => {
       const base = supabase.from("products").select("*").eq("active", true);
@@ -113,7 +115,7 @@ function Home() {
     .filter((row) => row.items.length > 0);
 
   const recentIds = useRecentlyViewed();
-  const recentProducts = useQuery({
+  const recentProducts = useFastQuery<Product[]>({
     enabled: recentIds.length > 0,
     queryKey: ["recently-viewed", "home", recentIds.join(",")],
     queryFn: async () => {
@@ -140,6 +142,16 @@ function Home() {
             {/* Mobile: compact swipeable tiles */}
             <div className="flex snap-x gap-3 overflow-x-auto px-3 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:hidden [&::-webkit-scrollbar]:hidden">
               {(hero.data ?? []).map((b) => {
+                if (isComboBanner(b)) {
+                  return (
+                    <ComboBanner
+                      key={b.id}
+                      banner={b}
+                      compact
+                      className="w-[72%] shrink-0 snap-start"
+                    />
+                  );
+                }
                 const target = bannerTarget(b);
                 return (
                   <button
@@ -186,6 +198,11 @@ function Home() {
               className="hidden snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] sm:flex [&::-webkit-scrollbar]:hidden"
             >
               {(hero.data ?? []).map((b) => {
+                if (isComboBanner(b)) {
+                  return (
+                    <ComboBanner key={b.id} banner={b} className="w-full shrink-0 snap-center" />
+                  );
+                }
                 const target = bannerTarget(b);
                 return (
                   <button
@@ -317,6 +334,16 @@ function Home() {
       <section className="-mx-3 mt-4 sm:mx-0 sm:mt-5">
         <div className="flex snap-x gap-3 overflow-x-auto px-3 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:px-0 [&::-webkit-scrollbar]:hidden">
           {(promo.data ?? []).map((b) => {
+            if (isComboBanner(b)) {
+              return (
+                <ComboBanner
+                  key={b.id}
+                  banner={b}
+                  compact
+                  className="w-[80%] shrink-0 snap-start sm:w-[48%]"
+                />
+              );
+            }
             const target = bannerTarget(b);
             return (
               <button

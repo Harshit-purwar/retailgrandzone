@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useFastQuery } from "@/lib/fast-query";
 
 export const BASE_CATEGORIES = [
   "Mobiles",
@@ -40,11 +41,15 @@ export function useManagedCategories() {
 
 /** Enabled category names for the storefront, merged with categories used by products. */
 export function useCategories() {
-  return useQuery({
+  return useFastQuery<string[]>({
     queryKey: ["categories"],
     queryFn: async () => {
       const [catRes, prodRes] = await Promise.all([
-        supabase.from("categories").select("name,sort_order,active").order("sort_order").order("name"),
+        supabase
+          .from("categories")
+          .select("name,sort_order,active")
+          .order("sort_order")
+          .order("name"),
         supabase.from("products").select("category").eq("active", true),
       ]);
       if (catRes.error) throw catRes.error;
@@ -61,7 +66,9 @@ export function useCategories() {
         return Array.from(new Set([...enabled, ...used]));
       }
 
-      const used = (prodRes.data ?? []).map((r) => String((r as { category: string }).category)).filter(Boolean);
+      const used = (prodRes.data ?? [])
+        .map((r) => String((r as { category: string }).category))
+        .filter(Boolean);
       return Array.from(new Set([...BASE_CATEGORIES, ...used]));
     },
   });

@@ -11,6 +11,8 @@ import {
   Package,
   ShoppingBag,
   Clock,
+  Search,
+  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -89,6 +91,8 @@ const emptyBanner: AnyRecord = {
   placement: "hero",
   link_category: "",
   product_id: "",
+  product_ids: "",
+  price: 0,
   store_id: "",
   sort_order: 0,
   active: true,
@@ -249,6 +253,7 @@ function AdminPage() {
       placement: row.placement,
       link_category: row.link_category || null,
       product_id: row.product_id || null,
+      price: Number(row.price) || 0,
       sort_order: Number(row.sort_order),
       store_id: row.store_id ? String(row.store_id) : null,
       active: !!row.active,
@@ -267,19 +272,21 @@ function AdminPage() {
       : await supabase.from("banners").insert(payload as never);
     if (
       res.error &&
-      multi.length > 0 &&
-      /PGRST204|PGRST205|Could not find the table/i.test(res.error.message)
+      (multi.length > 0 || Number(row.price) > 0) &&
+      /PGRST204|PGRST205|Could not find the table|Could not find the column/i.test(
+        res.error.message,
+      )
     ) {
-      // product_ids column not available yet — save the rest and notify.
+      // product_ids / price columns not available yet — save the rest and notify.
       delete payload.product_ids;
+      delete payload.price;
       res = row.id
         ? await supabase
             .from("banners")
             .update(payload as never)
             .eq("id", row.id as string)
         : await supabase.from("banners").insert(payload as never);
-      if (!res.error)
-        toast.info("Saved, but multiple product links need the DB migration to activate.");
+      if (!res.error) toast.info("Saved, but banner combo needs the DB migration to activate.");
     }
     if (res.error) return toast.error(res.error.message);
     toast.success("Banner saved");
@@ -557,9 +564,10 @@ function EditForm({
           ["cta_text", "Button text", "text"],
           ["image_url", "Image URL", "text"],
           ["placement", "Placement (hero or promo)", "text"],
+          ["price", "Combo price (leave 0 for a normal banner)", "number"],
           ["link_category", "Link to category", "text"],
           ["product_id", "Link to product ID", "text"],
-          ["product_ids", "Link to multiple products", "products"],
+          ["product_ids", "Combo products (shown at the combo price)", "products"],
           ["sort_order", "Sort order", "number"],
           ["store_id", "Store", "store"],
         ];
@@ -895,14 +903,25 @@ function ProductPicker({
   value: string[];
   onChange: (value: string[]) => void;
 }) {
-  const products = useQuery({
-    queryKey: ["admin", "product-picker"],
+  const [q, setQ] = useState("");
+  const query = q.trim();
+
+  const results = useQuery({
+    queryKey: ["admin", "product-picker", query],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id,title")
-        .order("title")
-        .limit(300);
+      let base = supabase.from("products").select("id,title");
+      if (query) base = base.ilike("title", `%${query}%`);
+      const { data, error } = await base.order("title").limit(query ? 20 : 100);
+      if (error) throw error;
+      return (data ?? []) as unknown as Pick<Product, "id" | "title">[];
+    },
+  });
+
+  const selected = useQuery({
+    enabled: value.length > 0,
+    queryKey: ["admin", "product-picker-selected", value.join(",")],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("products").select("id,title").in("id", value);
       if (error) throw error;
       return (data ?? []) as unknown as Pick<Product, "id" | "title">[];
     },
@@ -912,21 +931,62 @@ function ProductPicker({
     onChange(value.includes(id) ? value.filter((v) => v !== id) : [...value, id]);
   }
 
+  const selectedItems = (selected.data ?? [])
+    .slice()
+    .sort((a, b) => a.title.localeCompare(b.title));
+  const hits = (results.data ?? []).filter((p) => !value.includes(p.id));
+
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          className="pl-8"
+          placeholder="Search products to add to the banner…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+      </div>
+
+      {selectedItems.length > 0 ? (
+        <div>
+          <p className="mb-1 text-xs font-medium text-muted-foreground">Selected for this banner</p>
+          <div className="space-y-1 rounded border border-border p-2 text-sm">
+            {selectedItems.map((p) => (
+              <div key={p.id} className="flex items-center justify-between gap-2">
+                <span className="min-w-0 truncate">{p.title}</span>
+                <button
+                  type="button"
+                  aria-label={`Remove ${p.title}`}
+                  onClick={() => toggle(p.id)}
+                  className="shrink-0 text-muted-foreground hover:text-destructive"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="max-h-40 space-y-1 overflow-y-auto rounded border border-border p-2 text-sm">
-        {(products.data ?? []).map((p) => (
+        {hits.map((p) => (
           <label key={p.id} className="flex items-center gap-2">
             <input type="checkbox" checked={value.includes(p.id)} onChange={() => toggle(p.id)} />
             {p.title}
           </label>
         ))}
-        {!products.isLoading && (products.data ?? []).length === 0 ? (
+        {!results.isLoading && hits.length === 0 && !query ? (
           <p className="p-2 text-xs text-muted-foreground">No products yet.</p>
         ) : null}
+        {!results.isLoading && hits.length === 0 && query ? (
+          <p className="p-2 text-xs text-muted-foreground">No products match “{query}”.</p>
+        ) : null}
       </div>
+
       <p className="text-xs text-muted-foreground">
-        Banner will link to the first selected product. Leave empty to link to a category instead.
+        These products are shown on the banner. Add a combo price above to offer them together as a
+        combo at that price.
       </p>
     </div>
   );
