@@ -8,7 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /** Optional delivery-fee rules — admin can switch the fee off entirely. */
 export function DeliveryTab() {
@@ -19,7 +25,11 @@ export function DeliveryTab() {
   const settings = useQuery({
     queryKey: ["admin", "store-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("store_settings").select("*").limit(1).maybeSingle();
+      const { data, error } = await supabase
+        .from("store_settings")
+        .select("*")
+        .limit(1)
+        .maybeSingle();
       if (error) throw error;
       return (data as unknown as StoreSettings | null) ?? null;
     },
@@ -38,9 +48,13 @@ export function DeliveryTab() {
       free_delivery_above: Number(row.free_delivery_above) || 0,
       delivery_estimate: (row.delivery_estimate || "2-4 Days").trim(),
       support_phone: (row.support_phone || "6392480868").trim(),
+      admin_whatsapp: (row.admin_whatsapp || "").trim(),
     };
     const res = row.id
-      ? await supabase.from("store_settings").update(payload as never).eq("id", row.id)
+      ? await supabase
+          .from("store_settings")
+          .update(payload as never)
+          .eq("id", row.id)
       : await supabase.from("store_settings").insert(payload as never);
     setBusy(false);
     if (res.error) return toast.error(res.error.message);
@@ -56,7 +70,9 @@ export function DeliveryTab() {
       <label className="flex items-center justify-between gap-4 rounded-xl border border-border p-3">
         <span>
           <span className="block text-sm font-medium">Charge a delivery fee</span>
-          <span className="block text-xs text-muted-foreground">Turn off to keep delivery free for everyone</span>
+          <span className="block text-xs text-muted-foreground">
+            Turn off to keep delivery free for everyone
+          </span>
         </span>
         <Switch
           checked={row.delivery_fee_enabled}
@@ -97,7 +113,8 @@ export function DeliveryTab() {
           onChange={(e) => setRow({ ...row, delivery_estimate: e.target.value })}
         />
         <p className="mt-1 text-xs text-muted-foreground">
-          Shown on product, checkout and order pages when the customer has not shared a live location.
+          Shown on product, checkout and order pages when the customer has not shared a live
+          location.
         </p>
       </div>
 
@@ -110,6 +127,19 @@ export function DeliveryTab() {
         />
       </div>
 
+      <div>
+        <Label htmlFor="admin-whatsapp">Admin WhatsApp number (order alerts)</Label>
+        <Input
+          id="admin-whatsapp"
+          placeholder="e.g. 6392480868"
+          value={row.admin_whatsapp ?? ""}
+          onChange={(e) => setRow({ ...row, admin_whatsapp: e.target.value })}
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          Every new order sends a WhatsApp alert to this number (requires the WhatsApp API
+          credentials to be configured).
+        </p>
+      </div>
 
       <Button disabled={busy} onClick={save}>
         {busy ? "Saving…" : "Save settings"}
@@ -139,7 +169,10 @@ export function CouponsTab() {
   const coupons = useQuery({
     queryKey: ["admin", "coupons"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("coupons").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("coupons")
+        .select("*")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as Coupon[];
     },
@@ -159,7 +192,10 @@ export function CouponsTab() {
     };
     if (!payload.code) return toast.error("Coupon code is required");
     const res = draft.id
-      ? await supabase.from("coupons").update(payload as never).eq("id", draft.id)
+      ? await supabase
+          .from("coupons")
+          .update(payload as never)
+          .eq("id", draft.id)
       : await supabase.from("coupons").insert(payload as never);
     if (res.error) return toast.error(res.error.message);
     toast.success("Coupon saved");
@@ -194,7 +230,10 @@ export function CouponsTab() {
           </div>
           <div>
             <Label htmlFor="type">Discount type</Label>
-            <Select value={draft.discount_type} onValueChange={(v) => setDraft({ ...draft, discount_type: v })}>
+            <Select
+              value={draft.discount_type}
+              onValueChange={(v) => setDraft({ ...draft, discount_type: v })}
+            >
               <SelectTrigger id="type">
                 <SelectValue />
               </SelectTrigger>
@@ -251,7 +290,10 @@ export function CouponsTab() {
             Also makes delivery free
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <Switch checked={draft.active} onCheckedChange={(v) => setDraft({ ...draft, active: v })} />
+            <Switch
+              checked={draft.active}
+              onCheckedChange={(v) => setDraft({ ...draft, active: v })}
+            />
             Active
           </label>
           <div className="flex gap-2 sm:col-span-2">
@@ -274,7 +316,10 @@ export function CouponsTab() {
           </p>
         ) : null}
         {(coupons.data ?? []).map((c) => (
-          <div key={c.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-border p-3 text-sm">
+          <div
+            key={c.id}
+            className="flex flex-wrap items-center gap-3 rounded-xl border border-border p-3 text-sm"
+          >
             <div className="flex-1">
               <p className="font-semibold">
                 {c.code} {c.active ? "" : "· inactive"}
@@ -284,7 +329,9 @@ export function CouponsTab() {
                 {Number(c.min_order) > 0 ? ` · min ₹${c.min_order}` : ""}
                 {Number(c.max_discount) > 0 ? ` · max ₹${c.max_discount}` : ""}
                 {c.free_delivery ? " · free delivery" : ""}
-                {c.expires_at ? ` · till ${new Date(c.expires_at).toLocaleDateString("en-IN")}` : ""}
+                {c.expires_at
+                  ? ` · till ${new Date(c.expires_at).toLocaleDateString("en-IN")}`
+                  : ""}
               </p>
             </div>
             <Button

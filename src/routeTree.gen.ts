@@ -21,6 +21,7 @@ import { Route as ProductsRouteImport } from './routes/products'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiNotifyAdminRouteImport } from './routes/api/notify-admin'
 import { Route as BrandBrandRouteImport } from './routes/brand.$brand'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as OrderIdRouteImport } from './routes/order.$id'
@@ -86,6 +87,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiNotifyAdminRoute = ApiNotifyAdminRouteImport.update({
+  id: '/api/notify-admin',
+  path: '/api/notify-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrandBrandRoute = BrandBrandRouteImport.update({
   id: '/brand/$brand',
   path: '/brand/$brand',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/wishlist': typeof WishlistRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/notify-admin': typeof ApiNotifyAdminRoute
   '/brand/$brand': typeof BrandBrandRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/order/$id': typeof OrderIdRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/wishlist': typeof WishlistRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/notify-admin': typeof ApiNotifyAdminRoute
   '/brand/$brand': typeof BrandBrandRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/order/$id': typeof OrderIdRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/wishlist': typeof WishlistRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/notify-admin': typeof ApiNotifyAdminRoute
   '/brand/$brand': typeof BrandBrandRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/order/$id': typeof OrderIdRoute
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/wishlist'
     | '/api/chat'
+    | '/api/notify-admin'
     | '/brand/$brand'
     | '/invoice/$id'
     | '/order/$id'
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/wishlist'
     | '/api/chat'
+    | '/api/notify-admin'
     | '/brand/$brand'
     | '/invoice/$id'
     | '/order/$id'
@@ -213,6 +224,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/wishlist'
     | '/api/chat'
+    | '/api/notify-admin'
     | '/brand/$brand'
     | '/invoice/$id'
     | '/order/$id'
@@ -232,6 +244,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   WishlistRoute: typeof WishlistRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiNotifyAdminRoute: typeof ApiNotifyAdminRoute
   BrandBrandRoute: typeof BrandBrandRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
   OrderIdRoute: typeof OrderIdRoute
@@ -324,6 +337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/notify-admin': {
+      id: '/api/notify-admin'
+      path: '/api/notify-admin'
+      fullPath: '/api/notify-admin'
+      preLoaderRoute: typeof ApiNotifyAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/brand/$brand': {
       id: '/brand/$brand'
       path: '/brand/$brand'
@@ -368,6 +388,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   WishlistRoute: WishlistRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiNotifyAdminRoute: ApiNotifyAdminRoute,
   BrandBrandRoute: BrandBrandRoute,
   InvoiceIdRoute: InvoiceIdRoute,
   OrderIdRoute: OrderIdRoute,

@@ -64,6 +64,35 @@ export const Route = createFileRoute("/admin")({
 
 type AnyRecord = Record<string, unknown>;
 
+/** Short double-beep so the admin notices a new order even when not looking. */
+function playAlertBeep() {
+  try {
+    type AudioContextCtor = typeof AudioContext;
+    const Ctor: AudioContextCtor | undefined =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: AudioContextCtor }).webkitAudioContext;
+    if (!Ctor) return;
+    const ctx = new Ctor();
+    const notes = [880, 1175];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.18;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+      osc.start(t);
+      osc.stop(t + 0.28);
+    });
+  } catch {
+    /* audio unavailable or blocked — the toast alone is enough */
+  }
+}
+
 const emptyProduct: AnyRecord = {
   title: "",
   slug: "",
@@ -165,6 +194,7 @@ function AdminPage() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, (payload) => {
         const row = payload.new as Partial<Order> | null;
         if (row?.id) {
+          playAlertBeep();
           toast.success(`New order received — ${row.full_name ?? "Customer"}`, {
             description: `₹${Number(row.total ?? 0).toLocaleString("en-IN")} · ${row.payment_method ?? ""}`,
             duration: 6000,
@@ -277,16 +307,19 @@ function AdminPage() {
         res.error.message,
       )
     ) {
-      // product_ids / price columns not available yet — save the rest and notify.
-      delete payload.product_ids;
-      delete payload.price;
+      // A banner column is missing (usually `price` until the migration runs).
+      // Drop only that column so the rest of the banner — including any combo
+      // products — still saves.
+      const match = res.error.message.match(/Could not find the '([^']+)' column/i);
+      const missing = match ? match[1] : "price";
+      if (missing in payload) delete payload[missing];
       res = row.id
         ? await supabase
             .from("banners")
             .update(payload as never)
             .eq("id", row.id as string)
         : await supabase.from("banners").insert(payload as never);
-      if (!res.error) toast.info("Saved, but banner combo needs the DB migration to activate.");
+      if (!res.error) toast.info(`Saved — “${missing}” needs the DB migration to activate.`);
     }
     if (res.error) return toast.error(res.error.message);
     toast.success("Banner saved");

@@ -306,6 +306,13 @@ function CheckoutPage() {
       toast.success("Order placed!");
     }
 
+    // Fire-and-forget WhatsApp alert to the store admin (never blocks checkout).
+    void fetch("/api/notify-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId: order.id }),
+    }).catch(() => {});
+
     setBusy(false);
     clear();
     navigate({ to: "/order/$id", params: { id: order.id } });
