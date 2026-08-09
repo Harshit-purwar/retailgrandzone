@@ -7,6 +7,10 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  // Deploy to Vercel: emit the Nitro output in Vercel's serverless format instead of
+  // the default Cloudflare Worker target. The Lovable sandbox overrides this back to
+  // cloudflare-module for local preview builds, so local dev/preview is unaffected.
+  nitro: { preset: "vercel" },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
