@@ -55,11 +55,14 @@ export function LuckyCoinsPanel() {
     setMessage(null);
     try {
       const res = await claimCoinReward(orderId);
-      if (res.already_claimed) {
+      if (res.better_luck) {
+        setMessage(res.message || "Better luck next time! You have reached the weekly Coins limit.");
+      } else if (res.already_claimed) {
         setMessage(`You already claimed ₹${res.amount} for this order.`);
       } else {
         setMessage(
-          `Lucky draw! You won ₹${res.amount} Coins. Valid until ${new Date(res.expires_at).toLocaleDateString()}.`,
+          res.message ||
+            `Lucky draw! You won ₹${res.amount} Coins. Valid until ${new Date(res.expires_at).toLocaleDateString()}.`,
         );
       }
       await refetchWallet();
@@ -189,11 +192,14 @@ export function OrderLuckyCoins({ orderId }: { orderId: string }) {
     setMessage(null);
     try {
       const res = await claimCoinReward(orderId);
-      if (res.already_claimed) {
+      if (res.better_luck) {
+        setMessage(res.message || "Better luck next time! You have reached the weekly Coins limit.");
+      } else if (res.already_claimed) {
         setMessage(`You already claimed ₹${res.amount} for this order.`);
       } else {
         setMessage(
-          `Lucky draw! You won ₹${res.amount} Coins. Valid until ${new Date(res.expires_at).toLocaleDateString()}.`,
+          res.message ||
+            `Lucky draw! You won ₹${res.amount} Coins. Valid until ${new Date(res.expires_at).toLocaleDateString()}.`,
         );
       }
       await refetchWallet();

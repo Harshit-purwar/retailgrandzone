@@ -63,7 +63,13 @@ export function useCoinRewards(userId: string | undefined) {
 
 export async function claimCoinReward(
   orderId: string,
-): Promise<{ amount: number; expires_at: string; already_claimed: boolean }> {
+): Promise<{
+  amount: number;
+  expires_at: string;
+  already_claimed: boolean;
+  better_luck?: boolean;
+  message?: string;
+}> {
   const { data, error } = await supabase.rpc("claim_lucky_coin", {
     p_order_id: orderId,
   });
@@ -72,11 +78,15 @@ export async function claimCoinReward(
     amount?: number;
     expires_at?: string;
     already_claimed?: boolean;
+    better_luck?: boolean;
+    message?: string;
   };
   return {
     amount: Number(parsed.amount ?? 0),
     expires_at: parsed.expires_at ?? "",
     already_claimed: Boolean(parsed.already_claimed),
+    better_luck: Boolean(parsed.better_luck),
+    message: parsed.message ?? "",
   };
 }
 

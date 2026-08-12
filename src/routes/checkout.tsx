@@ -16,7 +16,7 @@ import {
 } from "@/lib/store-settings";
 import { detectCurrentLocation } from "@/lib/geo";
 import { listAddresses, saveAddress, type Address } from "@/lib/addresses";
-import { redeemCoins, useActiveCampaign, useCoinWallet } from "@/lib/lucky-coins";
+import { redeemCoins, useActiveCampaign, useCoinWallet, claimCoinReward } from "@/lib/lucky-coins";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -367,6 +367,24 @@ function CheckoutPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orderId: order.id }),
     }).catch(() => {});
+
+    // Auto-claim today's Lucky Coins for this order (never blocks checkout).
+    void claimCoinReward(order.id)
+      .then((res) => {
+        if (res.better_luck) {
+          toast.info(res.message || "Better luck next time! You have reached the weekly Coins limit.");
+        } else if (res.already_claimed) {
+          // already claimed — nothing to show
+        } else if (res.amount > 0) {
+          toast.success(
+            res.message ||
+              `Lucky draw! You won ₹${res.amount} Coins. Valid until ${new Date(res.expires_at).toLocaleDateString()}.`,
+          );
+        }
+      })
+      .catch(() => {
+        /* Coins stay claimable from the order page — not worth blocking checkout */
+      });
 
     setBusy(false);
     clear();

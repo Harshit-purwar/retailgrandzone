@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Home, LayoutGrid, Heart, ShoppingCart, User } from "lucide-react";
-import { useCart } from "@/lib/cart-context";
+import { Home, LayoutGrid, Heart, Sparkles, User } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useWishlist } from "@/lib/wishlist";
 
@@ -38,7 +37,6 @@ function NavItem({
 
 /** Sticky mobile bottom navigation — hidden on sm+ screens. */
 export function MobileNav() {
-  const { count } = useCart();
   const { user } = useAuth();
   const wishCount = useWishlist().length;
 
@@ -53,12 +51,7 @@ export function MobileNav() {
           icon={<Heart className="h-5 w-5" />}
           badge={wishCount}
         />
-        <NavItem
-          to="/cart"
-          label="Cart"
-          icon={<ShoppingCart className="h-5 w-5" />}
-          badge={count}
-        />
+        <NavItem to="/combos" label="Combos" icon={<Sparkles className="h-5 w-5" />} />
         <NavItem
           to={user ? "/orders" : "/auth"}
           label="Account"

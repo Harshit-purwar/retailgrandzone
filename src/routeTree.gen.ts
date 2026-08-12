@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as CombosRouteImport } from './routes/combos'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as PolicyRouteImport } from './routes/policy'
@@ -57,6 +58,11 @@ const CategoriesRoute = CategoriesRouteImport.update({
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CombosRoute = CombosRouteImport.update({
+  id: '/combos',
+  path: '/combos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
+  '/combos': typeof CombosRoute
   '/help': typeof HelpRoute
   '/orders': typeof OrdersRoute
   '/policy': typeof PolicyRoute
@@ -153,6 +160,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
+  '/combos': typeof CombosRoute
   '/help': typeof HelpRoute
   '/orders': typeof OrdersRoute
   '/policy': typeof PolicyRoute
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
+  '/combos': typeof CombosRoute
   '/help': typeof HelpRoute
   '/orders': typeof OrdersRoute
   '/policy': typeof PolicyRoute
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/categories'
     | '/checkout'
+    | '/combos'
     | '/help'
     | '/orders'
     | '/policy'
@@ -219,6 +229,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/categories'
     | '/checkout'
+    | '/combos'
     | '/help'
     | '/orders'
     | '/policy'
@@ -240,6 +251,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/categories'
     | '/checkout'
+    | '/combos'
     | '/help'
     | '/orders'
     | '/policy'
@@ -262,6 +274,7 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
+  CombosRoute: typeof CombosRoute
   HelpRoute: typeof HelpRoute
   OrdersRoute: typeof OrdersRoute
   PolicyRoute: typeof PolicyRoute
@@ -319,6 +332,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/combos': {
+      id: '/combos'
+      path: '/combos'
+      fullPath: '/combos'
+      preLoaderRoute: typeof CombosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -422,6 +442,7 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,
+  CombosRoute: CombosRoute,
   HelpRoute: HelpRoute,
   OrdersRoute: OrdersRoute,
   PolicyRoute: PolicyRoute,
