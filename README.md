@@ -22,3 +22,18 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Mobile app (Play Store / App Store)
+
+The repo includes a [Capacitor](https://capacitorjs.com) wrapper (`android/` and `ios/` folders). The native app loads the **live website URL** in a WebView, so every update you push appears in the app instantly — no rebuild needed.
+
+1. **Set your production URL** in `capacitor.config.ts` (`APP_URL` — it currently points at the preview domain).
+2. **Android → Play Store**
+   - Install Android Studio + the Android SDK.
+   - `npm i && npx cap sync android`
+   - Open `android/` in Android Studio, set your app icon/splash, generate a signed AAB (Build → Generate Signed Bundle), then upload to [Google Play Console](https://play.google.com/console).
+3. **iOS → App Store** (requires a Mac)
+   - Install Xcode, then `npm i && npx cap sync ios`.
+   - Open `ios/App` in Xcode, set the bundle ID / signing, archive (Product → Archive), then upload to App Store Connect.
+
+Environment variables (Supabase keys, Razorpay keys, etc.) are read at runtime from the live website — the app itself needs none.

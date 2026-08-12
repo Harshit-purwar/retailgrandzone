@@ -28,6 +28,15 @@ dist-ssr
 # Vercel
 .vercel
 
+# Capacitor native build artifacts
+android/app/build
+android/build
+android/.gradle
+android/local.properties
+ios/App/Pods
+ios/App/build
+ios/App/DerivedData
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

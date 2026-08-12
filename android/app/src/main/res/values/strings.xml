@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">The Grand Zone</string>
+    <string name="title_activity_main">The Grand Zone</string>
+    <string name="package_name">com.grandzone.store</string>
+    <string name="custom_url_scheme">com.grandzone.store</string>
+</resources>
