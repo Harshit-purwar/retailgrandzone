@@ -1,5 +1,5 @@
 /* Service worker for The Grand Zone — enables "Install App" + offline shell. */
-const CACHE = "grandzone-v1";
+const CACHE = "grandzone-v2";
 const CORE = ["/", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {

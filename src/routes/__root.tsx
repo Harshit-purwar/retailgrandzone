@@ -135,9 +135,14 @@ function RootComponent() {
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {
-        /* PWA install is progressive enhancement — ignore failures */
-      });
+      navigator.serviceWorker
+        .register("/sw.js", { updateViaCache: "none" })
+        .then((reg) => {
+          reg.update().catch(() => {});
+        })
+        .catch(() => {
+          /* PWA install is progressive enhancement — ignore failures */
+        });
     }
   }, []);
 
