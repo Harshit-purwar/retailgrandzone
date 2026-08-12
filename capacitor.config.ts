@@ -10,7 +10,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
  *
  * Set your real production domain below (e.g. https://retailgrandzone.vercel.app).
  */
-const APP_URL = process.env.CAPACITOR_APP_URL ?? "https://8080-f9ece6e56f76590f.monkeycode-ai.live";
+const APP_URL = process.env.CAPACITOR_APP_URL ?? "https://www.thegrandzone.shop";
 
 const config: CapacitorConfig = {
   appId: "com.grandzone.store",
