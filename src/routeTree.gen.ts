@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CartRouteImport } from './routes/cart'
+import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as OrdersRouteImport } from './routes/orders'
@@ -23,6 +24,7 @@ import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiNotifyAdminRouteImport } from './routes/api/notify-admin'
 import { Route as BrandBrandRouteImport } from './routes/brand.$brand'
+import { Route as ComboIdRouteImport } from './routes/combo.$id'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as OrderIdRouteImport } from './routes/order.$id'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
@@ -45,6 +47,11 @@ const AuthRoute = AuthRouteImport.update({
 const CartRoute = CartRouteImport.update({
   id: '/cart',
   path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategoriesRoute = CategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutRoute = CheckoutRouteImport.update({
@@ -97,6 +104,11 @@ const BrandBrandRoute = BrandBrandRouteImport.update({
   path: '/brand/$brand',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComboIdRoute = ComboIdRouteImport.update({
+  id: '/combo/$id',
+  path: '/combo/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InvoiceIdRoute = InvoiceIdRouteImport.update({
   id: '/invoice/$id',
   path: '/invoice/$id',
@@ -118,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
+  '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/help': typeof HelpRoute
   '/orders': typeof OrdersRoute
@@ -128,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/api/notify-admin': typeof ApiNotifyAdminRoute
   '/brand/$brand': typeof BrandBrandRoute
+  '/combo/$id': typeof ComboIdRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/order/$id': typeof OrderIdRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -137,6 +151,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
+  '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/help': typeof HelpRoute
   '/orders': typeof OrdersRoute
@@ -147,6 +162,7 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/api/notify-admin': typeof ApiNotifyAdminRoute
   '/brand/$brand': typeof BrandBrandRoute
+  '/combo/$id': typeof ComboIdRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/order/$id': typeof OrderIdRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -157,6 +173,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
+  '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/help': typeof HelpRoute
   '/orders': typeof OrdersRoute
@@ -167,6 +184,7 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/api/notify-admin': typeof ApiNotifyAdminRoute
   '/brand/$brand': typeof BrandBrandRoute
+  '/combo/$id': typeof ComboIdRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/order/$id': typeof OrderIdRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -178,6 +196,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/cart'
+    | '/categories'
     | '/checkout'
     | '/help'
     | '/orders'
@@ -188,6 +207,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/notify-admin'
     | '/brand/$brand'
+    | '/combo/$id'
     | '/invoice/$id'
     | '/order/$id'
     | '/product/$slug'
@@ -197,6 +217,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/cart'
+    | '/categories'
     | '/checkout'
     | '/help'
     | '/orders'
@@ -207,6 +228,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/notify-admin'
     | '/brand/$brand'
+    | '/combo/$id'
     | '/invoice/$id'
     | '/order/$id'
     | '/product/$slug'
@@ -216,6 +238,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/cart'
+    | '/categories'
     | '/checkout'
     | '/help'
     | '/orders'
@@ -226,6 +249,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/notify-admin'
     | '/brand/$brand'
+    | '/combo/$id'
     | '/invoice/$id'
     | '/order/$id'
     | '/product/$slug'
@@ -236,6 +260,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   CartRoute: typeof CartRoute
+  CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
   HelpRoute: typeof HelpRoute
   OrdersRoute: typeof OrdersRoute
@@ -246,6 +271,7 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiNotifyAdminRoute: typeof ApiNotifyAdminRoute
   BrandBrandRoute: typeof BrandBrandRoute
+  ComboIdRoute: typeof ComboIdRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
   OrderIdRoute: typeof OrderIdRoute
   ProductSlugRoute: typeof ProductSlugRoute
@@ -279,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/cart'
       fullPath: '/cart'
       preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/categories': {
+      id: '/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof CategoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout': {
@@ -351,6 +384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BrandBrandRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/combo/$id': {
+      id: '/combo/$id'
+      path: '/combo/$id'
+      fullPath: '/combo/$id'
+      preLoaderRoute: typeof ComboIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invoice/$id': {
       id: '/invoice/$id'
       path: '/invoice/$id'
@@ -380,6 +420,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   CartRoute: CartRoute,
+  CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,
   HelpRoute: HelpRoute,
   OrdersRoute: OrdersRoute,
@@ -390,6 +431,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiNotifyAdminRoute: ApiNotifyAdminRoute,
   BrandBrandRoute: BrandBrandRoute,
+  ComboIdRoute: ComboIdRoute,
   InvoiceIdRoute: InvoiceIdRoute,
   OrderIdRoute: OrderIdRoute,
   ProductSlugRoute: ProductSlugRoute,

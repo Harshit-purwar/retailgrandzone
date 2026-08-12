@@ -46,12 +46,7 @@ export function MobileNav() {
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(0,0,0,0.06)] backdrop-blur md:hidden">
       <div className="mx-auto flex w-full max-w-[600px] items-stretch px-2">
         <NavItem to="/" label="Home" icon={<Home className="h-5 w-5" />} />
-        <NavItem
-          to="/products"
-          label="Categories"
-          icon={<LayoutGrid className="h-5 w-5" />}
-          search={{ q: undefined, category: undefined }}
-        />
+        <NavItem to="/categories" label="Categories" icon={<LayoutGrid className="h-5 w-5" />} />
         <NavItem
           to="/wishlist"
           label="Wishlist"

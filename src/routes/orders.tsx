@@ -7,14 +7,21 @@ import type { Order } from "@/lib/store-types";
 import { inr } from "@/lib/store-types";
 import { orderState, orderStateLabel } from "@/lib/order-status";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LuckyCoinsPanel } from "@/components/store/LuckyCoins";
 
 export const Route = createFileRoute("/orders")({
   head: () => ({
     meta: [
       { title: "My orders — The Grand Zone" },
-      { name: "description", content: "See all the orders you have placed on The Grand Zone and their current status." },
+      {
+        name: "description",
+        content: "See all the orders you have placed on The Grand Zone and their current status.",
+      },
       { property: "og:title", content: "My orders — The Grand Zone" },
-      { property: "og:description", content: "See all the orders you have placed on The Grand Zone." },
+      {
+        property: "og:description",
+        content: "See all the orders you have placed on The Grand Zone.",
+      },
     ],
   }),
   component: OrdersPage,
@@ -25,7 +32,8 @@ function OrdersPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth", search: { redirect: "/orders" }, replace: true });
+    if (!loading && !user)
+      navigate({ to: "/auth", search: { redirect: "/orders" }, replace: true });
   }, [loading, user, navigate]);
 
   const query = useQuery({
@@ -44,12 +52,15 @@ function OrdersPage() {
   const orders = query.data ?? [];
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-4">
-      <div className="rounded-lg bg-card p-4">
+    <div className="mx-auto max-w-4xl px-3 py-4 sm:px-4">
+      <LuckyCoinsPanel />
+      <div className="mt-4 rounded-lg bg-card p-4">
         <h1 className="mb-4 text-xl font-semibold">My orders</h1>
         {query.isLoading ? <Skeleton className="h-24 w-full" /> : null}
         {!query.isLoading && orders.length === 0 ? (
-          <p className="py-10 text-center text-muted-foreground">You haven't placed any orders yet.</p>
+          <p className="py-10 text-center text-muted-foreground">
+            You haven't placed any orders yet.
+          </p>
         ) : null}
         <div className="space-y-3">
           {orders.map((o) => (
@@ -69,11 +80,14 @@ function OrdersPage() {
                 <p className="font-semibold">{inr(Number(o.total))}</p>
                 {(() => {
                   const state = orderState(o);
-                  if (state === "successful") return <p className="text-[var(--deal)]">{o.status}</p>;
+                  if (state === "successful")
+                    return <p className="text-[var(--deal)]">{o.status}</p>;
                   return (
                     <p
                       className={
-                        state === "pending" ? "font-semibold text-muted-foreground" : "font-semibold text-destructive"
+                        state === "pending"
+                          ? "font-semibold text-muted-foreground"
+                          : "font-semibold text-destructive"
                       }
                     >
                       {orderStateLabel(state)}

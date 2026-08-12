@@ -40,6 +40,28 @@ export type Banner = {
   product_ids?: unknown;
   /** Combo price for the banner — when set with product_ids it becomes a combo offer. */
   price?: number;
+  /** Links this banner to a dedicated combo offer — clicking opens the combo page. */
+  combo_id?: string | null;
+};
+
+/** A combo offer bundles existing products into a single discounted purchase. */
+export type Combo = {
+  id: string;
+  name: string;
+  description: string;
+  image_url: string;
+  product_ids: unknown;
+  combo_price: number;
+  active: boolean;
+  store_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** A product bundled inside a combo, as stored on the order line (snapshot). */
+export type ComboItem = {
+  id: string;
+  title: string;
 };
 
 export type Order = {
@@ -63,6 +85,7 @@ export type Order = {
   latitude?: number | null;
   longitude?: number | null;
   delivery_estimate?: string | null;
+  coins_applied?: number;
 };
 
 export type HelpRequest = {
@@ -86,6 +109,10 @@ export type OrderItem = {
   image_url: string;
   price: number;
   quantity: number;
+  /** Set for combo order lines — the combo this line came from. */
+  combo_id?: string | null;
+  /** Snapshot of the products included in a combo line ([{ id, title }]). */
+  combo_items?: unknown;
 };
 
 export const CANCELLED_BY_CUSTOMER = "Cancelled by Customer";
@@ -128,6 +155,21 @@ export function discountPercent(price: number, mrp: number): number {
 export function toList(value: unknown): string[] {
   if (Array.isArray(value)) return value.map(String);
   return [];
+}
+
+/** Parses an order line's stored combo snapshot ([{ id, title }, ...]). */
+export function toComboItems(value: unknown): ComboItem[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((v) =>
+      v && typeof v === "object"
+        ? {
+            id: String((v as Record<string, unknown>).id ?? ""),
+            title: String((v as Record<string, unknown>).title ?? ""),
+          }
+        : null,
+    )
+    .filter((v): v is ComboItem => !!v && v.id !== "");
 }
 
 export function toSpecs(value: unknown): [string, string][] {

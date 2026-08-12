@@ -1,14 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Banner, Product } from "@/lib/store-types";
+import type { Banner, Combo, Product } from "@/lib/store-types";
 import { toList } from "@/lib/store-types";
 import { useFastQuery } from "@/lib/fast-query";
 import { isComboBanner } from "@/lib/banner-combo";
 import { ComboBanner } from "@/components/store/BannerCombo";
+import { ComboCard } from "@/components/store/ComboCard";
+import { useCombos, comboProductIds } from "@/lib/combos";
 import { ProductCard } from "@/components/store/ProductCard";
 import { ProductRow } from "@/components/store/ProductRow";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LuckyCoinsHomeBanner } from "@/components/store/LuckyCoins";
 import { ChevronLeft, ChevronRight, Zap, ShieldCheck, RotateCcw, Truck } from "lucide-react";
 import { useSelectedStore, scopeToStore } from "@/lib/stores";
 import { useRecentlyViewed } from "@/lib/recently-viewed";
@@ -52,11 +55,16 @@ function useBanners(placement: string, storeId: string | null) {
 
 function bannerTarget(banner: Banner) {
   const multi = toList(banner.product_ids).filter(Boolean);
-  const first = multi[0] ?? banner.product_id;
-  if (first) return { to: "/product/$slug", params: { slug: first } } as const;
+  if (multi.length > 0) {
+    return { to: "/products", search: { q: undefined, category: undefined, ids: multi } } as const;
+  }
+  if (banner.product_id) {
+    return { to: "/product/$slug", params: { slug: banner.product_id } } as const;
+  }
+  if (banner.combo_id) return { to: "/combo/$id", params: { id: banner.combo_id } } as const;
   return {
     to: "/products",
-    search: { q: undefined, category: banner.link_category ?? undefined },
+    search: { q: undefined, category: banner.link_category ?? undefined, ids: undefined },
   } as const;
 }
 
@@ -88,6 +96,8 @@ function Home() {
   }, [heroCount]);
 
   const promo = useBanners("promo", storeId);
+
+  const comboOffers = useCombos(storeId);
 
   const products = useFastQuery<Product[]>({
     queryKey: ["products", "home", storeId ?? ""],
@@ -135,23 +145,13 @@ function Home() {
       <h1 className="sr-only">The Grand Zone online shopping</h1>
 
       {/* Hero banners — scrollable carousel (Blinkit-style cards on mobile) */}
-      <section className="-mx-3 sm:mx-0">
-        {hero.isLoading ? <Skeleton className="mx-4 aspect-[16/6] rounded-2xl sm:mx-0" /> : null}
+      <section className="mt-4 sm:mt-0">
+        {hero.isLoading ? <Skeleton className="aspect-[16/6] w-full rounded-2xl" /> : null}
         {(hero.data ?? []).length > 0 ? (
           <div className="relative">
             {/* Mobile: compact swipeable tiles */}
-            <div className="flex snap-x gap-3 overflow-x-auto px-3 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:hidden [&::-webkit-scrollbar]:hidden">
+            <div className="flex snap-x gap-3 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:hidden [&::-webkit-scrollbar]:hidden">
               {(hero.data ?? []).map((b) => {
-                if (isComboBanner(b)) {
-                  return (
-                    <ComboBanner
-                      key={b.id}
-                      banner={b}
-                      compact
-                      className="w-[72%] shrink-0 snap-start"
-                    />
-                  );
-                }
                 const target = bannerTarget(b);
                 return (
                   <button
@@ -198,11 +198,6 @@ function Home() {
               className="hidden snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] sm:flex [&::-webkit-scrollbar]:hidden"
             >
               {(hero.data ?? []).map((b) => {
-                if (isComboBanner(b)) {
-                  return (
-                    <ComboBanner key={b.id} banner={b} className="w-full shrink-0 snap-center" />
-                  );
-                }
                 const target = bannerTarget(b);
                 return (
                   <button
@@ -314,6 +309,8 @@ function Home() {
         </span>
       </section>
 
+      <LuckyCoinsHomeBanner />
+
       <ProductRow
         title="Deals of the day"
         products={deals}
@@ -331,8 +328,8 @@ function Home() {
       />
 
       {/* Promo banners — horizontally scrollable */}
-      <section className="-mx-3 mt-4 sm:mx-0 sm:mt-5">
-        <div className="flex snap-x gap-3 overflow-x-auto px-3 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:px-0 [&::-webkit-scrollbar]:hidden">
+      <section className="mt-4 sm:mt-5">
+        <div className="flex snap-x gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {(promo.data ?? []).map((b) => {
             if (isComboBanner(b)) {
               return (
@@ -379,6 +376,13 @@ function Home() {
         </div>
       </section>
 
+      {comboOffers.data && comboOffers.data.length > 0 ? (
+        <ComboOffersSection
+          combos={comboOffers.data}
+          productsById={new Map(list.map((p) => [p.id, p]))}
+        />
+      ) : null}
+
       {categoryRows.map((row) => (
         <ProductRow
           key={row.category}
@@ -401,6 +405,45 @@ function Home() {
 }
 
 /** Horizontal scrollable category shortcut strip with circular icons. */
+/** "Combo offers" strip: enabled combos, each linking to its own detail page. */
+function ComboOffersSection({
+  combos,
+  productsById,
+}: {
+  combos: Combo[];
+  productsById: Map<string, Product>;
+}) {
+  const rows = combos
+    .map((c) => ({
+      combo: c,
+      products: comboProductIds(c)
+        .map((id) => productsById.get(id))
+        .filter((p): p is Product => !!p),
+    }))
+    .filter((r) => r.products.length > 0);
+
+  if (rows.length === 0) return null;
+
+  return (
+    <section className="mt-4 sm:mt-5">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-base font-bold sm:text-xl">Combo offers</h2>
+        <span className="text-xs font-medium text-muted-foreground">Bundle &amp; save</span>
+      </div>
+      <div className="flex snap-x gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {rows.map((r) => (
+          <ComboCard
+            key={r.combo.id}
+            combo={r.combo}
+            products={r.products}
+            className="w-[68%] shrink-0 snap-start sm:w-[300px]"
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function CategoryStrip() {
   const categories = useCategories();
   const items = (categories.data ?? []) as string[];
@@ -408,8 +451,8 @@ function CategoryStrip() {
   if (items.length === 0) return null;
 
   return (
-    <section className="-mx-3 mt-4 sm:mx-0 sm:mt-5">
-      <div className="flex snap-x gap-2 overflow-x-auto px-3 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:px-0 [&::-webkit-scrollbar]:hidden">
+    <section className="mt-4 sm:mt-5">
+      <div className="flex snap-x gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {items.map((c) => {
           const Icon = categoryIcon(c);
           return (

@@ -11,14 +11,12 @@ import {
   Package,
   ShoppingBag,
   Clock,
-  Search,
-  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { BASE_CATEGORIES, useCategories } from "@/lib/categories";
 import { uploadStoreImage } from "@/lib/storage-upload";
-import type { Banner, Order, Product } from "@/lib/store-types";
+import type { Banner, Combo, Order, Product } from "@/lib/store-types";
 import { ORDER_STATUSES, inr } from "@/lib/store-types";
 import { CouponsTab, DeliveryTab } from "@/components/admin/StoreConfigTabs";
 import { OrderDetailDialog } from "@/components/admin/OrderDetailDialog";
@@ -33,6 +31,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { ImageManager } from "@/components/admin/ImageManager";
+import { ProductPicker } from "@/components/admin/ProductPicker";
+import { CombosTab } from "@/components/admin/CombosTab";
+import { CoinCampaignsTab } from "@/components/admin/CoinCampaignsTab";
+import { ReviewsTab } from "@/components/admin/ReviewsTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -122,6 +124,7 @@ const emptyBanner: AnyRecord = {
   product_id: "",
   product_ids: "",
   price: 0,
+  combo_id: "",
   store_id: "",
   sort_order: 0,
   active: true,
@@ -283,6 +286,7 @@ function AdminPage() {
       placement: row.placement,
       link_category: row.link_category || null,
       product_id: row.product_id || null,
+      combo_id: row.combo_id || null,
       price: Number(row.price) || 0,
       sort_order: Number(row.sort_order),
       store_id: row.store_id ? String(row.store_id) : null,
@@ -352,6 +356,7 @@ function AdminPage() {
       <Tabs defaultValue="products" className="rounded-lg bg-card p-4">
         <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="combos">Combos</TabsTrigger>
           <TabsTrigger value="stores">Stores</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="banners">Banners</TabsTrigger>
@@ -359,6 +364,8 @@ function AdminPage() {
           <TabsTrigger value="help">Help requests</TabsTrigger>
           <TabsTrigger value="coupons">Coupons</TabsTrigger>
           <TabsTrigger value="delivery">Delivery</TabsTrigger>
+          <TabsTrigger value="coins">Lucky Coins</TabsTrigger>
+          <TabsTrigger value="reviews">Reviews</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="pt-4">
@@ -418,6 +425,15 @@ function AdminPage() {
               </div>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="combos" className="pt-4">
+          <CombosTab
+            onDeleted={() => {
+              qc.invalidateQueries({ queryKey: ["admin", "combos"] });
+              qc.invalidateQueries({ queryKey: ["combos"] });
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="banners" className="pt-4">
@@ -525,6 +541,14 @@ function AdminPage() {
         <TabsContent value="delivery" className="pt-4">
           <DeliveryTab />
         </TabsContent>
+
+        <TabsContent value="coins" className="pt-4">
+          <CoinCampaignsTab />
+        </TabsContent>
+
+        <TabsContent value="reviews" className="pt-4">
+          <ReviewsTab />
+        </TabsContent>
       </Tabs>
 
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
@@ -571,7 +595,11 @@ function EditForm({
   onChange: (row: AnyRecord) => void;
   onSave: () => void;
 }) {
-  const fields: [string, string, "text" | "number" | "area" | "gallery" | "store" | "products"][] =
+  const fields: [
+    string,
+    string,
+    "text" | "number" | "area" | "gallery" | "store" | "products" | "combo",
+  ][] =
     kind === "product"
       ? [
           ["title", "Title", "text"],
@@ -598,6 +626,7 @@ function EditForm({
           ["image_url", "Image URL", "text"],
           ["placement", "Placement (hero or promo)", "text"],
           ["price", "Combo price (leave 0 for a normal banner)", "number"],
+          ["combo_id", "Link to combo offer", "combo"],
           ["link_category", "Link to category", "text"],
           ["product_id", "Link to product ID", "text"],
           ["product_ids", "Combo products (shown at the combo price)", "products"],
@@ -623,6 +652,11 @@ function EditForm({
           <Label htmlFor={key}>{label}</Label>
           {type === "store" ? (
             <StoreField
+              value={String(row[key] ?? "")}
+              onChange={(v) => onChange({ ...row, [key]: v })}
+            />
+          ) : type === "combo" ? (
+            <ComboField
               value={String(row[key] ?? "")}
               onChange={(v) => onChange({ ...row, [key]: v })}
             />
@@ -929,98 +963,35 @@ function AdminStats({ orders, products }: { orders: Order[]; products: Product[]
   );
 }
 
-function ProductPicker({
-  value,
-  onChange,
-}: {
-  value: string[];
-  onChange: (value: string[]) => void;
-}) {
-  const [q, setQ] = useState("");
-  const query = q.trim();
-
-  const results = useQuery({
-    queryKey: ["admin", "product-picker", query],
+function ComboField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const combos = useQuery({
+    queryKey: ["admin", "combos", "all"],
     queryFn: async () => {
-      let base = supabase.from("products").select("id,title");
-      if (query) base = base.ilike("title", `%${query}%`);
-      const { data, error } = await base.order("title").limit(query ? 20 : 100);
+      const { data, error } = await supabase.from("combos").select("*").order("name");
       if (error) throw error;
-      return (data ?? []) as unknown as Pick<Product, "id" | "title">[];
+      return (data ?? []) as unknown as Combo[];
     },
   });
-
-  const selected = useQuery({
-    enabled: value.length > 0,
-    queryKey: ["admin", "product-picker-selected", value.join(",")],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("id,title").in("id", value);
-      if (error) throw error;
-      return (data ?? []) as unknown as Pick<Product, "id" | "title">[];
-    },
-  });
-
-  function toggle(id: string) {
-    onChange(value.includes(id) ? value.filter((v) => v !== id) : [...value, id]);
-  }
-
-  const selectedItems = (selected.data ?? [])
-    .slice()
-    .sort((a, b) => a.title.localeCompare(b.title));
-  const hits = (results.data ?? []).filter((p) => !value.includes(p.id));
 
   return (
-    <div className="space-y-2">
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          className="pl-8"
-          placeholder="Search products to add to the banner…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-      </div>
-
-      {selectedItems.length > 0 ? (
-        <div>
-          <p className="mb-1 text-xs font-medium text-muted-foreground">Selected for this banner</p>
-          <div className="space-y-1 rounded border border-border p-2 text-sm">
-            {selectedItems.map((p) => (
-              <div key={p.id} className="flex items-center justify-between gap-2">
-                <span className="min-w-0 truncate">{p.title}</span>
-                <button
-                  type="button"
-                  aria-label={`Remove ${p.title}`}
-                  onClick={() => toggle(p.id)}
-                  className="shrink-0 text-muted-foreground hover:text-destructive"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      <div className="max-h-40 space-y-1 overflow-y-auto rounded border border-border p-2 text-sm">
-        {hits.map((p) => (
-          <label key={p.id} className="flex items-center gap-2">
-            <input type="checkbox" checked={value.includes(p.id)} onChange={() => toggle(p.id)} />
-            {p.title}
-          </label>
+    <Select value={value || "__none"} onValueChange={(v) => onChange(v === "__none" ? "" : v)}>
+      <SelectTrigger>
+        <SelectValue placeholder="Link this banner to a combo offer" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="__none">No combo link</SelectItem>
+        {(combos.data ?? []).map((c) => (
+          <SelectItem key={c.id} value={c.id}>
+            {c.name} — {inr(Number(c.combo_price))}
+            {c.active ? "" : " (disabled)"}
+          </SelectItem>
         ))}
-        {!results.isLoading && hits.length === 0 && !query ? (
-          <p className="p-2 text-xs text-muted-foreground">No products yet.</p>
+        {combos.isLoading ? (
+          <SelectItem value="__loading" disabled>
+            Loading…
+          </SelectItem>
         ) : null}
-        {!results.isLoading && hits.length === 0 && query ? (
-          <p className="p-2 text-xs text-muted-foreground">No products match “{query}”.</p>
-        ) : null}
-      </div>
-
-      <p className="text-xs text-muted-foreground">
-        These products are shown on the banner. Add a combo price above to offer them together as a
-        combo at that price.
-      </p>
-    </div>
+      </SelectContent>
+    </Select>
   );
 }

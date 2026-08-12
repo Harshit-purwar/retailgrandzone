@@ -1,5 +1,5 @@
 import type { Order, OrderItem } from "@/lib/store-types";
-import { inr } from "@/lib/store-types";
+import { inr, toComboItems } from "@/lib/store-types";
 
 /** Normalises an Indian phone number into wa.me format (91XXXXXXXXXX). */
 export function waNumber(phone: string): string {
@@ -11,7 +11,11 @@ export function waNumber(phone: string): string {
 
 /** Full, human-readable order summary used for WhatsApp notifications. */
 export function orderMessage(order: Order, items: OrderItem[], forAdmin: boolean): string {
-  const lines = items.map((i) => `• ${i.title} × ${i.quantity} — ${inr(Number(i.price) * i.quantity)}`);
+  const lines = items.map((i) => {
+    const combo = toComboItems(i.combo_items);
+    const suffix = combo.length ? ` (with ${combo.map((c) => c.title).join(", ")})` : "";
+    return `• ${i.title}${suffix} × ${i.quantity} — ${inr(Number(i.price) * i.quantity)}`;
+  });
   return [
     forAdmin ? "*New order — The Grand Zone*" : "*Your The Grand Zone order*",
     `Order ID: ${order.id.slice(0, 8).toUpperCase()}`,
@@ -28,7 +32,9 @@ export function orderMessage(order: Order, items: OrderItem[], forAdmin: boolean
     `${order.address_line}, ${order.city}, ${order.state} — ${order.pincode}`,
     order.delivery_estimate ? `Delivery estimate: ${order.delivery_estimate}` : "",
     "",
-    forAdmin ? "Please confirm and process this order." : "Thank you for shopping with The Grand Zone!",
+    forAdmin
+      ? "Please confirm and process this order."
+      : "Thank you for shopping with The Grand Zone!",
   ]
     .filter((l) => l !== undefined)
     .join("\n");

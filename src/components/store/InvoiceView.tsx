@@ -1,6 +1,6 @@
 import logo from "@/assets/grandzone-logo.png";
 import type { OrderItem } from "@/lib/store-types";
-import { inr } from "@/lib/store-types";
+import { inr, toComboItems } from "@/lib/store-types";
 import { invoiceNumber, invoiceTotals, type InvoiceOrder } from "@/lib/invoice";
 import { orderState, orderStateLabel } from "@/lib/order-status";
 
@@ -44,7 +44,9 @@ export function InvoiceView({ order, items }: { order: InvoiceOrder; items: Orde
 
       <section className="grid gap-4 py-4 text-sm sm:grid-cols-2">
         <div>
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Billed to</p>
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Billed to
+          </p>
           <p className="font-medium">{order.full_name}</p>
           <p>{order.phone}</p>
           {order.email ? <p>{order.email}</p> : null}
@@ -54,12 +56,22 @@ export function InvoiceView({ order, items }: { order: InvoiceOrder; items: Orde
           {order.customer_gstin ? <p className="mt-1">GSTIN: {order.customer_gstin}</p> : null}
         </div>
         <div className="sm:text-right">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Payment</p>
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Payment
+          </p>
           <p>{order.payment_method}</p>
-          <p className={state === "successful" ? "font-semibold text-[var(--deal)]" : "font-semibold text-destructive"}>
+          <p
+            className={
+              state === "successful"
+                ? "font-semibold text-[var(--deal)]"
+                : "font-semibold text-destructive"
+            }
+          >
             {orderStateLabel(state)} · {order.payment_status}
           </p>
-          {order.payment_id ? <p className="text-xs text-muted-foreground">Ref {order.payment_id}</p> : null}
+          {order.payment_id ? (
+            <p className="text-xs text-muted-foreground">Ref {order.payment_id}</p>
+          ) : null}
         </div>
       </section>
 
@@ -73,14 +85,26 @@ export function InvoiceView({ order, items }: { order: InvoiceOrder; items: Orde
           </tr>
         </thead>
         <tbody>
-          {items.map((it) => (
-            <tr key={it.id} className="border-b border-border">
-              <td className="px-3 py-2">{it.title}</td>
-              <td className="px-3 py-2 text-center">{it.quantity}</td>
-              <td className="px-3 py-2 text-right">{inr(Number(it.price))}</td>
-              <td className="px-3 py-2 text-right">{inr(Number(it.price) * Number(it.quantity))}</td>
-            </tr>
-          ))}
+          {items.map((it) => {
+            const comboItems = toComboItems(it.combo_items);
+            return (
+              <tr key={it.id} className="border-b border-border">
+                <td className="px-3 py-2">
+                  {it.title}
+                  {comboItems.length > 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Includes: {comboItems.map((c) => c.title).join(", ")}
+                    </p>
+                  ) : null}
+                </td>
+                <td className="px-3 py-2 text-center">{it.quantity}</td>
+                <td className="px-3 py-2 text-right">{inr(Number(it.price))}</td>
+                <td className="px-3 py-2 text-right">
+                  {inr(Number(it.price) * Number(it.quantity))}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
@@ -92,7 +116,9 @@ export function InvoiceView({ order, items }: { order: InvoiceOrder; items: Orde
           </div>
           {t.discount > 0 ? (
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">Discount{order.coupon_code ? ` (${order.coupon_code})` : ""}</dt>
+              <dt className="text-muted-foreground">
+                Discount{order.coupon_code ? ` (${order.coupon_code})` : ""}
+              </dt>
               <dd>− {inr(t.discount)}</dd>
             </div>
           ) : null}
@@ -124,8 +150,8 @@ export function InvoiceView({ order, items }: { order: InvoiceOrder; items: Orde
       ) : null}
 
       <footer className="mt-6 border-t border-border pt-3 text-center text-[11px] text-muted-foreground">
-        This is a computer-generated invoice and does not require a signature. Thank you for shopping with The Grand
-        Zone.
+        This is a computer-generated invoice and does not require a signature. Thank you for
+        shopping with The Grand Zone.
       </footer>
     </div>
   );

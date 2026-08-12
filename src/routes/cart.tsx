@@ -9,9 +9,15 @@ export const Route = createFileRoute("/cart")({
   head: () => ({
     meta: [
       { title: "Your cart — The Grand Zone" },
-      { name: "description", content: "Review the items in your The Grand Zone cart before placing your order." },
+      {
+        name: "description",
+        content: "Review the items in your The Grand Zone cart before placing your order.",
+      },
       { property: "og:title", content: "Your cart — The Grand Zone" },
-      { property: "og:description", content: "Review the items in your The Grand Zone cart before placing your order." },
+      {
+        property: "og:description",
+        content: "Review the items in your The Grand Zone cart before placing your order.",
+      },
     ],
   }),
   component: CartPage,
@@ -23,10 +29,9 @@ function CartPage() {
   const settings = useStoreSettings();
   const delivery = deliveryFeeFor(subtotal, settings.data);
 
-
   if (lines.length === 0) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+      <div className="mx-auto max-w-3xl px-3 py-16 text-center sm:px-4">
         <div className="rounded-lg bg-card p-10">
           <h1 className="text-xl font-semibold">Your cart is empty</h1>
           <p className="mt-2 text-sm text-muted-foreground">Add items to it now.</p>
@@ -43,13 +48,16 @@ function CartPage() {
   }
 
   return (
-    <div className="mx-auto grid w-full max-w-[1600px] gap-4 px-3 pb-28 pt-3 sm:px-4 sm:py-4 lg:grid-cols-[1fr_360px] lg:pb-8">
+    <div className="mx-auto grid w-full max-w-[1600px] gap-4 px-3 pb-40 pt-3 sm:px-4 sm:py-4 lg:grid-cols-[1fr_360px] lg:pb-8">
       <div className="overflow-hidden rounded-2xl bg-card shadow-sm">
         <h1 className="border-b border-border px-4 py-3 text-base font-semibold sm:text-lg">
           My Cart ({lines.length})
         </h1>
         {lines.map((l) => (
-          <div key={l.productId} className="flex gap-3 border-b border-border p-3 last:border-0 sm:gap-4 sm:p-4">
+          <div
+            key={l.productId}
+            className="flex gap-3 border-b border-border p-3 last:border-0 sm:gap-4 sm:p-4"
+          >
             <img
               src={l.image_url}
               alt={l.title}
@@ -57,13 +65,28 @@ function CartPage() {
               className="h-20 w-20 shrink-0 rounded-xl bg-muted/40 object-contain sm:h-24 sm:w-24"
             />
             <div className="min-w-0 flex-1">
-              <Link
-                to="/product/$slug"
-                params={{ slug: l.slug ?? l.productId }}
-                className="line-clamp-2 text-sm font-medium transition-colors hover:text-primary"
-              >
-                {l.title}
-              </Link>
+              {l.kind === "combo" ? (
+                <Link
+                  to="/combo/$id"
+                  params={{ id: l.productId }}
+                  className="line-clamp-2 text-sm font-medium transition-colors hover:text-primary"
+                >
+                  {l.title}
+                </Link>
+              ) : (
+                <Link
+                  to="/product/$slug"
+                  params={{ slug: l.slug ?? l.productId }}
+                  className="line-clamp-2 text-sm font-medium transition-colors hover:text-primary"
+                >
+                  {l.title}
+                </Link>
+              )}
+              {l.kind === "combo" && l.comboItems && l.comboItems.length > 0 ? (
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Includes: {l.comboItems.map((c) => c.title).join(", ")}
+                </p>
+              ) : null}
               <p className="mt-1 text-base font-semibold sm:text-lg">{inr(l.price)}</p>
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <div className="flex items-center rounded-full border border-border">
@@ -96,7 +119,9 @@ function CartPage() {
       </div>
 
       <aside className="h-fit rounded-2xl bg-card p-4 shadow-sm lg:sticky lg:top-32">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Price details</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Price details
+        </h2>
         <div className="space-y-2 border-b border-dashed border-border pb-3 text-sm">
           <div className="flex justify-between">
             <span>Price ({lines.length} items)</span>
@@ -104,7 +129,9 @@ function CartPage() {
           </div>
           <div className="flex justify-between">
             <span>Delivery charges</span>
-            <span className={delivery ? "" : "text-[var(--deal)]"}>{delivery ? inr(delivery) : "FREE"}</span>
+            <span className={delivery ? "" : "text-[var(--deal)]"}>
+              {delivery ? inr(delivery) : "FREE"}
+            </span>
           </div>
         </div>
         <div className="flex justify-between py-3 text-base font-semibold">
@@ -121,7 +148,7 @@ function CartPage() {
         </Button>
       </aside>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-[3.25rem] z-40 border-t border-border bg-card/95 p-3 backdrop-blur lg:hidden">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-3">
           <div className="text-sm">
             <p className="font-semibold leading-tight">{inr(subtotal + delivery)}</p>
@@ -139,4 +166,3 @@ function CartPage() {
     </div>
   );
 }
-

@@ -12,7 +12,15 @@ const SUGGESTIONS = [
   "How can I track my order?",
 ];
 
-const UNSURE = ["i don't know", "i do not know", "not sure", "sorry", "can't help", "cannot help", "unable to"];
+const UNSURE = [
+  "i don't know",
+  "i do not know",
+  "not sure",
+  "sorry",
+  "can't help",
+  "cannot help",
+  "unable to",
+];
 
 export function HelpChat() {
   const settings = useStoreSettings();
@@ -49,7 +57,11 @@ export function HelpChat() {
       });
 
       if (!res.ok || !res.body) {
-        throw new Error(res.status === 429 ? "Too many requests, please try again in a moment." : "Chat is unavailable right now.");
+        throw new Error(
+          res.status === 429
+            ? "Too many requests, please try again in a moment."
+            : "Chat is unavailable right now.",
+        );
       }
 
       const reader = res.body.getReader();
@@ -109,7 +121,10 @@ export function HelpChat() {
       const message = err instanceof Error ? err.message : "Something went wrong.";
       setMessages((prev) => {
         const copy = [...prev];
-        copy[copy.length - 1] = { role: "assistant", content: `${message}\n\nNeed more help? Call us at ${phone}.` };
+        copy[copy.length - 1] = {
+          role: "assistant",
+          content: `${message}\n\nNeed more help? Call us at ${phone}.`,
+        };
         return copy;
       });
     } finally {
@@ -123,13 +138,13 @@ export function HelpChat() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close help chat" : "Open help chat"}
-        className="fixed bottom-4 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95 sm:h-14 sm:w-14"
+        className="fixed bottom-[8.5rem] right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95 sm:bottom-4 sm:h-14 sm:w-14"
       >
         {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
       </button>
 
       {open ? (
-        <div className="fixed inset-x-3 bottom-20 z-50 flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:inset-x-auto sm:right-4 sm:w-[380px]">
+        <div className="fixed inset-x-3 bottom-[9.75rem] z-50 flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:inset-x-auto sm:bottom-20 sm:right-4 sm:w-[380px]">
           <div className="flex items-center gap-2 bg-brand px-4 py-3 text-brand-foreground">
             <Sparkles className="h-4 w-4" />
             <div className="min-w-0">
@@ -148,7 +163,10 @@ export function HelpChat() {
                     : "mr-auto max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-bl-sm bg-muted px-3 py-2 text-sm text-foreground"
                 }
               >
-                {m.content || (busy && i === messages.length - 1 ? <Loader2 className="h-4 w-4 animate-spin" /> : null)}
+                {m.content ||
+                  (busy && i === messages.length - 1 ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : null)}
               </div>
             ))}
 
@@ -183,8 +201,6 @@ export function HelpChat() {
               <LifeBuoy className="h-3.5 w-3.5" /> Request help
             </Link>
           </div>
-
-
 
           <form
             onSubmit={(e) => {

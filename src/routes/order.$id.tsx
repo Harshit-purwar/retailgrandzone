@@ -4,21 +4,33 @@ import { CheckCircle2, Clock, FileText, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Order, OrderItem } from "@/lib/store-types";
-import { CANCELLED_BY_CUSTOMER, ORDER_STATUSES, canCustomerCancel, inr } from "@/lib/store-types";
+import {
+  CANCELLED_BY_CUSTOMER,
+  ORDER_STATUSES,
+  canCustomerCancel,
+  inr,
+  toComboItems,
+} from "@/lib/store-types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useStoreSettings } from "@/lib/store-settings";
 import { cancellationFeePercent, refundBreakdown } from "@/lib/policy";
 import { orderState, orderStateLabel } from "@/lib/order-status";
-
+import { OrderLuckyCoins } from "@/components/store/LuckyCoins";
 
 export const Route = createFileRoute("/order/$id")({
   head: () => ({
     meta: [
       { title: "Order confirmed — The Grand Zone" },
-      { name: "description", content: "Track your The Grand Zone order status, items and delivery address." },
+      {
+        name: "description",
+        content: "Track your The Grand Zone order status, items and delivery address.",
+      },
       { property: "og:title", content: "Order confirmed — The Grand Zone" },
-      { property: "og:description", content: "Track your The Grand Zone order status, items and delivery address." },
+      {
+        property: "og:description",
+        content: "Track your The Grand Zone order status, items and delivery address.",
+      },
     ],
   }),
   component: OrderPage,
@@ -28,7 +40,6 @@ function OrderPage() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const settings = useStoreSettings();
-
 
   const query = useQuery({
     queryKey: ["order", id],
@@ -84,7 +95,9 @@ function OrderPage() {
       .update({ status: CANCELLED_BY_CUSTOMER, cancelled_at: new Date().toISOString() })
       .eq("id", order.id);
     if (error) return toast.error(error.message);
-    toast.success(prepaid ? `Order cancelled — ${inr(refund.refund)} will be refunded` : "Order cancelled");
+    toast.success(
+      prepaid ? `Order cancelled — ${inr(refund.refund)} will be refunded` : "Order cancelled",
+    );
     qc.invalidateQueries({ queryKey: ["order", order.id] });
   }
 
@@ -100,16 +113,19 @@ function OrderPage() {
         )}
         <h1 className="mt-3 text-xl font-semibold">{orderStateLabel(state)}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Order ID {order.id.slice(0, 8).toUpperCase()} · {order.payment_method} · {order.payment_status}
+          Order ID {order.id.slice(0, 8).toUpperCase()} · {order.payment_method} ·{" "}
+          {order.payment_status}
         </p>
         {state === "failed" ? (
           <p className="mt-2 text-sm text-destructive">
-            Your payment was not completed, so this order has not been confirmed. You can place it again from your cart.
+            Your payment was not completed, so this order has not been confirmed. You can place it
+            again from your cart.
           </p>
         ) : null}
         {state === "pending" ? (
           <p className="mt-2 text-sm text-muted-foreground">
-            We are waiting for payment confirmation. The order is confirmed only once the payment succeeds.
+            We are waiting for payment confirmation. The order is confirmed only once the payment
+            succeeds.
           </p>
         ) : null}
         <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -121,6 +137,9 @@ function OrderPage() {
         </div>
       </div>
 
+      {state === "successful" || state === "pending" ? (
+        <OrderLuckyCoins orderId={order.id} />
+      ) : null}
 
       <div className="rounded-lg bg-card p-4">
         <h2 className="mb-4 font-semibold">Order status</h2>
@@ -133,7 +152,9 @@ function OrderPage() {
                   i <= activeIndex ? "bg-[var(--deal)]" : "bg-muted"
                 }`}
               />
-              <span className={i <= activeIndex ? "font-medium" : "text-muted-foreground"}>{s}</span>
+              <span className={i <= activeIndex ? "font-medium" : "text-muted-foreground"}>
+                {s}
+              </span>
             </li>
           ))}
         </ol>
@@ -141,16 +162,27 @@ function OrderPage() {
 
       <div className="rounded-lg bg-card">
         <h2 className="border-b border-border px-4 py-3 font-semibold">Items</h2>
-        {(query.data?.items ?? []).map((it) => (
-          <div key={it.id} className="flex items-center gap-4 border-b border-border p-4 last:border-0">
-            <img src={it.image_url} alt={it.title} className="h-16 w-16 object-contain" />
-            <div className="flex-1 text-sm">
-              <p className="font-medium">{it.title}</p>
-              <p className="text-muted-foreground">Qty {it.quantity}</p>
+        {(query.data?.items ?? []).map((it) => {
+          const comboItems = toComboItems(it.combo_items);
+          return (
+            <div
+              key={it.id}
+              className="flex items-center gap-4 border-b border-border p-4 last:border-0"
+            >
+              <img src={it.image_url} alt={it.title} className="h-16 w-16 object-contain" />
+              <div className="flex-1 text-sm">
+                <p className="font-medium">{it.title}</p>
+                {comboItems.length > 0 ? (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Includes: {comboItems.map((c) => c.title).join(", ")}
+                  </p>
+                ) : null}
+                <p className="text-muted-foreground">Qty {it.quantity}</p>
+              </div>
+              <span className="font-semibold">{inr(Number(it.price) * it.quantity)}</span>
             </div>
-            <span className="font-semibold">{inr(Number(it.price) * it.quantity)}</span>
-          </div>
-        ))}
+          );
+        })}
         <div className="flex justify-between px-4 py-3 font-semibold">
           <span>Total paid</span>
           <span>{inr(Number(order.total))}</span>
@@ -170,8 +202,9 @@ function OrderPage() {
         <h2 className="mb-2 font-semibold">Cancellation &amp; refund</h2>
         {prepaid ? (
           <p>
-            This order is prepaid. If you cancel or return it, a {percent}% processing fee ({inr(refund.fee)}) is
-            deducted and <strong>{inr(refund.refund)}</strong> is refunded to your original payment method.
+            This order is prepaid. If you cancel or return it, a {percent}% processing fee (
+            {inr(refund.fee)}) is deducted and <strong>{inr(refund.refund)}</strong> is refunded to
+            your original payment method.
           </p>
         ) : (
           <p>Cash on delivery orders can be cancelled free of charge before dispatch.</p>
@@ -187,7 +220,6 @@ function OrderPage() {
           </Button>
         </div>
       </div>
-
 
       <Link
         to="/products"

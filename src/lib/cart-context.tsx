@@ -1,9 +1,21 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { toast } from "sonner";
 
-
 export type CartLine = {
+  /** Unique line key — a product id for normal items, a combo id for combos. */
   productId: string;
+  /** "combo" marks a bundled combo offer line (charged at the combo price). */
+  kind?: "product" | "combo";
+  /** Snapshot of the bundled products ([{ id, title }]) — set on combo lines. */
+  comboItems?: { id: string; title: string }[];
   title: string;
   image_url: string;
   price: number;
@@ -18,7 +30,6 @@ function capToStock(quantity: number, stock?: number | null): number {
   if (stock === undefined || stock === null || !Number.isFinite(Number(stock))) return quantity;
   return Math.min(quantity, Math.max(0, Number(stock)));
 }
-
 
 type CartValue = {
   lines: CartLine[];
@@ -95,7 +106,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
           }),
     );
   }, []);
-
 
   const remove = useCallback((productId: string) => {
     setLines((prev) => prev.filter((l) => l.productId !== productId));

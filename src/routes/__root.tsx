@@ -17,6 +17,7 @@ import { Header, Footer } from "@/components/store/Header";
 import { MobileNav } from "@/components/store/MobileNav";
 import { Toaster } from "@/components/ui/sonner";
 import { HelpChat } from "@/components/store/HelpChat";
+import { InstallAppBanner } from "@/components/store/InstallAppBanner";
 import { StoreGate } from "@/components/store/StoreGate";
 
 function NotFoundComponent() {
@@ -132,6 +133,14 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {
+        /* PWA install is progressive enhancement — ignore failures */
+      });
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -143,6 +152,7 @@ function RootComponent() {
             </main>
             <Footer />
             <HelpChat />
+            <InstallAppBanner />
             <StoreGate />
             <MobileNav />
           </div>

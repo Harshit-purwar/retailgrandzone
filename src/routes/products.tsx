@@ -10,6 +10,7 @@ import { useSelectedStore, scopeToStore } from "@/lib/stores";
 const searchSchema = z.object({
   q: z.string().optional(),
   category: z.string().optional(),
+  ids: z.union([z.array(z.string()), z.string()]).optional(),
 });
 
 export const Route = createFileRoute("/products")({
@@ -17,24 +18,34 @@ export const Route = createFileRoute("/products")({
   head: () => ({
     meta: [
       { title: "All products — The Grand Zone" },
-      { name: "description", content: "Browse every product on The Grand Zone by category, brand and price." },
+      {
+        name: "description",
+        content: "Browse every product on The Grand Zone by category, brand and price.",
+      },
       { property: "og:title", content: "All products — The Grand Zone" },
-      { property: "og:description", content: "Browse every product on The Grand Zone by category, brand and price." },
+      {
+        property: "og:description",
+        content: "Browse every product on The Grand Zone by category, brand and price.",
+      },
     ],
   }),
   component: ProductsPage,
 });
 
 function ProductsPage() {
-  const { q, category } = Route.useSearch();
+  const search = Route.useSearch();
+  const q = search.q;
+  const category = search.category;
+  const ids = (Array.isArray(search.ids) ? search.ids : search.ids ? [search.ids] : undefined) ?? [];
   const { store } = useSelectedStore();
   const storeId = store?.id ?? null;
 
   const products = useQuery({
-    queryKey: ["products", "list", q ?? "", category ?? "", storeId ?? ""],
+    queryKey: ["products", "list", q ?? "", category ?? "", ids.join(",") ?? "", storeId ?? ""],
     queryFn: async () => {
       let query = supabase.from("products").select("*").eq("active", true);
-      if (category) query = query.eq("category", category);
+      if (ids.length > 0) query = query.in("id", ids);
+      else if (category) query = query.eq("category", category);
       query = scopeToStore(query, storeId);
       if (q) query = query.or(`title.ilike.%${q}%,brand.ilike.%${q}%,category.ilike.%${q}%`);
       const { data, error } = await query.order("created_at", { ascending: false });
@@ -46,16 +57,24 @@ function ProductsPage() {
   const list = products.data ?? [];
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-4 py-4">
+    <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-4">
       <div className="rounded-lg bg-card p-4">
         <h1 className="text-xl font-semibold">
-          {category ? category : q ? `Results for "${q}"` : "All products"}
+          {ids.length > 0
+            ? "Featured products"
+            : category
+              ? category
+              : q
+                ? `Results for "${q}"`
+                : "All products"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">{list.length} items</p>
 
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {products.isLoading
-            ? Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-72 rounded-lg" />)
+            ? Array.from({ length: 10 }).map((_, i) => (
+                <Skeleton key={i} className="h-72 rounded-lg" />
+              ))
             : list.map((p) => <ProductCard key={p.id} product={p} />)}
         </div>
 
@@ -64,7 +83,7 @@ function ProductsPage() {
             <p className="text-muted-foreground">No products matched your search.</p>
             <Link
               to="/products"
-              search={{ q: undefined, category: undefined }}
+              search={{ q: undefined, category: undefined, ids: undefined }}
               className="mt-4 inline-block rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
             >
               Clear filters

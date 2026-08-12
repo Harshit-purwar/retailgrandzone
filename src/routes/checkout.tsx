@@ -16,6 +16,7 @@ import {
 } from "@/lib/store-settings";
 import { detectCurrentLocation } from "@/lib/geo";
 import { listAddresses, saveAddress, type Address } from "@/lib/addresses";
+import { redeemCoins, useActiveCampaign, useCoinWallet } from "@/lib/lucky-coins";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -85,6 +86,11 @@ function CheckoutPage() {
   const [addressesLoading, setAddressesLoading] = useState(true);
   const [locating, setLocating] = useState(false);
   const [saveAddressOnPlace, setSaveAddressOnPlace] = useState(true);
+  const [coinsToUse, setCoinsToUse] = useState(0);
+
+  const { data: coinCampaign } = useActiveCampaign();
+  const { data: coinWallet } = useCoinWallet(user?.id);
+  const walletBalance = Number(coinWallet?.balance ?? 0);
 
   useEffect(() => {
     if (!user) return;
@@ -133,7 +139,9 @@ function CheckoutPage() {
   const discount = couponDiscount(subtotal, coupon);
   const baseDelivery = deliveryFeeFor(subtotal, settings.data);
   const delivery = coupon?.free_delivery ? 0 : baseDelivery;
-  const total = Math.max(0, subtotal - discount + delivery);
+  const maxCoins = Math.min(walletBalance, subtotal - discount);
+  const coinsToUseCapped = Math.max(0, Math.min(coinsToUse, maxCoins));
+  const total = Math.max(0, subtotal - discount + delivery - coinsToUseCapped);
 
   async function applyCoupon() {
     if (!couponInput.trim()) return;
@@ -259,6 +267,7 @@ function CheckoutPage() {
         coupon_code: coupon?.code ?? null,
         discount,
         delivery_fee: delivery,
+        coins_applied: coinsToUseCapped,
         store_id: store?.id ?? null,
         delivery_estimate: store?.delivery_estimate ?? null,
         payment_method: payment,
@@ -273,15 +282,51 @@ function CheckoutPage() {
       return toast.error(error?.message ?? "Could not place order");
     }
 
+    // Redeem Coins through the wallet ledger. The server only spends rewards
+    // whose campaign covers an item category in this order, so `used` may be
+    // smaller than requested; the order total is adjusted to match exactly.
+    let coinsUsed = 0;
+    if (coinsToUseCapped > 0) {
+      try {
+        const res = await redeemCoins(order.id, coinsToUseCapped);
+        coinsUsed = Number(res.used ?? 0);
+      } catch {
+        coinsUsed = 0;
+      }
+      if (coinsUsed !== coinsToUseCapped) {
+        const corrected = Math.max(0, total + (coinsToUseCapped - coinsUsed));
+        await supabase
+          .from("orders")
+          .update({ total: corrected, coins_applied: coinsUsed })
+          .eq("id", order.id);
+        if (coinsUsed < coinsToUseCapped) {
+          toast.info(`Applied ${inr(coinsUsed)} Coins — the rest is not eligible for this order.`);
+        }
+      }
+    }
+
     const { error: itemsError } = await supabase.from("order_items").insert(
-      lines.map((l) => ({
-        order_id: order.id,
-        product_id: l.productId,
-        title: l.title,
-        image_url: l.image_url,
-        price: l.price,
-        quantity: l.quantity,
-      })),
+      lines.map((l) =>
+        l.kind === "combo"
+          ? {
+              order_id: order.id,
+              product_id: null,
+              combo_id: l.productId,
+              combo_items: (l.comboItems ?? []).map((c) => ({ id: c.id, title: c.title })),
+              title: l.title,
+              image_url: l.image_url,
+              price: l.price,
+              quantity: l.quantity,
+            }
+          : {
+              order_id: order.id,
+              product_id: l.productId,
+              title: l.title,
+              image_url: l.image_url,
+              price: l.price,
+              quantity: l.quantity,
+            },
+      ),
     );
     if (itemsError) {
       setBusy(false);
@@ -299,6 +344,16 @@ function CheckoutPage() {
           .from("orders")
           .update({ payment_status: "Failed", status: "Payment Failed" })
           .eq("id", order.id);
+        // Return any Coins that were redeemed for this order to the wallet.
+        if (coinsUsed > 0) {
+          try {
+            await supabase.rpc("release_coins_for_pending_order", {
+              p_order_id: order.id,
+            });
+          } catch {
+            /* coins stay locked — admin can refund manually */
+          }
+        }
         setBusy(false);
         return toast.error(err instanceof Error ? err.message : "Payment failed");
       }
@@ -570,6 +625,57 @@ function CheckoutPage() {
             </div>
           )}
         </div>
+
+        {coinCampaign ? (
+          <div className="mt-3 rounded-xl border border-dashed border-amber-300 bg-amber-50/50 p-3">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-700">
+              {coinCampaign.name}
+            </p>
+            <p className="mb-2 text-sm text-amber-800">
+              Wallet: {inr(walletBalance)}
+              {coinsToUseCapped > 0 ? ` · Applying ${inr(coinsToUseCapped)}` : ""}
+            </p>
+            {walletBalance > 0 ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={0}
+                  max={maxCoins}
+                  value={coinsToUse === 0 ? "" : coinsToUse}
+                  onChange={(e) =>
+                    setCoinsToUse(Math.max(0, Math.min(maxCoins, Number(e.target.value) || 0)))
+                  }
+                  placeholder="Coins to use"
+                  aria-label="Coins to use"
+                  className="bg-white"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="shrink-0 bg-white"
+                  onClick={() => setCoinsToUse(maxCoins)}
+                >
+                  Max
+                </Button>
+              </div>
+            ) : (
+              <p className="text-xs text-amber-700">
+                You have no Coins yet. Complete an eligible order to earn some.
+              </p>
+            )}
+            <p className="mt-2 text-[11px] leading-snug text-amber-700">
+              Coins can only be used on eligible categories and are applied after coupon discount.
+              They cannot be withdrawn as cash.
+            </p>
+          </div>
+        ) : null}
+
+        {coinsToUseCapped > 0 ? (
+          <div className="flex justify-between text-sm text-amber-700">
+            <span>Coins applied</span>
+            <span>− {inr(coinsToUseCapped)}</span>
+          </div>
+        ) : null}
 
         <div className="mt-3 flex justify-between border-t border-border pt-3 text-base font-semibold">
           <span>Total</span>

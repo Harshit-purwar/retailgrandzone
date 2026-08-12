@@ -1,11 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Gift, ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import { Gift, ShieldCheck, Truck, RotateCcw, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/lib/store-types";
 import { discountPercent, inr, toList, toSpecs } from "@/lib/store-types";
 import { Rating } from "@/components/store/ProductCard";
+import { ReviewsSection } from "@/components/store/Reviews";
+import { LuckyCoinsPromo } from "@/components/store/LuckyCoins";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/lib/cart-context";
@@ -14,14 +16,19 @@ import { ComboSection } from "@/components/store/ComboSection";
 import { recordRecentlyViewed, useRecentlyViewed } from "@/lib/recently-viewed";
 import { useEffect, useState } from "react";
 
-
 export const Route = createFileRoute("/product/$slug")({
   head: () => ({
     meta: [
       { title: "Product details — The Grand Zone" },
-      { name: "description", content: "Full description, ratings and specifications for this The Grand Zone product." },
+      {
+        name: "description",
+        content: "Full description, ratings and specifications for this The Grand Zone product.",
+      },
       { property: "og:title", content: "Product details — The Grand Zone" },
-      { property: "og:description", content: "Full description, ratings and specifications for this The Grand Zone product." },
+      {
+        property: "og:description",
+        content: "Full description, ratings and specifications for this The Grand Zone product.",
+      },
     ],
   }),
   component: ProductPage,
@@ -32,7 +39,6 @@ function ProductPage() {
   const navigate = useNavigate();
   const cart = useCart();
   const [color, setColor] = useState<string>("");
-
 
   const productQuery = useQuery({
     queryKey: ["product", slug],
@@ -64,7 +70,12 @@ function ProductPage() {
       if (error) throw error;
       let rows = (data ?? []) as unknown as Product[];
       if (rows.length === 0) {
-        const fallback = await supabase.from("products").select("*").eq("active", true).neq("id", product!.id).limit(12);
+        const fallback = await supabase
+          .from("products")
+          .select("*")
+          .eq("active", true)
+          .neq("id", product!.id)
+          .limit(12);
         rows = (fallback.data ?? []) as unknown as Product[];
       }
       return rows;
@@ -77,7 +88,11 @@ function ProductPage() {
     enabled: recentIds.length > 0,
     queryKey: ["recently-viewed", recentIds.join(",")],
     queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("*").in("id", recentIds).eq("active", true);
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .in("id", recentIds)
+        .eq("active", true);
       if (error) throw error;
       const rows = (data ?? []) as unknown as Product[];
       return recentIds.map((id) => rows.find((r) => r.id === id)).filter(Boolean) as Product[];
@@ -128,15 +143,18 @@ function ProductPage() {
     stock: product.stock,
   };
 
-
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-4">
+    <div className="mx-auto w-full max-w-[1600px] px-3 py-4 pb-32 sm:px-4 md:pb-4">
       <nav className="mb-3 text-xs text-muted-foreground">
         <Link to="/" className="hover:underline">
           Home
         </Link>
         {" / "}
-        <Link to="/products" search={{ q: undefined, category: product.category }} className="hover:underline">
+        <Link
+          to="/products"
+          search={{ q: undefined, category: product.category }}
+          className="hover:underline"
+        >
           {product.category}
         </Link>
         {" / "}
@@ -165,7 +183,9 @@ function ProductPage() {
                   key={`thumb-${src}-${i}`}
                   type="button"
                   onClick={() =>
-                    document.getElementById(`gallery-${i}`)?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
+                    document
+                      .getElementById(`gallery-${i}`)
+                      ?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
                   }
                   className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-white"
                 >
@@ -217,7 +237,9 @@ function ProductPage() {
             <span className="text-3xl font-bold">{inr(Number(product.price))}</span>
             {off > 0 ? (
               <>
-                <span className="text-lg text-muted-foreground line-through">{inr(Number(product.mrp))}</span>
+                <span className="text-lg text-muted-foreground line-through">
+                  {inr(Number(product.mrp))}
+                </span>
                 <span className="text-lg font-semibold text-[var(--deal)]">{off}% off</span>
               </>
             ) : null}
@@ -232,9 +254,7 @@ function ProductPage() {
 
           {colors.length > 0 ? (
             <div className="mt-4">
-              <h2 className="mb-2 text-sm font-semibold">
-                Colour{color ? `: ${color}` : ""}
-              </h2>
+              <h2 className="mb-2 text-sm font-semibold">Colour{color ? `: ${color}` : ""}</h2>
               <div className="flex flex-wrap gap-2">
                 {colors.map((c) => (
                   <button
@@ -242,7 +262,9 @@ function ProductPage() {
                     type="button"
                     onClick={() => setColor(c === color ? "" : c)}
                     className={`rounded-full border px-3 py-1.5 text-sm ${
-                      c === color ? "border-primary bg-primary/10 font-semibold" : "border-border hover:bg-muted"
+                      c === color
+                        ? "border-primary bg-primary/10 font-semibold"
+                        : "border-border hover:bg-muted"
                     }`}
                   >
                     {c}
@@ -259,45 +281,16 @@ function ProductPage() {
             </p>
           ) : null}
 
-          {highlights.length > 0 ? (
-            <div className="mt-5">
-              <h2 className="mb-2 font-semibold">Highlights</h2>
-              <ul className="list-disc space-y-1 pl-5 text-sm text-foreground/90">
-                {highlights.map((h) => (
-                  <li key={h}>{h}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          <div className="mt-5">
-            <h2 className="mb-2 font-semibold">Description</h2>
-            <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/90">{product.description}</p>
-          </div>
-
-          {specs.length > 0 ? (
-            <div className="mt-6">
-              <h2 className="mb-2 font-semibold">Specifications</h2>
-              <div className="overflow-hidden rounded border border-border">
-                <table className="w-full text-sm">
-                  <tbody>
-                    {specs.map(([k, v], i) => (
-                      <tr key={k} className={i % 2 ? "bg-muted/40" : ""}>
-                        <td className="w-32 px-3 py-2 align-top text-muted-foreground sm:w-48">{k}</td>
-                        <td className="px-3 py-2">{v}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ) : null}
+          <ViewDetails product={product} highlights={highlights} specs={specs} />
 
           <div className="mt-6 grid gap-3 text-sm sm:grid-cols-3">
             <span className="flex items-center gap-2 rounded border border-border p-3">
               <Truck className="h-4 w-4 text-primary" /> Free delivery
             </span>
-            <Link to="/policy" className="flex items-center gap-2 rounded border border-border p-3 hover:border-primary">
+            <Link
+              to="/policy"
+              className="flex items-center gap-2 rounded border border-border p-3 hover:border-primary"
+            >
               <RotateCcw className="h-4 w-4 text-primary" /> 7 day replacement
             </Link>
             <span className="flex items-center gap-2 rounded border border-border p-3">
@@ -310,7 +303,14 @@ function ProductPage() {
 
       <ComboSection product={product} />
 
+      <div className="mt-4">
+        <LuckyCoinsPromo category={product.category} />
+      </div>
 
+      <div className="mt-8 space-y-4">
+        <h2 className="text-lg font-semibold">Customer reviews</h2>
+        <ReviewsSection productId={product.id} />
+      </div>
 
       <ProductRow
         title="Similar products"
@@ -325,6 +325,135 @@ function ProductPage() {
       />
 
       <ProductRow title="Recently viewed" products={recentlyViewed.data ?? []} />
+
+      <StickyBuyBar
+        outOfStock={outOfStock}
+        onAdd={() => {
+          cart.add(line);
+          toast.success("Added to cart");
+        }}
+        onBuy={() => {
+          cart.add(line);
+          navigate({ to: "/checkout" });
+        }}
+      />
+    </div>
+  );
+}
+
+function StickyBuyBar({
+  outOfStock,
+  onAdd,
+  onBuy,
+}: {
+  outOfStock: boolean;
+  onAdd: () => void;
+  onBuy: () => void;
+}) {
+  return (
+    <div className="fixed inset-x-0 bottom-[4.5rem] z-40 border-t border-border bg-card/95 px-3 py-2 backdrop-blur md:hidden">
+      <div className="mx-auto grid w-full max-w-[600px] grid-cols-2 gap-2">
+        <Button
+          size="lg"
+          disabled={outOfStock}
+          className="bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90"
+          onClick={onAdd}
+        >
+          {outOfStock ? "Sold out" : "Add to cart"}
+        </Button>
+        <Button size="lg" disabled={outOfStock} onClick={onBuy}>
+          Buy now
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function ViewDetails({
+  product,
+  highlights,
+  specs,
+}: {
+  product: Product;
+  highlights: string[];
+  specs: [string, string][];
+}) {
+  const [open, setOpen] = useState(false);
+  const summary = specs.slice(0, 2);
+
+  return (
+    <div className="mt-5">
+      <div className="mt-1">
+        <h2 className="mb-2 font-semibold">Description</h2>
+        <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/90">
+          {product.description}
+        </p>
+      </div>
+
+      {summary.length > 0 ? (
+        <div className="mt-4">
+          <h2 className="mb-2 font-semibold">Specifications</h2>
+          <div className="overflow-hidden rounded border border-border">
+            <table className="w-full text-sm">
+              <tbody>
+                {summary.map(([k, v], i) => (
+                  <tr key={k} className={i % 2 ? "bg-muted/40" : ""}>
+                    <td className="w-32 px-3 py-2 align-top text-muted-foreground sm:w-48">{k}</td>
+                    <td className="px-3 py-2">{v}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+
+      <Button type="button" variant="outline" className="mt-4" onClick={() => setOpen((o) => !o)}>
+        {open ? "Hide details" : "View details"}
+        <ChevronDown className={`ml-1 h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+      </Button>
+
+      {open ? (
+        <div className="mt-4 space-y-4">
+          {highlights.length > 0 ? (
+            <div>
+              <h2 className="mb-2 font-semibold">Highlights</h2>
+              <ul className="list-disc space-y-1 pl-5 text-sm text-foreground/90">
+                {highlights.map((h) => (
+                  <li key={h}>{h}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {specs.length > 2 ? (
+            <div>
+              <h2 className="mb-2 font-semibold">Full specifications</h2>
+              <div className="overflow-hidden rounded border border-border">
+                <table className="w-full text-sm">
+                  <tbody>
+                    {specs.map(([k, v], i) => (
+                      <tr key={k} className={i % 2 ? "bg-muted/40" : ""}>
+                        <td className="w-32 px-3 py-2 align-top text-muted-foreground sm:w-48">
+                          {k}
+                        </td>
+                        <td className="px-3 py-2">{v}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : null}
+
+          {product.warranty?.trim() ? (
+            <div>
+              <h2 className="mb-2 font-semibold">Warranty</h2>
+              <p className="text-sm text-foreground/90">{product.warranty}</p>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
