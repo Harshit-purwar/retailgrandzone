@@ -69,19 +69,22 @@ export function ProductRow({ title, products, loading, seeAll }: Props) {
         </div>
       </div>
 
-      <div
-        ref={scroller}
-        className="flex snap-x gap-3 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {loading
-          ? Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-72 w-[46%] shrink-0 rounded-2xl sm:w-56" />
-            ))
-          : products.map((p) => (
-              <div key={p.id} className="w-[46%] shrink-0 snap-start sm:w-56 lg:w-60">
-                <ProductCard product={p} />
-              </div>
-            ))}
+      <div className="relative">
+        <div
+          ref={scroller}
+          className="flex snap-x gap-3 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-64 w-[29%] shrink-0 rounded-2xl sm:w-56" />
+              ))
+            : products.map((p) => (
+                <div key={p.id} className="w-[29%] shrink-0 snap-start sm:w-56 lg:w-60">
+                  <ProductCard product={p} />
+                </div>
+              ))}
+        </div>
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-card to-transparent" />
       </div>
     </section>
   );
