@@ -39,7 +39,7 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <div className="group relative flex h-full flex-col rounded-2xl border border-border bg-card p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+    <div className="group relative flex h-full flex-col rounded-2xl border border-border bg-card p-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg sm:p-3">
       <button
         type="button"
         aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
@@ -61,7 +61,7 @@ export function ProductCard({ product }: { product: Product }) {
         params={{ slug: product.slug ?? product.id }}
         className="flex flex-1 flex-col"
       >
-        <div className="flex h-36 items-center justify-center overflow-hidden rounded-xl bg-secondary">
+        <div className="flex h-24 items-center justify-center overflow-hidden rounded-xl bg-secondary sm:h-36">
           <img
             src={product.image_url}
             alt={product.title}
@@ -70,20 +70,20 @@ export function ProductCard({ product }: { product: Product }) {
           />
         </div>
 
-        <span className="mt-3 inline-flex w-fit items-center gap-1 rounded-md bg-secondary px-1.5 py-0.5 text-[11px] font-bold text-muted-foreground">
+        <span className="mt-2 inline-flex w-fit items-center gap-1 rounded-md bg-secondary px-1.5 py-0.5 text-[11px] font-bold text-muted-foreground sm:mt-3">
           <Clock className="h-3 w-3" /> 12 MINS
         </span>
 
-        <h3 className="mt-1.5 line-clamp-2 text-sm font-semibold text-foreground">
+        <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-foreground sm:mt-1.5">
           {product.title}
         </h3>
         <p className="mt-0.5 text-xs text-muted-foreground">{product.brand}</p>
-        <div className="mt-1.5">
+        <div className="mt-1 sm:mt-1.5">
           <Rating value={Number(product.rating)} count={product.rating_count} />
         </div>
       </Link>
 
-      <div className="mt-3 flex items-end justify-between gap-2">
+      <div className="mt-2 flex items-end justify-between gap-2 sm:mt-3">
         <div className="leading-tight">
           <span className="block text-base font-bold">{inr(Number(product.price))}</span>
           {off > 0 ? (
