@@ -11,6 +11,8 @@ import {
   Package,
   ShoppingBag,
   Clock,
+  Search,
+  Hourglass,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -187,6 +189,23 @@ function AdminPage() {
   );
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
   const [newOrderOpen, setNewOrderOpen] = useState(false);
+  const [productSearch, setProductSearch] = useState("");
+  const [productCategory, setProductCategory] = useState("");
+
+  const productCategories = Array.from(
+    new Set((products.data ?? []).map((p) => p.category).filter(Boolean)),
+  ).sort();
+  const filteredProducts = (products.data ?? []).filter((p) => {
+    const q = productSearch.trim().toLowerCase();
+    const matchQ =
+      !q ||
+      p.title.toLowerCase().includes(q) ||
+      p.brand.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q) ||
+      p.id.includes(q);
+    const matchC = !productCategory || p.category === productCategory;
+    return matchQ && matchC;
+  });
 
   // Live order updates (requires the realtime publication to include `orders`
   // — see supabase/migrations). Silently no-ops until that migration runs.
@@ -369,14 +388,47 @@ function AdminPage() {
         </TabsList>
 
         <TabsContent value="products" className="pt-4">
-          <Button
-            className="mb-3"
-            onClick={() => setEditing({ kind: "product", row: { ...emptyProduct } })}
-          >
-            <Plus className="mr-1 h-4 w-4" /> New product
-          </Button>
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search products by name, brand or category…"
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            <Select
+              value={productCategory || "__all"}
+              onValueChange={(v) => setProductCategory(v === "__all" ? "" : v)}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all">All categories</SelectItem>
+                {productCategories.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              className="ml-auto"
+              onClick={() => setEditing({ kind: "product", row: { ...emptyProduct } })}
+            >
+              <Plus className="mr-1 h-4 w-4" /> New product
+            </Button>
+          </div>
+          <p className="mb-2 text-xs text-muted-foreground">
+            Showing {filteredProducts.length} of {(products.data ?? []).length} products
+          </p>
           <div className="space-y-2">
-            {(products.data ?? []).map((p) => (
+            {filteredProducts.length === 0 ? (
+              <p className="py-8 text-center text-muted-foreground">No products found.</p>
+            ) : null}
+            {filteredProducts.map((p) => (
               <div
                 key={p.id}
                 className="flex flex-wrap items-center gap-3 rounded border border-border p-3"
@@ -909,6 +961,11 @@ function CategoryField({
 
 function AdminStats({ orders, products }: { orders: Order[]; products: Product[] }) {
   const activeOrders = orders.filter((o) => !/delivered|cancelled/i.test(o.status ?? ""));
+  const pendingOrders = orders.filter((o) => {
+    const status = String(o.status ?? "");
+    const pay = String(o.payment_status ?? "");
+    return /ordered|packed/i.test(status) || /pending|unpaid|awaiting/i.test(pay);
+  });
   const revenue = orders.reduce((n, o) => {
     const online = /razorpay|online|upi|card/i.test(o.payment_method ?? "");
     if (online && (o.payment_status ?? "").toLowerCase() !== "paid") return n;
@@ -932,6 +989,13 @@ function AdminStats({ orders, products }: { orders: Order[]; products: Product[]
       tone: "text-primary",
     },
     {
+      label: "Pending orders",
+      value: String(pendingOrders.length),
+      sub: "awaiting action",
+      icon: <Hourglass className="h-4 w-4" />,
+      tone: "text-[var(--deal)]",
+    },
+    {
       label: "Products",
       value: String(products.length),
       sub: `${lowStock.length} low on stock`,
@@ -948,7 +1012,7 @@ function AdminStats({ orders, products }: { orders: Order[]; products: Product[]
   ];
 
   return (
-    <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       {cards.map((c) => (
         <div key={c.label} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
