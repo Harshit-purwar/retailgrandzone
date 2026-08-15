@@ -14,9 +14,16 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Login or sign up — The Grand Zone" },
-      { name: "description", content: "Log in or create a The Grand Zone account with your email address to place orders." },
+      {
+        name: "description",
+        content:
+          "Log in or create a The Grand Zone account with your email address to place orders.",
+      },
       { property: "og:title", content: "Login or sign up — The Grand Zone" },
-      { property: "og:description", content: "Log in or create a The Grand Zone account with your email address." },
+      {
+        property: "og:description",
+        content: "Log in or create a The Grand Zone account with your email address.",
+      },
     ],
   }),
   component: AuthPage,
@@ -58,7 +65,6 @@ function AuthPage() {
     toast.success("Password reset link sent — check your email");
   }
 
-
   async function signup(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -68,7 +74,9 @@ function AuthPage() {
       options: { emailRedirectTo: window.location.origin, data: { full_name: fullName } },
     });
     if (!error && data.user) {
-      await supabase.from("profiles").upsert({ id: data.user.id, email: email.trim(), full_name: fullName });
+      await supabase
+        .from("profiles")
+        .upsert({ id: data.user.id, email: email.trim(), full_name: fullName });
     }
     setBusy(false);
     if (error) return toast.error(error.message);
@@ -81,7 +89,9 @@ function AuthPage() {
       <div className="overflow-hidden rounded-lg bg-card shadow">
         <div className="bg-primary px-6 py-8 text-primary-foreground">
           <h1 className="text-2xl font-semibold">Login or sign up</h1>
-          <p className="mt-1 text-sm opacity-90">Use your email address to access orders and faster checkout.</p>
+          <p className="mt-1 text-sm opacity-90">
+            Use your email address to access orders and faster checkout.
+          </p>
         </div>
         <Tabs defaultValue="login" className="p-6">
           <TabsList className="grid w-full grid-cols-2">
@@ -93,7 +103,13 @@ function AuthPage() {
             <form className="space-y-4 pt-4" onSubmit={login}>
               <div>
                 <Label htmlFor="login-email">Email</Label>
-                <Input id="login-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Input
+                  id="login-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
               <div>
                 <Label htmlFor="login-password">Password</Label>
@@ -119,16 +135,26 @@ function AuthPage() {
             </form>
           </TabsContent>
 
-
           <TabsContent value="signup">
             <form className="space-y-4 pt-4" onSubmit={signup}>
               <div>
                 <Label htmlFor="signup-name">Full name</Label>
-                <Input id="signup-name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                <Input
+                  id="signup-name"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
               </div>
               <div>
                 <Label htmlFor="signup-email">Email</Label>
-                <Input id="signup-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Input
+                  id="signup-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
               <div>
                 <Label htmlFor="signup-password">Password</Label>
@@ -139,7 +165,9 @@ function AuthPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <p className="mt-1 text-xs text-muted-foreground">Any password works — no strength rules.</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Any password works — no strength rules.
+                </p>
               </div>
               <Button className="w-full" type="submit" disabled={busy}>
                 {busy ? "Please wait…" : "Create account"}

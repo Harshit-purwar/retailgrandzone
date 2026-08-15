@@ -53,7 +53,7 @@ export function MobileNav() {
         />
         <NavItem to="/combos" label="Combos" icon={<Sparkles className="h-5 w-5" />} />
         <NavItem
-          to={user ? "/orders" : "/auth"}
+          to={user ? "/account" : "/auth"}
           label="Account"
           icon={<User className="h-5 w-5" />}
         />

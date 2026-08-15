@@ -105,6 +105,9 @@ export function Header() {
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate({ to: "/account" })}>
+                      <User className="mr-2 h-4 w-4" /> My account
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate({ to: "/orders" })}>
                       <Package className="mr-2 h-4 w-4" /> My orders
                     </DropdownMenuItem>
