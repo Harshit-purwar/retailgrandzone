@@ -3,6 +3,7 @@ import { Trash2, Minus, Plus } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { inr } from "@/lib/store-types";
 import { deliveryFeeFor, useStoreSettings } from "@/lib/store-settings";
+import { storeImageUrl } from "@/lib/store-image";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/cart")({
@@ -59,7 +60,7 @@ function CartPage() {
             className="flex gap-3 border-b border-border p-3 last:border-0 sm:gap-4 sm:p-4"
           >
             <img
-              src={l.image_url}
+              src={storeImageUrl(l.image_url, 240)}
               alt={l.title}
               loading="lazy"
               className="h-20 w-20 shrink-0 rounded-xl bg-muted/40 object-contain sm:h-24 sm:w-24"

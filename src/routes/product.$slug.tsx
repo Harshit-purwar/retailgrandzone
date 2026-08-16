@@ -14,6 +14,7 @@ import { useCart } from "@/lib/cart-context";
 import { ProductRow } from "@/components/store/ProductRow";
 import { ComboSection } from "@/components/store/ComboSection";
 import { recordRecentlyViewed, useRecentlyViewed } from "@/lib/recently-viewed";
+import { storeImageUrl } from "@/lib/store-image";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/product/$slug")({
@@ -169,8 +170,10 @@ function ProductPage() {
                 <img
                   key={`${src}-${i}`}
                   id={`gallery-${i}`}
-                  src={src}
+                  src={storeImageUrl(src, 900)}
                   alt={`${product.title} image ${i + 1}`}
+                  loading={i === 0 ? "eager" : "lazy"}
+                  decoding="async"
                   className="mx-auto h-64 w-full shrink-0 snap-center object-contain sm:h-80"
                 />
               ))}
@@ -189,7 +192,11 @@ function ProductPage() {
                   }
                   className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-white"
                 >
-                  <img src={src} alt="" className="h-full w-full object-contain" />
+                  <img
+                    src={storeImageUrl(src, 200)}
+                    alt=""
+                    className="h-full w-full object-contain"
+                  />
                 </button>
               ))}
             </div>

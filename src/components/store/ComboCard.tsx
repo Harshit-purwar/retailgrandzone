@@ -3,6 +3,7 @@ import { Sparkles } from "lucide-react";
 import type { Combo, Product } from "@/lib/store-types";
 import { inr } from "@/lib/store-types";
 import { comboNormalTotal } from "@/lib/combos";
+import { storeImageUrl } from "@/lib/store-image";
 
 /** Compact combo offer card linking to the combo detail page. */
 export function ComboCard({
@@ -27,7 +28,7 @@ export function ComboCard({
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
         {combo.image_url ? (
           <img
-            src={combo.image_url}
+            src={storeImageUrl(combo.image_url, 640)}
             alt=""
             aria-hidden
             loading="lazy"
@@ -36,7 +37,7 @@ export function ComboCard({
         ) : null}
         {combo.image_url ? (
           <img
-            src={combo.image_url}
+            src={storeImageUrl(combo.image_url, 640)}
             alt={combo.name}
             loading="lazy"
             className="relative h-full w-full object-contain"

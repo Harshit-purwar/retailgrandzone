@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Banner, Product } from "@/lib/store-types";
 import { inr } from "@/lib/store-types";
 import { comboProductIds, splitComboPrice } from "@/lib/banner-combo";
+import { storeImageUrl } from "@/lib/store-image";
 import { useCart } from "@/lib/cart-context";
 import { Button } from "@/components/ui/button";
 
@@ -67,14 +68,14 @@ export function ComboBanner({
     >
       <div className="relative w-full overflow-hidden bg-muted">
         <img
-          src={banner.image_url}
+          src={storeImageUrl(banner.image_url, 900)}
           alt=""
           aria-hidden
           loading="lazy"
           className="absolute inset-0 h-full w-full scale-110 object-cover blur-xl opacity-60"
         />
         <img
-          src={banner.image_url}
+          src={storeImageUrl(banner.image_url, 900)}
           alt={banner.title}
           loading="lazy"
           className="relative h-full w-full object-contain"
@@ -110,7 +111,7 @@ export function ComboBanner({
                 onClick={(e) => e.stopPropagation()}
               >
                 <img
-                  src={p.image_url}
+                  src={storeImageUrl(p.image_url, 160)}
                   alt={p.title}
                   loading="lazy"
                   className="h-16 w-16 rounded-lg border border-border bg-white object-contain sm:h-20 sm:w-20"

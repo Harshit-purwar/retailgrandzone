@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { Check, Minus, ShoppingCart, Sparkles } from "lucide-react";
 import type { Product } from "@/lib/store-types";
 import { inr } from "@/lib/store-types";
+import { storeImageUrl } from "@/lib/store-image";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/lib/cart-context";
@@ -115,7 +116,7 @@ function ComboPage() {
         <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
           {combo.image_url ? (
             <img
-              src={combo.image_url}
+              src={storeImageUrl(combo.image_url, 900)}
               alt={combo.name}
               className="aspect-square w-full bg-white object-contain"
             />
@@ -244,7 +245,7 @@ function ComboProductRow({ product }: { product: Product }) {
     >
       <Link to="/product/$slug" params={{ slug: product.slug ?? product.id }} className="shrink-0">
         <img
-          src={product.image_url}
+          src={storeImageUrl(product.image_url, 160)}
           alt={product.title}
           loading="lazy"
           className="h-16 w-16 rounded-lg border border-border bg-white object-contain"

@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/lib/store-types";
 import { inr, toList } from "@/lib/store-types";
 import { useCart } from "@/lib/cart-context";
+import { storeImageUrl } from "@/lib/store-image";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -14,14 +15,21 @@ import { Button } from "@/components/ui/button";
  */
 export function ComboSection({ product }: { product: Product }) {
   const cart = useCart();
-  const ids = useMemo(() => toList(product.combo_product_ids).filter(Boolean), [product.combo_product_ids]);
+  const ids = useMemo(
+    () => toList(product.combo_product_ids).filter(Boolean),
+    [product.combo_product_ids],
+  );
   const [skipped, setSkipped] = useState<string[]>([]);
 
   const combo = useQuery({
     enabled: ids.length > 0,
     queryKey: ["combo", product.id, ids.join(",")],
     queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("*").in("id", ids).eq("active", true);
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .in("id", ids)
+        .eq("active", true);
       if (error) throw error;
       return (data ?? []) as unknown as Product[];
     },
@@ -64,13 +72,20 @@ export function ComboSection({ product }: { product: Product }) {
           <div key={p.id} className="flex items-center gap-3">
             <Plus className="h-4 w-4 text-muted-foreground" />
             <label className="cursor-pointer">
-              <ComboTile image={p.image_url} title={p.title} price={Number(p.price)} dim={skipped.includes(p.id)} />
+              <ComboTile
+                image={p.image_url}
+                title={p.title}
+                price={Number(p.price)}
+                dim={skipped.includes(p.id)}
+              />
               <span className="mt-1 flex items-center gap-1 text-xs">
                 <input
                   type="checkbox"
                   checked={!skipped.includes(p.id)}
                   onChange={(e) =>
-                    setSkipped((s) => (e.target.checked ? s.filter((id) => id !== p.id) : [...s, p.id]))
+                    setSkipped((s) =>
+                      e.target.checked ? s.filter((id) => id !== p.id) : [...s, p.id],
+                    )
                   }
                 />
                 Include
@@ -81,7 +96,10 @@ export function ComboSection({ product }: { product: Product }) {
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <span className="text-lg font-bold">Combo total: {inr(total)}</span>
-        <Button onClick={addAll} className="bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90">
+        <Button
+          onClick={addAll}
+          className="bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90"
+        >
           Add all to cart
         </Button>
       </div>
@@ -89,10 +107,25 @@ export function ComboSection({ product }: { product: Product }) {
   );
 }
 
-function ComboTile({ image, title, price, dim }: { image: string; title: string; price: number; dim?: boolean }) {
+function ComboTile({
+  image,
+  title,
+  price,
+  dim,
+}: {
+  image: string;
+  title: string;
+  price: number;
+  dim?: boolean;
+}) {
   return (
     <div className={`w-28 ${dim ? "opacity-40" : ""}`}>
-      <img src={image} alt={title} loading="lazy" className="h-24 w-28 rounded-lg border border-border bg-white object-contain" />
+      <img
+        src={storeImageUrl(image, 200)}
+        alt={title}
+        loading="lazy"
+        className="h-24 w-28 rounded-lg border border-border bg-white object-contain"
+      />
       <p className="mt-1 line-clamp-2 text-xs">{title}</p>
       <p className="text-xs font-semibold">{inr(price)}</p>
     </div>

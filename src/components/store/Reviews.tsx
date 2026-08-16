@@ -5,6 +5,7 @@ import { BadgeCheck, Camera, Star, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { uploadStoreImage } from "@/lib/storage-upload";
+import { storeImageUrl } from "@/lib/store-image";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -134,7 +135,7 @@ export function ReviewsSection({ productId }: { productId: string }) {
                 {(r.images as string[]).map((src) => (
                   <img
                     key={src}
-                    src={src}
+                    src={storeImageUrl(src, 160)}
                     alt="review"
                     className="h-16 w-16 rounded object-cover"
                   />
@@ -304,7 +305,11 @@ function ReviewForm({ productId }: { productId: string }) {
             <div className="flex flex-wrap gap-1.5">
               {images.map((src) => (
                 <div key={src} className="relative">
-                  <img src={src} alt="" className="h-16 w-16 rounded object-cover" />
+                  <img
+                    src={storeImageUrl(src, 160)}
+                    alt=""
+                    className="h-16 w-16 rounded object-cover"
+                  />
                   <button
                     type="button"
                     onClick={() => setImages((prev) => prev.filter((s) => s !== src))}

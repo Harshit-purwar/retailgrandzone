@@ -5,6 +5,7 @@ import type { Product } from "@/lib/store-types";
 import { discountPercent, inr } from "@/lib/store-types";
 import { useCart } from "@/lib/cart-context";
 import { useToggleWishlist, useWishlist } from "@/lib/wishlist";
+import { storeImageUrl } from "@/lib/store-image";
 
 export function Rating({ value, count }: { value: number; count?: number }) {
   return (
@@ -121,9 +122,10 @@ export function ProductCard({ product }: { product: Product }) {
       <Link to="/product/$slug" params={{ slug: product.slug ?? product.id }} className="block">
         <div className="flex h-24 items-center justify-center overflow-hidden rounded-xl bg-secondary sm:h-36">
           <img
-            src={product.image_url}
+            src={storeImageUrl(product.image_url, 480)}
             alt={product.title}
             loading="lazy"
+            decoding="async"
             className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
           />
         </div>

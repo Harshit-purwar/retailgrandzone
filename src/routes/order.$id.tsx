@@ -14,6 +14,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useStoreSettings } from "@/lib/store-settings";
+import { storeImageUrl } from "@/lib/store-image";
 import { cancellationFeePercent, refundBreakdown } from "@/lib/policy";
 import { orderState, orderStateLabel } from "@/lib/order-status";
 import { OrderLuckyCoins } from "@/components/store/LuckyCoins";
@@ -169,7 +170,11 @@ function OrderPage() {
               key={it.id}
               className="flex items-center gap-4 border-b border-border p-4 last:border-0"
             >
-              <img src={it.image_url} alt={it.title} className="h-16 w-16 object-contain" />
+              <img
+                src={storeImageUrl(it.image_url, 160)}
+                alt={it.title}
+                className="h-16 w-16 object-contain"
+              />
               <div className="flex-1 text-sm">
                 <p className="font-medium">{it.title}</p>
                 {comboItems.length > 0 ? (

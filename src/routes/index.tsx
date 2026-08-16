@@ -5,6 +5,7 @@ import type { Banner, Combo, Product } from "@/lib/store-types";
 import { toList } from "@/lib/store-types";
 import { useFastQuery } from "@/lib/fast-query";
 import { isComboBanner } from "@/lib/banner-combo";
+import { storeImageUrl } from "@/lib/store-image";
 import { ComboBanner } from "@/components/store/BannerCombo";
 import { ComboCard } from "@/components/store/ComboCard";
 import { useCombos, comboProductIds } from "@/lib/combos";
@@ -162,13 +163,14 @@ function Home() {
                   >
                     <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted">
                       <img
-                        src={b.image_url}
+                        src={storeImageUrl(b.image_url, 480)}
                         alt=""
                         aria-hidden
+                        loading="lazy"
                         className="absolute inset-0 h-full w-full scale-110 object-cover blur-xl opacity-60"
                       />
                       <img
-                        src={b.image_url}
+                        src={storeImageUrl(b.image_url, 480)}
                         alt={b.title}
                         loading="lazy"
                         className="relative h-full w-full object-contain"
@@ -208,14 +210,14 @@ function Home() {
                   >
                     <div className="relative aspect-[16/6] w-full overflow-hidden bg-muted">
                       <img
-                        src={b.image_url}
+                        src={storeImageUrl(b.image_url, 1400)}
                         alt=""
                         aria-hidden
                         loading="lazy"
                         className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl opacity-60"
                       />
                       <img
-                        src={b.image_url}
+                        src={storeImageUrl(b.image_url, 1400)}
                         alt={b.title}
                         loading="lazy"
                         className="relative h-full w-full object-contain"
@@ -351,13 +353,14 @@ function Home() {
               >
                 <div className="relative aspect-[16/7] w-full overflow-hidden bg-muted">
                   <img
-                    src={b.image_url}
+                    src={storeImageUrl(b.image_url, 800)}
                     alt=""
                     aria-hidden
+                    loading="lazy"
                     className="absolute inset-0 h-full w-full scale-110 object-cover blur-xl opacity-60"
                   />
                   <img
-                    src={b.image_url}
+                    src={storeImageUrl(b.image_url, 800)}
                     alt={b.title}
                     loading="lazy"
                     className="relative h-full w-full object-contain"
