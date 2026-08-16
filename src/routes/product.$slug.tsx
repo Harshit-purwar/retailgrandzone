@@ -144,7 +144,7 @@ function ProductPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-3 py-4 pb-32 sm:px-4 md:pb-4">
+    <div className="mx-auto w-full max-w-[1600px] px-3 py-4 pb-32 sm:px-4 md:pb-24">
       <nav className="mb-3 text-xs text-muted-foreground">
         <Link to="/" className="hover:underline">
           Home
@@ -194,30 +194,6 @@ function ProductPage() {
               ))}
             </div>
           ) : null}
-
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Button
-              size="lg"
-              disabled={outOfStock}
-              className="bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90"
-              onClick={() => {
-                cart.add(line);
-                toast.success("Added to cart");
-              }}
-            >
-              {outOfStock ? "Sold out" : "Add to cart"}
-            </Button>
-            <Button
-              size="lg"
-              disabled={outOfStock}
-              onClick={() => {
-                cart.add(line);
-                navigate({ to: "/checkout" });
-              }}
-            >
-              Buy now
-            </Button>
-          </div>
         </div>
 
         <div>
@@ -326,7 +302,7 @@ function ProductPage() {
 
       <ProductRow title="Recently viewed" products={recentlyViewed.data ?? []} />
 
-      <StickyBuyBar
+      <BuyBar
         outOfStock={outOfStock}
         onAdd={() => {
           cart.add(line);
@@ -341,7 +317,7 @@ function ProductPage() {
   );
 }
 
-function StickyBuyBar({
+function BuyBar({
   outOfStock,
   onAdd,
   onBuy,
@@ -351,8 +327,8 @@ function StickyBuyBar({
   onBuy: () => void;
 }) {
   return (
-    <div className="fixed inset-x-0 bottom-[4.5rem] z-40 border-t border-border bg-card/95 px-3 py-2 backdrop-blur md:hidden">
-      <div className="mx-auto grid w-full max-w-[600px] grid-cols-2 gap-2">
+    <div className="fixed inset-x-0 bottom-[4.5rem] z-40 border-t border-border bg-card/95 px-3 py-2 backdrop-blur md:bottom-0 md:px-4">
+      <div className="mx-auto grid w-full max-w-[1600px] grid-cols-2 gap-2 sm:gap-3">
         <Button
           size="lg"
           disabled={outOfStock}

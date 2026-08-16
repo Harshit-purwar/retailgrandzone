@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { MessageCircle, X, Send, Loader2, Sparkles, Phone, LifeBuoy } from "lucide-react";
+import { Headset, X, Send, Loader2, Sparkles, Phone, LifeBuoy } from "lucide-react";
 import { supportPhone, useStoreSettings } from "@/lib/store-settings";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
@@ -138,9 +138,9 @@ export function HelpChat() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close help chat" : "Open help chat"}
-        className="fixed bottom-[8.5rem] right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95 sm:bottom-4 sm:h-14 sm:w-14"
+        className="fixed bottom-[8.5rem] right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-lg transition-transform active:scale-95 sm:bottom-4 sm:h-14 sm:w-14"
       >
-        {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+        {open ? <X className="h-6 w-6" /> : <Headset className="h-6 w-6" />}
       </button>
 
       {open ? (
