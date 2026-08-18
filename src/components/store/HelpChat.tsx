@@ -134,23 +134,33 @@ export function HelpChat() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Close help chat" : "Open help chat"}
-        className="fixed bottom-[8.5rem] right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-lg transition-transform active:scale-95 sm:bottom-4 sm:h-14 sm:w-14"
-      >
-        {open ? <X className="h-6 w-6" /> : <Headset className="h-6 w-6" />}
-      </button>
+      {!open ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Open help chat"
+          className="fixed bottom-[8.5rem] right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-lg transition-transform active:scale-95 sm:bottom-4 sm:h-14 sm:w-14"
+        >
+          <Headset className="h-6 w-6" />
+        </button>
+      ) : null}
 
       {open ? (
         <div className="fixed inset-x-3 bottom-[9.75rem] z-50 flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:inset-x-auto sm:bottom-20 sm:right-4 sm:w-[380px]">
           <div className="flex items-center gap-2 bg-brand px-4 py-3 text-brand-foreground">
-            <Sparkles className="h-4 w-4" />
-            <div className="min-w-0">
+            <Sparkles className="h-4 w-4 shrink-0" />
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-bold leading-tight">Help &amp; Support</p>
               <p className="text-[11px] opacity-80">AI assistant · replies instantly</p>
             </div>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close help chat"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-black/10 active:scale-95"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-3 py-3">
