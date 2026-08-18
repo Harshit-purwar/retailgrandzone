@@ -16,6 +16,7 @@ export type Database = {
           full_name: string;
           phone: string;
           address_line: string;
+          landmark: string;
           city: string;
           state: string;
           pincode: string;
@@ -31,6 +32,7 @@ export type Database = {
           full_name?: string;
           phone?: string;
           address_line?: string;
+          landmark?: string;
           city?: string;
           state?: string;
           pincode?: string;
@@ -46,6 +48,7 @@ export type Database = {
           full_name?: string;
           phone?: string;
           address_line?: string;
+          landmark?: string;
           city?: string;
           state?: string;
           pincode?: string;
@@ -460,6 +463,7 @@ export type Database = {
           id: string;
           invoice_notes: string;
           invoice_number: string | null;
+          landmark: string;
           latitude: number | null;
           longitude: number | null;
           payment_id: string | null;
@@ -492,6 +496,7 @@ export type Database = {
           id?: string;
           invoice_notes?: string;
           invoice_number?: string | null;
+          landmark?: string;
           latitude?: number | null;
           longitude?: number | null;
           payment_id?: string | null;
@@ -524,6 +529,7 @@ export type Database = {
           id?: string;
           invoice_notes?: string;
           invoice_number?: string | null;
+          landmark?: string;
           latitude?: number | null;
           longitude?: number | null;
           payment_id?: string | null;

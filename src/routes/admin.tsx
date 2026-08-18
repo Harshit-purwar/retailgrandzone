@@ -19,12 +19,11 @@ import { useAuth } from "@/lib/auth-context";
 import { BASE_CATEGORIES, useCategories } from "@/lib/categories";
 import { uploadStoreImage } from "@/lib/storage-upload";
 import type { Banner, Combo, Order, Product } from "@/lib/store-types";
-import { ORDER_STATUSES, inr } from "@/lib/store-types";
+import { inr } from "@/lib/store-types";
 import { CouponsTab, DeliveryTab } from "@/components/admin/StoreConfigTabs";
-import { OrderDetailDialog } from "@/components/admin/OrderDetailDialog";
 import { CategoriesTab } from "@/components/admin/CategoriesTab";
 import { HelpRequestsTab } from "@/components/admin/HelpRequestsTab";
-import { NewOrderDialog } from "@/components/admin/NewOrderDialog";
+import { OrdersTab } from "@/components/admin/OrdersTab";
 import { StoresTab, StoreField } from "@/components/admin/StoresTab";
 
 import { Button } from "@/components/ui/button";
@@ -187,8 +186,6 @@ function AdminPage() {
   const [editing, setEditing] = useState<{ kind: "product" | "banner"; row: AnyRecord } | null>(
     null,
   );
-  const [viewOrder, setViewOrder] = useState<Order | null>(null);
-  const [newOrderOpen, setNewOrderOpen] = useState(false);
   const [productSearch, setProductSearch] = useState("");
   const [productCategory, setProductCategory] = useState("");
 
@@ -359,13 +356,6 @@ function AdminPage() {
     qc.invalidateQueries({ queryKey: [table] });
   }
 
-  async function setOrderStatus(id: string, status: string) {
-    const { error } = await supabase.from("orders").update({ status }).eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("Order updated");
-    qc.invalidateQueries({ queryKey: ["admin", "orders"] });
-  }
-
   return (
     <div className="mx-auto w-full max-w-[1600px] px-4 py-4">
       <h1 className="mb-4 text-xl font-semibold">Admin panel</h1>
@@ -526,52 +516,11 @@ function AdminPage() {
         </TabsContent>
 
         <TabsContent value="orders" className="pt-4">
-          <Button className="mb-3" onClick={() => setNewOrderOpen(true)}>
-            <Plus className="mr-1 h-4 w-4" /> New order
-          </Button>
-          <div className="space-y-2">
-            {(orders.data ?? []).length === 0 ? (
-              <p className="py-8 text-center text-muted-foreground">No orders yet.</p>
-            ) : null}
-            {(orders.data ?? []).map((o) => (
-              <div
-                key={o.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => setViewOrder(o)}
-                onKeyDown={(e) => e.key === "Enter" && setViewOrder(o)}
-                className="flex cursor-pointer flex-wrap items-center gap-3 rounded border border-border p-3 text-sm hover:bg-muted/50"
-              >
-                <div className="flex-1">
-                  <p className="font-medium">
-                    {o.id.slice(0, 8).toUpperCase()} · {o.full_name} · {o.phone}
-                  </p>
-                  <p className="text-muted-foreground">
-                    {o.address_line}, {o.city}, {o.state} — {o.pincode}
-                  </p>
-                  <p className="text-muted-foreground">
-                    {o.payment_method} ({o.payment_status}) ·{" "}
-                    {new Date(o.created_at).toLocaleString("en-IN")}
-                  </p>
-                </div>
-                <span className="font-semibold">{inr(Number(o.total))}</span>
-                <div onClick={(e) => e.stopPropagation()} className="w-full sm:w-44">
-                  <Select value={o.status} onValueChange={(v) => setOrderStatus(o.id, v)}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ORDER_STATUSES.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            ))}
-          </div>
+          <OrdersTab
+            orders={orders.data ?? []}
+            isLoading={orders.isLoading}
+            onInvalidate={() => qc.invalidateQueries({ queryKey: ["admin", "orders"] })}
+          />
         </TabsContent>
 
         <TabsContent value="stores" className="pt-4">
@@ -624,14 +573,6 @@ function AdminPage() {
           ) : null}
         </DialogContent>
       </Dialog>
-
-      <OrderDetailDialog order={viewOrder} onClose={() => setViewOrder(null)} />
-
-      <NewOrderDialog
-        open={newOrderOpen}
-        onClose={() => setNewOrderOpen(false)}
-        onCreated={() => qc.invalidateQueries({ queryKey: ["admin", "orders"] })}
-      />
     </div>
   );
 }

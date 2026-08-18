@@ -71,6 +71,7 @@ export type Order = {
   phone: string;
   email: string | null;
   address_line: string;
+  landmark?: string | null;
   city: string;
   state: string;
   pincode: string;

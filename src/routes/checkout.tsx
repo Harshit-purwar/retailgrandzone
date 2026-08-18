@@ -15,14 +15,29 @@ import {
   useStoreSettings,
 } from "@/lib/store-settings";
 import { detectCurrentLocation } from "@/lib/geo";
-import { listAddresses, saveAddress, type Address } from "@/lib/addresses";
+import {
+  listAddresses,
+  saveAddress,
+  deleteAddress,
+  setDefaultAddress,
+  ADDRESS_TYPES,
+  INDIAN_STATES,
+  type Address,
+} from "@/lib/addresses";
 import { redeemCoins, useActiveCampaign, useCoinWallet, claimCoinReward } from "@/lib/lucky-coins";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { MapPin, Loader2, Home, Building2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MapPin, Loader2, Home, Building2, Pencil, Trash2, Plus } from "lucide-react";
 
 declare global {
   interface Window {
@@ -72,9 +87,11 @@ function CheckoutPage() {
     full_name: "",
     phone: "",
     address_line: "",
+    landmark: "",
     city: "",
     state: "",
     pincode: "",
+    label: "Home" as string,
     latitude: null as number | null,
     longitude: null as number | null,
   });
@@ -84,6 +101,10 @@ function CheckoutPage() {
   const [couponBusy, setCouponBusy] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [addressesLoading, setAddressesLoading] = useState(true);
+  const [mode, setMode] = useState<"pick" | "add" | "edit">("pick");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [makeDefault, setMakeDefault] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
   const [locating, setLocating] = useState(false);
   const [saveAddressOnPlace, setSaveAddressOnPlace] = useState(true);
   const [coinsToUse, setCoinsToUse] = useState(0);
@@ -92,10 +113,35 @@ function CheckoutPage() {
   const { data: coinWallet } = useCoinWallet(user?.id);
   const walletBalance = Number(coinWallet?.balance ?? 0);
 
+  function fromAddress(a: Address) {
+    return {
+      full_name: a.full_name,
+      phone: a.phone,
+      address_line: a.address_line,
+      landmark: a.landmark ?? "",
+      city: a.city,
+      state: a.state,
+      pincode: a.pincode,
+      label: a.label || "Home",
+      latitude: a.latitude ?? null,
+      longitude: a.longitude ?? null,
+    };
+  }
+
   useEffect(() => {
     if (!user) return;
     listAddresses(user.id)
-      .then(setAddresses)
+      .then((list) => {
+        setAddresses(list);
+        if (list.length === 0) {
+          setMode("add");
+        } else {
+          const pick = list.find((a) => a.is_default) ?? list[0];
+          setSelectedId(pick.id);
+          setForm(fromAddress(pick));
+          setMode("pick");
+        }
+      })
       .catch(() => setAddresses([]))
       .finally(() => setAddressesLoading(false));
   }, [user]);
@@ -121,19 +167,105 @@ function CheckoutPage() {
     }
   }
 
-  function useSavedAddress(a: Address) {
-    setForm({
-      full_name: a.full_name || form.full_name,
-      phone: a.phone || form.phone,
-      address_line: a.address_line,
-      city: a.city,
-      state: a.state,
-      pincode: a.pincode,
-      latitude: a.latitude ?? null,
-      longitude: a.longitude ?? null,
-    });
+  function pickAddress(a: Address) {
+    setForm(fromAddress(a));
+    setSelectedId(a.id);
+    setMode("pick");
     toast.success(`Delivering to ${a.label}`);
   }
+
+  function startAdd() {
+    setSelectedId(null);
+    setMode("add");
+    setMakeDefault(addresses.length === 0);
+    setForm((f) => ({
+      ...f,
+      address_line: "",
+      landmark: "",
+      city: "",
+      state: "",
+      pincode: "",
+      latitude: null,
+      longitude: null,
+      label: "Home",
+    }));
+  }
+
+  function startEdit(a: Address) {
+    setForm(fromAddress(a));
+    setSelectedId(a.id);
+    setMode("edit");
+    setMakeDefault(a.is_default);
+  }
+
+  async function removeAddress(a: Address) {
+    if (!window.confirm(`Delete the ${a.label} address?`)) return;
+    try {
+      await deleteAddress(a.id);
+      const list = await listAddresses(user!.id);
+      setAddresses(list);
+      if (selectedId === a.id) {
+        if (list.length > 0) {
+          const pick = list[0];
+          setSelectedId(pick.id);
+          setForm(fromAddress(pick));
+        } else {
+          setSelectedId(null);
+          setMode("add");
+        }
+      }
+      toast.success("Address deleted");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not delete address");
+    }
+  }
+
+  async function makeAddressDefault(a: Address) {
+    try {
+      await setDefaultAddress(a.id, user!.id);
+      const list = await listAddresses(user!.id);
+      setAddresses(list);
+      setSelectedId(a.id);
+      toast.success(`${a.label} is now your default address`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not update default address");
+    }
+  }
+
+  async function submitAddress() {
+    if (!user) return;
+    if (mode === "add" && saveAddressOnPlace) {
+      setSavingAddress(true);
+      try {
+        const saved = await saveAddress(
+          user.id,
+          { ...form },
+          makeDefault || addresses.length === 0,
+        );
+        setAddresses(await listAddresses(user.id));
+        setSelectedId(saved.id);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Could not save address");
+        setSavingAddress(false);
+        return;
+      }
+      setSavingAddress(false);
+    } else if (mode === "edit") {
+      setSavingAddress(true);
+      try {
+        await saveAddress(user.id, { ...form, id: selectedId ?? undefined }, makeDefault);
+        setAddresses(await listAddresses(user.id));
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Could not update address");
+        setSavingAddress(false);
+        return;
+      }
+      setSavingAddress(false);
+    }
+    setStep(2);
+  }
+
+  const selectedAddress = addresses.find((a) => a.id === selectedId) ?? null;
 
   const settings = useStoreSettings();
   const discount = couponDiscount(subtotal, coupon);
@@ -238,18 +370,6 @@ function CheckoutPage() {
     if (!user) return;
     setBusy(true);
 
-    const saved = await (async () => {
-      if (!saveAddressOnPlace) return null;
-      try {
-        return await saveAddress(user.id, { ...form }, false);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (/PGRST205|PGRST204|Could not find the table|Failed to fetch/i.test(msg)) return null;
-        console.error("save address failed", msg);
-        return null;
-      }
-    })();
-
     const { data: order, error } = await supabase
       .from("orders")
       .insert({
@@ -258,6 +378,7 @@ function CheckoutPage() {
         full_name: form.full_name,
         phone: form.phone,
         address_line: form.address_line,
+        landmark: form.landmark,
         city: form.city,
         state: form.state,
         pincode: form.pincode,
@@ -372,7 +493,9 @@ function CheckoutPage() {
     void claimCoinReward(order.id)
       .then((res) => {
         if (res.better_luck) {
-          toast.info(res.message || "Better luck next time! You have reached the weekly Coins limit.");
+          toast.info(
+            res.message || "Better luck next time! You have reached the weekly Coins limit.",
+          );
         } else if (res.already_claimed) {
           // already claimed — nothing to show
         } else if (res.amount > 0) {
@@ -402,133 +525,267 @@ function CheckoutPage() {
             <h2 className="font-semibold uppercase tracking-wide">Delivery address</h2>
           </header>
           {step === 1 ? (
-            <form
-              className="grid gap-4 p-4 sm:grid-cols-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                setStep(2);
-              }}
-            >
-              {!addressesLoading && addresses.length > 0 ? (
-                <div className="sm:col-span-2">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Saved addresses
-                  </p>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {addresses.map((a) => (
-                      <button
-                        key={a.id}
-                        type="button"
-                        onClick={() => useSavedAddress(a)}
-                        className="flex items-start gap-2.5 rounded-xl border border-border p-3 text-left text-sm transition-colors hover:border-primary"
-                      >
-                        {a.label.toLowerCase().includes("work") ||
-                        a.label.toLowerCase().includes("office") ? (
-                          <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                        ) : (
-                          <Home className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                        )}
-                        <span className="min-w-0">
-                          <span className="block font-semibold">
-                            {a.label}
-                            {a.is_default ? (
-                              <span className="ml-1.5 rounded bg-primary/10 px-1 py-0.5 text-[10px] font-bold text-primary">
-                                DEFAULT
-                              </span>
-                            ) : null}
-                          </span>
-                          <span className="block text-xs text-muted-foreground">
-                            {a.address_line}, {a.city}, {a.state} — {a.pincode}
-                          </span>
-                        </span>
-                      </button>
-                    ))}
+            <div className="p-4">
+              {!addressesLoading && mode === "pick" && addresses.length > 0 ? (
+                <>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Saved addresses
+                    </p>
+                    <Button type="button" variant="outline" size="sm" onClick={startAdd}>
+                      <Plus className="mr-1 h-3.5 w-3.5" /> Add new address
+                    </Button>
                   </div>
-                </div>
-              ) : null}
+                  <div className="mt-2 space-y-2">
+                    {addresses.map((a) => {
+                      const active = selectedId === a.id;
+                      const isWork = /work|office/i.test(a.label);
+                      return (
+                        <div
+                          key={a.id}
+                          className={`flex items-start gap-2 rounded-xl border p-3 transition-colors ${
+                            active ? "border-primary ring-1 ring-primary/30" : "border-border"
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => pickAddress(a)}
+                            className="flex min-w-0 flex-1 items-start gap-2.5 text-left text-sm"
+                          >
+                            {isWork ? (
+                              <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                            ) : (
+                              <Home className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                            )}
+                            <span className="min-w-0">
+                              <span className="flex flex-wrap items-center gap-1.5 font-semibold">
+                                {a.label}
+                                {a.is_default ? (
+                                  <span className="rounded bg-primary/10 px-1 py-0.5 text-[10px] font-bold text-primary">
+                                    DEFAULT
+                                  </span>
+                                ) : null}
+                              </span>
+                              <span className="block text-xs text-muted-foreground">
+                                {a.full_name} · {a.phone}
+                              </span>
+                              <span className="block text-xs text-muted-foreground">
+                                {a.address_line}
+                                {a.landmark ? `, ${a.landmark}` : ""}, {a.city}, {a.state} —{" "}
+                                {a.pincode}
+                              </span>
+                            </span>
+                          </button>
+                          <div className="flex shrink-0 flex-col gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => startEdit(a)}
+                              aria-label="Edit address"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => void removeAddress(a)}
+                              aria-label="Delete address"
+                              className="text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Button
+                      className="bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90"
+                      disabled={!selectedId}
+                      onClick={() => setStep(2)}
+                    >
+                      Deliver here
+                    </Button>
+                    {selectedAddress && !selectedAddress.is_default ? (
+                      <Button
+                        variant="outline"
+                        onClick={() => void makeAddressDefault(selectedAddress)}
+                      >
+                        Set as default
+                      </Button>
+                    ) : null}
+                  </div>
+                </>
+              ) : addressesLoading ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">Loading addresses…</p>
+              ) : (
+                <form
+                  className="grid gap-4 sm:grid-cols-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void submitAddress();
+                  }}
+                >
+                  <div className="sm:col-span-2">
+                    <Label>Save as</Label>
+                    <RadioGroup
+                      value={form.label}
+                      onValueChange={(v) => setForm((f) => ({ ...f, label: v }))}
+                      className="mt-1 flex gap-2"
+                    >
+                      {ADDRESS_TYPES.map((t) => (
+                        <label
+                          key={t}
+                          className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5 ${
+                            form.label === t ? "border-primary bg-primary/5" : "border-border"
+                          }`}
+                        >
+                          <RadioGroupItem value={t} id={`type-${t}`} />
+                          {t}
+                        </label>
+                      ))}
+                    </RadioGroup>
+                  </div>
 
-              <div className="flex items-end gap-2 sm:col-span-2">
-                <div className="flex-1">
-                  <Label htmlFor="name">Full name</Label>
-                  <Input id="name" required value={form.full_name} onChange={set("full_name")} />
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={locating}
-                  onClick={useCurrentLocation}
-                  className="shrink-0"
-                >
-                  {locating ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <MapPin className="h-4 w-4" />
-                  )}
-                  <span className="hidden sm:inline">
-                    {locating ? "Locating…" : "Use my location"}
-                  </span>
-                  <span className="sm:hidden">{locating ? "…" : "GPS"}</span>
-                </Button>
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone number</Label>
-                <Input
-                  id="phone"
-                  required
-                  pattern="[0-9]{10}"
-                  value={form.phone}
-                  onChange={set("phone")}
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <Label htmlFor="address">Address (house no, area, street)</Label>
-                <Input
-                  id="address"
-                  required
-                  value={form.address_line}
-                  onChange={set("address_line")}
-                />
-              </div>
-              <div>
-                <Label htmlFor="city">City</Label>
-                <Input id="city" required value={form.city} onChange={set("city")} />
-              </div>
-              <div>
-                <Label htmlFor="state">State</Label>
-                <Input id="state" required value={form.state} onChange={set("state")} />
-              </div>
-              <div>
-                <Label htmlFor="pincode">Pincode</Label>
-                <Input
-                  id="pincode"
-                  required
-                  pattern="[0-9]{6}"
-                  value={form.pincode}
-                  onChange={set("pincode")}
-                />
-              </div>
-              <label className="flex items-center gap-2 text-sm text-muted-foreground sm:col-span-2">
-                <Checkbox
-                  checked={saveAddressOnPlace}
-                  onCheckedChange={(v) => setSaveAddressOnPlace(v === true)}
-                />
-                Save this address for next time
-              </label>
-              <div className="sm:col-span-2">
-                <Button
-                  type="submit"
-                  className="bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90"
-                >
-                  Deliver here
-                </Button>
-              </div>
-            </form>
+                  <div className="flex items-end gap-2 sm:col-span-2">
+                    <div className="flex-1">
+                      <Label htmlFor="name">Full name</Label>
+                      <Input
+                        id="name"
+                        required
+                        value={form.full_name}
+                        onChange={set("full_name")}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={locating}
+                      onClick={useCurrentLocation}
+                      className="shrink-0"
+                    >
+                      {locating ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <MapPin className="h-4 w-4" />
+                      )}
+                      <span className="hidden sm:inline">
+                        {locating ? "Locating…" : "Use my location"}
+                      </span>
+                      <span className="sm:hidden">{locating ? "…" : "GPS"}</span>
+                    </Button>
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone number</Label>
+                    <Input
+                      id="phone"
+                      required
+                      pattern="[0-9]{10}"
+                      value={form.phone}
+                      onChange={set("phone")}
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="address">Flat, house no, building, street</Label>
+                    <Input
+                      id="address"
+                      required
+                      value={form.address_line}
+                      onChange={set("address_line")}
+                      placeholder="Flat 4B, Sunshine Residency, MG Road"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="landmark">Landmark (optional)</Label>
+                    <Input
+                      id="landmark"
+                      value={form.landmark}
+                      onChange={set("landmark")}
+                      placeholder="Opposite City Mall, near petrol pump"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="city">City</Label>
+                    <Input id="city" required value={form.city} onChange={set("city")} />
+                  </div>
+                  <div>
+                    <Label htmlFor="state">State</Label>
+                    <Select
+                      value={form.state}
+                      onValueChange={(v) => setForm((f) => ({ ...f, state: v }))}
+                    >
+                      <SelectTrigger id="state" className="w-full">
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64">
+                        {INDIAN_STATES.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="pincode">Pincode</Label>
+                    <Input
+                      id="pincode"
+                      required
+                      pattern="[0-9]{6}"
+                      value={form.pincode}
+                      onChange={set("pincode")}
+                    />
+                  </div>
+
+                  {mode === "add" ? (
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground sm:col-span-2">
+                      <Checkbox
+                        checked={saveAddressOnPlace}
+                        onCheckedChange={(v) => setSaveAddressOnPlace(v === true)}
+                      />
+                      Save this address for next time
+                    </label>
+                  ) : null}
+                  {mode === "edit" || addresses.length > 0 ? (
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground sm:col-span-2">
+                      <Checkbox
+                        checked={makeDefault}
+                        onCheckedChange={(v) => setMakeDefault(v === true)}
+                      />
+                      Make this my default address
+                    </label>
+                  ) : null}
+
+                  <div className="flex flex-wrap gap-2 sm:col-span-2">
+                    <Button
+                      type="submit"
+                      disabled={savingAddress}
+                      className="bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90"
+                    >
+                      {savingAddress
+                        ? "Saving…"
+                        : mode === "edit"
+                          ? "Update address"
+                          : "Save & deliver here"}
+                    </Button>
+                    {mode === "edit" ? (
+                      <Button type="button" variant="outline" onClick={() => setMode("pick")}>
+                        Cancel
+                      </Button>
+                    ) : null}
+                  </div>
+                </form>
+              )}
+            </div>
           ) : (
             <div className="flex items-start justify-between gap-4 p-4 text-sm">
               <p>
                 <span className="font-semibold">{form.full_name}</span> {form.phone}
                 <br />
-                {form.address_line}, {form.city}, {form.state} — {form.pincode}
+                {form.address_line}
+                {form.landmark ? `, ${form.landmark}` : ""}, {form.city}, {form.state} —{" "}
+                {form.pincode}
               </p>
               <Button variant="outline" size="sm" onClick={() => setStep(1)}>
                 Change

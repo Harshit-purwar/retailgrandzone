@@ -7,6 +7,7 @@ export type Address = {
   full_name: string;
   phone: string;
   address_line: string;
+  landmark: string;
   city: string;
   state: string;
   pincode: string;
@@ -15,6 +16,47 @@ export type Address = {
   is_default: boolean;
   created_at: string;
 };
+
+export const ADDRESS_TYPES = ["Home", "Work"] as const;
+
+export const INDIAN_STATES = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Andaman & Nicobar Islands",
+  "Chandigarh",
+  "Dadra & Nagar Haveli and Daman & Diu",
+  "Delhi",
+  "Jammu & Kashmir",
+  "Ladakh",
+  "Lakshadweep",
+  "Puducherry",
+];
 
 const TABLE_MISSING = /PGRST205|PGRST204|Could not find the table|Failed to fetch/i;
 
@@ -39,7 +81,7 @@ export async function listAddresses(userId: string): Promise<Address[]> {
   }
 }
 
-/** Inserts (or updates) an address. If `makeDefault`, clears other defaults first. */
+/** Inserts (or updates when `input.id` is set) an address. If `makeDefault`, clears other defaults first. */
 export async function saveAddress(
   userId: string,
   input: Partial<Address>,
@@ -48,9 +90,20 @@ export async function saveAddress(
   if (makeDefault) {
     await supabase.from("addresses").update({ is_default: false }).eq("user_id", userId);
   }
+  const { id, ...fields } = input;
+  if (id) {
+    const { data, error } = await supabase
+      .from("addresses")
+      .update({ ...fields, user_id: userId, is_default: makeDefault })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as unknown as Address;
+  }
   const { data, error } = await supabase
     .from("addresses")
-    .insert({ ...input, user_id: userId, is_default: makeDefault })
+    .insert({ ...fields, user_id: userId, is_default: makeDefault })
     .select()
     .single();
   if (error) throw error;

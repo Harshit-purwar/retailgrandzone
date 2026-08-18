@@ -145,20 +145,45 @@ function OrderPage() {
       <div className="rounded-lg bg-card p-4">
         <h2 className="mb-4 font-semibold">Order status</h2>
 
-        <ol className="grid gap-3 sm:grid-cols-5">
-          {steps.map((s, i) => (
-            <li key={s} className="text-center text-xs">
-              <span
-                className={`mx-auto mb-2 block h-2 w-full rounded-full ${
-                  i <= activeIndex ? "bg-[var(--deal)]" : "bg-muted"
-                }`}
-              />
-              <span className={i <= activeIndex ? "font-medium" : "text-muted-foreground"}>
-                {s}
-              </span>
-            </li>
-          ))}
-        </ol>
+        {/cancelled/i.test(order.status ?? "") ? (
+          <p className="text-sm font-semibold text-red-600">This order was cancelled.</p>
+        ) : (
+          <div className="flex items-center">
+            {steps.map((s, i) => {
+              const done = i <= activeIndex;
+              const isNow = i === activeIndex;
+              return (
+                <div key={s} className="flex flex-1 items-center last:flex-none">
+                  <div className="flex flex-col items-center">
+                    <span
+                      className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                        done
+                          ? "bg-[var(--deal)] text-white"
+                          : "border-2 border-border bg-card text-muted-foreground"
+                      } ${isNow ? "ring-2 ring-[var(--deal)]/40" : ""}`}
+                    >
+                      {done ? "✓" : i + 1}
+                    </span>
+                    <span
+                      className={`mt-1 max-w-16 whitespace-nowrap text-center text-[10px] leading-tight ${
+                        done ? "font-semibold" : "text-muted-foreground"
+                      }`}
+                    >
+                      {s}
+                    </span>
+                  </div>
+                  {i < steps.length - 1 ? (
+                    <span
+                      className={`mx-1 mb-4 h-0.5 flex-1 rounded ${
+                        i < activeIndex ? "bg-[var(--deal)]" : "bg-border"
+                      }`}
+                    />
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="rounded-lg bg-card">
@@ -199,7 +224,9 @@ function OrderPage() {
         <p>
           {order.full_name} · {order.phone}
           <br />
-          {order.address_line}, {order.city}, {order.state} — {order.pincode}
+          {order.address_line}
+          {order.landmark ? `, ${order.landmark}` : ""}, {order.city}, {order.state} —{" "}
+          {order.pincode}
         </p>
       </div>
 

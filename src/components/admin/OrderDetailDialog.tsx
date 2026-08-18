@@ -182,7 +182,7 @@ export function OrderDetailDialog({
               <Row label="Email" value={o.email ?? "—"} />
               <Row
                 label="Address"
-                value={`${o.address_line}, ${o.city}, ${o.state} — ${o.pincode}`}
+                value={`${o.address_line}${o.landmark ? `, ${o.landmark}` : ""}, ${o.city}, ${o.state} — ${o.pincode}`}
               />
             </div>
 
