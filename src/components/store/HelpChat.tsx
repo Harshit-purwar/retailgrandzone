@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { Headset, X, Send, Loader2, Sparkles, Phone, LifeBuoy } from "lucide-react";
 import { supportPhone, useStoreSettings } from "@/lib/store-settings";
 
@@ -25,6 +25,8 @@ const UNSURE = [
 export function HelpChat() {
   const settings = useStoreSettings();
   const phone = supportPhone(settings.data);
+  const { pathname } = useLocation();
+  const onProduct = pathname.startsWith("/product");
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -139,14 +141,20 @@ export function HelpChat() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Open help chat"
-          className="fixed bottom-[8.5rem] right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-lg transition-transform active:scale-95 sm:bottom-4 sm:h-14 sm:w-14"
+          className={`fixed right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-lg transition-transform active:scale-95 sm:h-14 sm:w-14 ${
+            onProduct ? "bottom-[11.5rem] sm:bottom-20" : "bottom-[8.5rem] sm:bottom-4"
+          }`}
         >
           <Headset className="h-6 w-6" />
         </button>
       ) : null}
 
       {open ? (
-        <div className="fixed inset-x-3 bottom-[9.75rem] z-50 flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:inset-x-auto sm:bottom-20 sm:right-4 sm:w-[380px]">
+        <div
+          className={`fixed inset-x-3 z-50 flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:inset-x-auto sm:right-4 sm:w-[380px] ${
+            onProduct ? "bottom-[13rem] sm:bottom-28" : "bottom-[9.75rem] sm:bottom-20"
+          }`}
+        >
           <div className="flex items-center gap-2 bg-brand px-4 py-3 text-brand-foreground">
             <Sparkles className="h-4 w-4 shrink-0" />
             <div className="min-w-0 flex-1">

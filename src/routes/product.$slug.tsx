@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { Gift, ShieldCheck, Truck, RotateCcw, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/lib/store-types";
@@ -145,7 +144,7 @@ function ProductPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-3 py-4 pb-32 sm:px-4 md:pb-24">
+    <div className="mx-auto w-full max-w-[1600px] px-3 py-4 pb-44 sm:px-4 md:pb-28">
       <nav className="mb-3 text-xs text-muted-foreground">
         <Link to="/" className="hover:underline">
           Home
@@ -310,11 +309,16 @@ function ProductPage() {
       <ProductRow title="Recently viewed" products={recentlyViewed.data ?? []} />
 
       <BuyBar
+        product={product}
         outOfStock={outOfStock}
-        onAdd={() => {
-          cart.add(line);
-          toast.success("Added to cart");
-        }}
+        inCartQty={cart.lines.find((l) => l.productId === product.id)?.quantity ?? 0}
+        onInc={() => cart.add(line)}
+        onDec={() =>
+          cart.setQuantity(
+            product.id,
+            (cart.lines.find((l) => l.productId === product.id)?.quantity ?? 1) - 1,
+          )
+        }
         onBuy={() => {
           cart.add(line);
           navigate({ to: "/checkout" });
@@ -325,28 +329,80 @@ function ProductPage() {
 }
 
 function BuyBar({
+  product,
   outOfStock,
-  onAdd,
+  inCartQty,
+  onInc,
+  onDec,
   onBuy,
 }: {
+  product: Product;
   outOfStock: boolean;
-  onAdd: () => void;
+  inCartQty: number;
+  onInc: () => void;
+  onDec: () => void;
   onBuy: () => void;
 }) {
+  const off = discountPercent(Number(product.price), Number(product.mrp));
+  const stockText = outOfStock
+    ? "Currently out of stock"
+    : product.stock <= 5
+      ? `Only ${product.stock} left in stock`
+      : "In stock";
+  const inCart = inCartQty > 0;
+
   return (
-    <div className="fixed inset-x-0 bottom-[4.5rem] z-40 border-t border-border bg-card/95 px-3 py-2 backdrop-blur md:bottom-0 md:px-4">
-      <div className="mx-auto grid w-full max-w-[1600px] grid-cols-2 gap-2 sm:gap-3">
-        <Button
-          size="lg"
-          disabled={outOfStock}
-          className="bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90"
-          onClick={onAdd}
-        >
-          {outOfStock ? "Sold out" : "Add to cart"}
-        </Button>
-        <Button size="lg" disabled={outOfStock} onClick={onBuy}>
-          Buy now
-        </Button>
+    <div className="fixed inset-x-0 bottom-[4.5rem] z-40 border-t border-border bg-card/95 px-3 py-2.5 backdrop-blur md:bottom-0 md:px-4">
+      <div className="mx-auto w-full max-w-[1600px] md:flex md:items-center md:gap-4">
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 md:min-w-0 md:flex-1">
+          <span className="text-xl font-extrabold sm:text-2xl">{inr(Number(product.price))}</span>
+          {off > 0 ? (
+            <>
+              <span className="text-sm text-muted-foreground line-through">
+                {inr(Number(product.mrp))}
+              </span>
+              <span className="text-sm font-semibold text-[var(--deal)]">{off}% off</span>
+            </>
+          ) : null}
+          <span className="ml-auto text-xs font-medium text-[var(--deal)]">{stockText}</span>
+        </div>
+
+        <div className="mt-2 grid grid-cols-2 gap-2 md:mt-0 md:w-auto md:shrink-0">
+          {inCart ? (
+            <div className="col-span-2 flex items-center justify-center gap-2 md:col-span-1">
+              <Button
+                size="icon"
+                variant="outline"
+                aria-label="Decrease quantity"
+                onClick={onDec}
+                className="h-11 w-11"
+              >
+                −
+              </Button>
+              <span className="w-7 text-center text-lg font-bold">{inCartQty}</span>
+              <Button
+                size="icon"
+                aria-label="Increase quantity"
+                onClick={onInc}
+                className="h-11 w-11 bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90"
+              >
+                +
+              </Button>
+            </div>
+          ) : (
+            <Button
+              size="lg"
+              disabled={outOfStock}
+              onClick={onInc}
+              className="bg-[var(--gold)] text-[var(--gold-foreground)] hover:bg-[var(--gold)]/90"
+            >
+              {outOfStock ? "Sold out" : "Add to cart"}
+            </Button>
+          )}
+          <Button size="lg" disabled={outOfStock} onClick={onBuy}>
+            Buy now
+          </Button>
+        </div>
       </div>
     </div>
   );
